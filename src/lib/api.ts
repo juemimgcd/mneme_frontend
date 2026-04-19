@@ -67,6 +67,14 @@ function firstPresent(source: Record<string, unknown>, keys: string[], fallback?
   return fallback;
 }
 
+function createClientId(prefix: string) {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+
+  return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
 function normalizeUser(raw: unknown): User {
   const source = isObject(raw) ? raw : {};
   return {
@@ -93,7 +101,7 @@ function normalizeKnowledgeBase(raw: unknown): KnowledgeBase {
   const source = isObject(raw) ? raw : {};
   const rawStatus = asString(firstPresent(source, ['status', 'index_status']), '');
   return {
-    id: asString(firstPresent(source, ['id', 'knowledge_base_id']), crypto.randomUUID()),
+    id: asString(firstPresent(source, ['id', 'knowledge_base_id']), createClientId('kb')),
     user_id: asNumber(firstPresent(source, ['user_id']), 0),
     name: asString(firstPresent(source, ['name', 'title']), '未命名知识库'),
     description: asString(firstPresent(source, ['description', 'summary']), ''),
@@ -137,7 +145,7 @@ function normalizeDocument(raw: unknown): DocumentItem {
   const fileName = asString(firstPresent(source, ['file_name', 'name', 'filename', 'title']), '未命名文档');
   const fileType = asString(firstPresent(source, ['file_type']), fileName.split('.').pop() ?? '');
   return {
-    id: asString(firstPresent(source, ['id', 'document_id']), crypto.randomUUID()),
+    id: asString(firstPresent(source, ['id', 'document_id']), createClientId('doc')),
     user_id: asNumber(firstPresent(source, ['user_id']), 0),
     file_name: fileName,
     name: fileName,
@@ -175,7 +183,7 @@ function normalizeChatExchange(raw: unknown, questionFallback = ''): ChatExchang
   const source = isObject(raw) ? raw : {};
   const nestedData = isObject(source.data) ? source.data : source;
   return {
-    id: asString(firstPresent(nestedData, ['id', 'chat_id']), crypto.randomUUID()),
+    id: asString(firstPresent(nestedData, ['id', 'chat_id']), createClientId('chat')),
     question: asString(firstPresent(nestedData, ['question']), questionFallback),
     answer: asString(firstPresent(nestedData, ['answer', 'response']), ''),
     sources: asArray(firstPresent(nestedData, ['sources', 'citations'], [])).map(normalizeSource),
