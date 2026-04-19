@@ -31,6 +31,14 @@ if [[ -f "$APP_DIR/$SCRIPT_NAME" ]] \
   mv "$APP_DIR/$SCRIPT_NAME" "$backup_path"
 fi
 
+if git ls-files --error-unmatch -- "$SCRIPT_NAME" >/dev/null 2>&1 \
+  && ! git diff --quiet -- "$SCRIPT_NAME"; then
+  backup_path="${APP_DIR}/${SCRIPT_NAME}.local.$(date +%Y%m%d%H%M%S).bak"
+  echo "Backup modified tracked script to $backup_path before pull"
+  cp "$APP_DIR/$SCRIPT_NAME" "$backup_path"
+  git restore -- "$SCRIPT_NAME"
+fi
+
 echo "[2/6] pull latest code from $BRANCH"
 git pull --ff-only origin "$BRANCH"
 
