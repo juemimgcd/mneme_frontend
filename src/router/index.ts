@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useSessionStore } from '@/stores/session';
+import IntroView from '@/views/IntroView.vue';
 import LandingView from '@/views/LandingView.vue';
 import LoginView from '@/views/LoginView.vue';
 import RegisterView from '@/views/RegisterView.vue';
@@ -16,6 +17,11 @@ const router = createRouter({
   routes: [
     {
       path: '/',
+      name: 'intro',
+      component: IntroView,
+    },
+    {
+      path: '/welcome',
       name: 'landing',
       component: LandingView,
     },
