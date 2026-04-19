@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { reactive } from 'vue';
 import { useRouter } from 'vue-router';
+import SignInPanel from '@/components/ui/SignInPanel.vue';
 import { useSessionStore } from '@/stores/session';
 
 const router = useRouter();
@@ -10,6 +11,27 @@ const form = reactive({
   password: '',
 });
 
+const testimonials = [
+  {
+    avatarSrc: 'https://randomuser.me/api/portraits/women/44.jpg',
+    name: 'Leah Santos',
+    handle: '@leahnotes',
+    text: 'The onboarding feels cinematic without getting in the way of actual work.',
+  },
+  {
+    avatarSrc: 'https://randomuser.me/api/portraits/men/28.jpg',
+    name: 'Noah Kim',
+    handle: '@noaharchive',
+    text: 'It gives my writing and research a place to return to instead of disappearing into folders.',
+  },
+  {
+    avatarSrc: 'https://randomuser.me/api/portraits/women/12.jpg',
+    name: 'Ava Foster',
+    handle: '@avafields',
+    text: 'The system feels composed. You can sense the structure before you even upload the first file.',
+  },
+] as const;
+
 async function submit() {
   await session.register(form);
   router.push({ name: 'dashboard' });
@@ -17,35 +39,25 @@ async function submit() {
 </script>
 
 <template>
-  <main class="auth-page">
-    <section class="auth-panel">
-      <div class="auth-panel__intro">
-        <p class="section-header__eyebrow">开始沉淀</p>
-        <h1>创建你的记忆型知识库入口</h1>
-        <p>注册后，后端会自动创建默认知识库。前端会立即把你带到工作台视图。</p>
-      </div>
-
-      <form class="auth-form" @submit.prevent="submit">
-        <label>
-          <span>用户名</span>
-          <input v-model="form.username" autocomplete="username" minlength="3" required />
-        </label>
-        <label>
-          <span>密码</span>
-          <input
-            v-model="form.password"
-            autocomplete="new-password"
-            minlength="8"
-            required
-            type="password"
-          />
-        </label>
-        <p v-if="session.error" class="form-error" role="alert">{{ session.error }}</p>
-        <button class="primary-button" type="submit" :disabled="session.loading">
-          {{ session.loading ? '创建中...' : '创建账号' }}
-        </button>
-        <RouterLink class="text-link" :to="{ name: 'login' }">已有账号？去登录</RouterLink>
-      </form>
-    </section>
+  <main class="login-view">
+    <SignInPanel
+      v-model:username="form.username"
+      v-model:password="form.password"
+      :error="session.error"
+      :hero-image-src="'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=2160&q=80'"
+      :loading="session.loading"
+      :password-minlength="8"
+      :show-secondary="false"
+      :testimonials="testimonials"
+      description="Create your account and continue with a fresh workspace."
+      footer-action-label="Sign In"
+      footer-prompt="Already have an account?"
+      footer-route-name="login"
+      password-autocomplete="new-password"
+      submit-label="Create Account"
+      support-label="Password rules"
+      title="Create Account"
+      @submit="submit"
+    />
   </main>
 </template>
