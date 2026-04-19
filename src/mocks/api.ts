@@ -3,11 +3,15 @@ import type {
   PersonalProfile,
   AuthToken,
   ChatExchange,
+  CompanionAnswerResult,
   ChatSource,
   DocumentItem,
+  GrowthAdviceResult,
   GrowthReport,
   KnowledgeBase,
   MemoryLibrary,
+  TaskActionResult,
+  TaskRecord,
   User,
 } from '@/lib/types';
 import {
@@ -15,10 +19,13 @@ import {
   demoToken,
   demoUser,
   documents,
+  companionAnswer,
+  growthAdvice,
   growthMetrics,
   knowledgeBases,
   memoryLibrary,
   profileInsights,
+  taskRecords,
 } from '@/mocks/data';
 
 const wait = (ms = 220) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -26,6 +33,7 @@ const wait = (ms = 220) => new Promise((resolve) => setTimeout(resolve, ms));
 const kbState = [...knowledgeBases];
 const documentState = [...documents];
 const chatState = [...chatHistory];
+const taskState = [...taskRecords];
 
 export async function mockRegister(payload: AuthPayload): Promise<User> {
   await wait();
@@ -103,16 +111,39 @@ export async function mockUploadDocuments(
   return uploaded;
 }
 
-export async function mockIndexDocument(documentId: string): Promise<DocumentItem> {
+export async function mockIndexDocument(documentId: string): Promise<{
+  task_id: string;
+  document_id: string;
+  knowledge_base_id: string;
+  status: DocumentItem['status'];
+  message: string;
+}> {
   await wait(350);
   const target = documentState.find((item) => item.id === documentId);
   if (!target) {
     throw new Error('Document not found');
   }
 
-  target.status = 'indexed';
-  target.chunk_count = target.chunk_count || 24;
-  return target;
+  const taskId = target.task_id || `task_${Date.now()}`;
+  target.status = 'queued';
+  target.task_id = taskId;
+  taskState.unshift({
+    id: taskId,
+    task_type: 'document_index',
+    target_id: target.id,
+    status: 'queued',
+    error_message: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  });
+
+  return {
+    task_id: taskId,
+    document_id: target.id,
+    knowledge_base_id: target.knowledge_base_id,
+    status: 'queued',
+    message: 'index task submitted',
+  };
 }
 
 export async function mockChatQuery(payload: {
@@ -169,4 +200,119 @@ export async function mockProfile(): Promise<PersonalProfile> {
 export async function mockGrowth(): Promise<GrowthReport> {
   await wait();
   return growthMetrics;
+}
+
+export async function mockAdvice(focusGoal?: string): Promise<GrowthAdviceResult> {
+  await wait();
+  return {
+    ...growthAdvice,
+    focus_goal: focusGoal ?? growthAdvice.focus_goal,
+  };
+}
+
+export async function mockCompanionReply(payload: {
+  question: string;
+  topK: number;
+}): Promise<CompanionAnswerResult> {
+  await wait(260);
+  return {
+    ...companionAnswer,
+    question: payload.question,
+    citations: companionAnswer.citations.slice(
+      0,
+      Math.max(1, Math.min(payload.topK, companionAnswer.citations.length)),
+    ),
+  };
+}
+
+export async function mockTaskStatus(taskId: string): Promise<TaskRecord> {
+  await wait();
+  const task = taskState.find((item) => item.id === taskId);
+  if (!task) {
+    throw new Error('Task not found');
+  }
+
+  if (task.status === 'queued') {
+    task.status = 'parsing';
+  } else if (task.status === 'parsing') {
+    task.status = 'chunking';
+  } else if (task.status === 'chunking') {
+    task.status = 'embedding';
+  } else if (task.status === 'embedding') {
+    task.status = 'vector_upserting';
+  } else if (task.status === 'vector_upserting') {
+    task.status = 'completed';
+    const doc = documentState.find((item) => item.id === task.target_id);
+    if (doc) {
+      doc.status = 'indexed';
+      doc.chunk_count = doc.chunk_count || 24;
+    }
+  }
+
+  task.updated_at = new Date().toISOString();
+  return { ...task };
+}
+
+export async function mockCancelTask(taskId: string): Promise<TaskActionResult> {
+  await wait();
+  const task = taskState.find((item) => item.id === taskId);
+  if (task) {
+    task.status = 'cancelled';
+    task.updated_at = new Date().toISOString();
+    const doc = documentState.find((item) => item.id === task.target_id);
+    if (doc) {
+      doc.status = 'uploaded';
+    }
+  }
+  return {
+    task_id: taskId,
+    status: 'cancelled',
+    document_id: task?.target_id ?? null,
+    message: 'task canceled',
+  };
+}
+
+export async function mockRetryTask(taskId: string): Promise<TaskActionResult> {
+  await wait();
+  const task = taskState.find((item) => item.id === taskId);
+  if (task) {
+    task.status = 'queued';
+    task.updated_at = new Date().toISOString();
+    const doc = documentState.find((item) => item.id === task.target_id);
+    if (doc) {
+      doc.status = 'queued';
+    }
+  }
+  return {
+    task_id: taskId,
+    status: 'queued',
+    document_id: task?.target_id ?? null,
+    message: 'task retried',
+  };
+}
+
+export async function mockDeleteDocument(documentId: string) {
+  await wait();
+  const index = documentState.findIndex((item) => item.id === documentId);
+  const [removed] = index >= 0 ? documentState.splice(index, 1) : [];
+  return {
+    document_id: documentId,
+    knowledge_base_id: removed?.knowledge_base_id ?? '',
+    chunk_count: removed?.chunk_count ?? 0,
+    deleted_memory_entry_count: 0,
+    deleted_task_count: taskState.filter((item) => item.target_id === documentId).length,
+    deleted_vector_count: removed?.chunk_count ?? 0,
+  };
+}
+
+export async function mockDocumentMemoryLibrary(documentId: string): Promise<MemoryLibrary> {
+  await wait();
+  return {
+    timeline: memoryLibrary.timeline.map((item, index) => ({
+      ...item,
+      entry_id: `${documentId}_${index}`,
+    })),
+    by_type: memoryLibrary.by_type,
+    by_theme: memoryLibrary.by_theme,
+  };
 }

@@ -1,12 +1,32 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed } from 'vue';
+
+const props = withDefaults(
+  defineProps<{
+    question?: string;
+    topK?: number;
+  }>(),
+  {
+    question: '',
+    topK: 4,
+  },
+);
 
 const emit = defineEmits<{
   (event: 'submit', payload: { question: string; topK: number }): void;
+  (event: 'update:question', value: string): void;
+  (event: 'update:topK', value: number): void;
 }>();
 
-const question = ref('');
-const topK = ref(4);
+const question = computed({
+  get: () => props.question,
+  set: (value: string) => emit('update:question', value),
+});
+
+const topK = computed({
+  get: () => props.topK,
+  set: (value: number) => emit('update:topK', value),
+});
 
 function submit() {
   if (!question.value.trim()) {
@@ -17,27 +37,26 @@ function submit() {
     question: question.value.trim(),
     topK: topK.value,
   });
-  question.value = '';
 }
 </script>
 
 <template>
   <form class="chat-composer" @submit.prevent="submit">
     <label>
-      <span>提问内容</span>
+      <span>Question</span>
       <textarea
         v-model="question"
         rows="4"
-        placeholder="例如：总结我近一个月关于长期主义的核心观点，并给出证据来源。"
+        placeholder="Summarize my main themes from the last month and cite the most relevant source chunks."
       />
     </label>
 
     <div class="chat-composer__footer">
       <label>
-        <span>召回数量</span>
-        <input v-model="topK" min="1" max="8" type="number" />
+        <span>Top-K</span>
+        <input v-model.number="topK" min="1" max="8" type="number" />
       </label>
-      <button class="primary-button" type="submit">发起检索问答</button>
+      <button class="primary-button" type="submit">Run Retrieval</button>
     </div>
   </form>
 </template>

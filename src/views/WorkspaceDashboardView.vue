@@ -1,85 +1,259 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
+import { computed } from 'vue';
 import ActivityFeed from '@/components/dashboard/ActivityFeed.vue';
+import MetricCard from '@/components/common/MetricCard.vue';
+import SectionHeader from '@/components/common/SectionHeader.vue';
+import SurfacePanel from '@/components/common/SurfacePanel.vue';
 import { useWorkspaceStore } from '@/stores/workspace';
+import type { ActivityItem, DashboardMetric } from '@/lib/types';
 
 const workspace = useWorkspaceStore();
+
+const pendingCount = computed(
+  () =>
+    workspace.filteredDocuments.filter((item) =>
+      ['queued', 'indexing', 'parsing', 'chunking', 'embedding', 'vector_upserting'].includes(item.status),
+    ).length,
+);
+
+const lastExchange = computed(() => workspace.chats[0] ?? null);
+const latestTheme = computed(() => workspace.profile?.main_themes[0] ?? null);
+const latestStage = computed(() => workspace.growth?.stage_summary ?? '');
+const memoryCount = computed(() => workspace.memoryLibrary?.timeline.length ?? 0);
+const latestTask = computed(() =>
+  Object.values(workspace.taskRecords)
+    .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())[0] ?? null,
+);
+const completedTasks = computed(
+  () =>
+    Object.values(workspace.taskRecords).filter((item) => item.status === 'completed').length,
+);
+const failedTasks = computed(
+  () =>
+    Object.values(workspace.taskRecords).filter((item) =>
+      ['failed', 'cancelled', 'canceled'].includes(item.status),
+    ).length,
+);
+
+function formatTimestamp(value?: string) {
+  if (!value) {
+    return '--';
+  }
+  return new Date(value).toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+const dashboardMetrics = computed<DashboardMetric[]>(() => [
+  {
+    label: 'Collections',
+    value: String(workspace.knowledgeBases.length),
+    change: workspace.currentKnowledgeBase?.name ?? 'No active collection',
+    tone: 'teal',
+  },
+  {
+    label: 'Indexed Docs',
+    value: String(
+      workspace.filteredDocuments.filter((item) => item.status === 'indexed').length,
+    ),
+    change: `${memoryCount.value} memory entries`,
+    tone: 'indigo',
+  },
+  {
+    label: 'Retrieval Runs',
+    value: String(workspace.chats.length),
+    change: lastExchange.value ? formatTimestamp(lastExchange.value.created_at) : 'No queries yet',
+    tone: 'amber',
+  },
+  {
+    label: 'Task State',
+    value: String(pendingCount.value),
+    change: failedTasks.value
+      ? `${failedTasks.value} need review`
+      : `${completedTasks.value} completed`,
+    tone: pendingCount.value || failedTasks.value ? 'coral' : 'teal',
+  },
+]);
+
+const activityItems = computed<ActivityItem[]>(() => {
+  const items: ActivityItem[] = [];
+
+  if (latestTask.value) {
+    items.push({
+      id: `task_${latestTask.value.id}`,
+      title: `Task ${latestTask.value.status}`,
+      detail: `Latest index task for ${latestTask.value.target_id}.`,
+      timestamp: formatTimestamp(latestTask.value.updated_at),
+      tone: ['failed', 'cancelled', 'canceled'].includes(latestTask.value.status)
+        ? 'coral'
+        : latestTask.value.status === 'completed'
+          ? 'teal'
+          : 'amber',
+    });
+  }
+
+  if (workspace.lastMemoryRebuild) {
+    items.push({
+      id: `memory_${workspace.lastMemoryRebuild.knowledge_base_id}_${workspace.lastMemoryRebuild.entry_count}`,
+      title: 'Memory rebuilt',
+      detail: `${workspace.lastMemoryRebuild.entry_count} entries across ${workspace.lastMemoryRebuild.processed_document_count} docs.`,
+      timestamp: 'Just now',
+      tone: 'indigo',
+    });
+  }
+
+  const latestDocument = [...workspace.filteredDocuments].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  )[0];
+
+  if (latestDocument) {
+    items.push({
+      id: `doc_${latestDocument.id}`,
+      title: latestDocument.name,
+      detail: `${latestDocument.status} · ${latestDocument.file_type?.toUpperCase() || 'FILE'}`,
+      timestamp: formatTimestamp(latestDocument.created_at),
+      tone: latestDocument.status === 'indexed' ? 'teal' : latestDocument.status === 'failed' ? 'coral' : 'amber',
+    });
+  }
+
+  if (lastExchange.value) {
+    items.push({
+      id: `chat_${lastExchange.value.id}`,
+      title: 'Latest retrieval',
+      detail: lastExchange.value.question,
+      timestamp: formatTimestamp(lastExchange.value.created_at),
+      tone: 'indigo',
+    });
+  }
+
+  if (workspace.profile) {
+    items.push({
+      id: `profile_${workspace.profile.knowledge_base_id}`,
+      title: 'Profile signal',
+      detail: workspace.profile.profile_summary,
+      timestamp: workspace.growth?.analysis_window || 'Live',
+      tone: 'teal',
+    });
+  }
+
+  return items.slice(0, 5);
+});
 </script>
 
 <template>
-  <div class="flex flex-col gap-10 max-w-7xl mx-auto">
-    <!-- Header Section -->
-    <div class="flex flex-col gap-3">
-      <div class="flex items-center gap-2">
-        <div class="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]"></div>
-        <span class="text-xs font-semibold tracking-widest text-cyan-400 uppercase">Workspace Overview</span>
-      </div>
-      <h2 class="text-3xl font-light text-slate-100 mt-2">智能 RAG 主链路一目了然</h2>
-      <p class="text-slate-400 text-sm max-w-2xl leading-relaxed">
-        总览页优先展示当前上下文、索引状态、近期活动和可追踪的增长指标，保持信息的极简与聚焦。
-      </p>
-    </div>
+  <div class="view-stack">
+    <SectionHeader
+      eyebrow="RAG Workspace"
+      title="Track the active loop."
+      description="One view for collection state, retrieval state, and signal state."
+    />
 
-    <!-- Metrics Grid -->
-    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <div
-        v-for="metric in workspace.dashboardMetrics"
+    <section class="metric-grid">
+      <MetricCard
+        v-for="metric in dashboardMetrics"
         :key="metric.label"
-        class="relative overflow-hidden rounded-2xl bg-white/5 border border-white/5 p-6 backdrop-blur-md group hover:bg-white/10 transition-colors"
-      >
-        <div class="absolute -right-4 -top-4 w-24 h-24 rounded-full bg-purple-500/10 blur-2xl group-hover:bg-purple-500/20 transition-all"></div>
-        <h3 class="text-sm font-medium text-slate-400 mb-2">{{ metric.label }}</h3>
-        <div class="flex items-end gap-3 pointer-events-none">
-          <span class="text-3xl font-light text-slate-100">{{ metric.value }}</span>
-          <span 
-            class="text-xs font-medium mb-1 px-2 py-0.5 rounded-full"
-            :class="[
-              metric.tone === 'teal' ? 'bg-emerald-500/10 text-emerald-400' : 
-              metric.tone === 'coral' ? 'bg-red-500/10 text-red-400' : 'bg-slate-500/10 text-slate-400'
-            ]"
-          >
-            {{ metric.change }}
-          </span>
-        </div>
-      </div>
+        :change="metric.change"
+        :label="metric.label"
+        :tone="metric.tone"
+        :value="metric.value"
+      />
     </section>
 
-    <!-- Main Content Grid -->
-    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div class="lg:col-span-1 flex flex-col gap-6">
-        <div class="rounded-2xl border border-white/5 bg-slate-900/50 backdrop-blur-md p-6">
-          <div class="pb-4 border-b border-white/5 mb-6">
-            <h3 class="text-xs font-semibold tracking-widest text-purple-400 uppercase mb-1">Current Context</h3>
-            <h4 class="text-lg font-medium text-slate-200">当前知识库</h4>
-          </div>
-          
-          <div v-if="workspace.currentKnowledgeBase" class="flex flex-col gap-6 relative">
-            <div class="absolute -left-2 -top-2 w-12 h-12 bg-purple-500/20 rounded-full blur-xl pointer-events-none"></div>
-            <div>
-              <strong class="block text-xl font-light text-white mb-2">{{ workspace.currentKnowledgeBase.name }}</strong>
-              <p class="text-sm text-slate-400 leading-relaxed">{{ workspace.currentKnowledgeBase.description }}</p>
-            </div>
-            
-            <dl class="grid grid-cols-2 gap-4">
-              <div class="p-4 rounded-xl bg-black/40 border border-white/5">
-                <dt class="text-xs text-slate-500 mb-1">文档数量</dt>
-                <dd class="text-lg font-medium text-slate-200">{{ workspace.currentKnowledgeBase.document_count }}</dd>
+    <section class="workspace-overview">
+      <SurfacePanel eyebrow="Current Context" title="Active collection">
+        <div v-if="workspace.currentKnowledgeBase" class="workspace-overview__hero">
+          <article class="context-card workspace-overview__feature">
+            <header class="knowledge-card__header">
+              <strong>{{ workspace.currentKnowledgeBase.name }}</strong>
+              <span class="status-pill" :data-status="workspace.currentKnowledgeBase.status">
+                {{ workspace.currentKnowledgeBase.status }}
+              </span>
+            </header>
+            <p>{{ workspace.currentKnowledgeBase.description }}</p>
+            <dl class="context-card__meta">
+              <div>
+                <dt>Docs</dt>
+                <dd>{{ workspace.currentKnowledgeBase.document_count }}</dd>
               </div>
-              <div class="p-4 rounded-xl bg-black/40 border border-white/5">
-                <dt class="text-xs text-slate-500 mb-1">记忆条目</dt>
-                <dd class="text-lg font-medium text-slate-200">{{ workspace.currentKnowledgeBase.memory_count }}</dd>
+              <div>
+                <dt>Memory</dt>
+                <dd>{{ memoryCount }}</dd>
               </div>
             </dl>
+          </article>
+
+          <div class="workspace-overview__rail">
+            <article class="growth-card">
+              <header>
+                <strong>Queue</strong>
+                <span class="growth-card__trend" :data-trend="pendingCount ? 'steady' : 'up'">
+                  {{ pendingCount }}
+                </span>
+              </header>
+              <p>{{ pendingCount ? 'Ingest is still processing pending files.' : 'Ingest lane is clear.' }}</p>
+            </article>
+
+            <article class="growth-card">
+              <header>
+                <strong>Latest Run</strong>
+                <span class="growth-card__trend" data-trend="up">
+                  {{ lastExchange?.sources.length ?? 0 }}
+                </span>
+              </header>
+              <p>{{ lastExchange?.question ?? 'No retrieval run yet.' }}</p>
+            </article>
+
+            <article class="growth-card">
+              <header>
+                <strong>Theme</strong>
+                <span class="growth-card__trend" data-trend="up">
+                  {{ latestTheme ? 'Live' : '--' }}
+                </span>
+              </header>
+              <p>{{ latestTheme?.theme_name ?? 'No stable theme yet.' }}</p>
+            </article>
           </div>
         </div>
-      </div>
+      </SurfacePanel>
 
-      <div class="lg:col-span-2 rounded-2xl border border-white/5 bg-slate-900/50 backdrop-blur-md p-6">
-        <div class="pb-4 border-b border-white/5 mb-6">
-          <h3 class="text-xs font-semibold tracking-widest text-cyan-400 uppercase mb-1">Recent Activity</h3>
-          <h4 class="text-lg font-medium text-slate-200">最近动态</h4>
+      <SurfacePanel eyebrow="Signal State" title="Current read">
+        <div class="workspace-overview__signals">
+          <article class="growth-card growth-card--feature">
+            <header>
+              <strong>Stage</strong>
+              <span class="growth-card__trend" data-trend="up">
+                {{ workspace.growth?.analysis_window ?? 'Pending' }}
+              </span>
+            </header>
+            <p>{{ latestStage || 'No growth summary yet.' }}</p>
+          </article>
+
+          <article v-if="workspace.profile" class="context-card">
+            <strong>Profile</strong>
+            <p>{{ workspace.profile.profile_summary }}</p>
+          </article>
+
+          <article v-if="workspace.profile?.growth_focus.length" class="context-card">
+            <strong>Focus</strong>
+            <div class="chip-wrap">
+              <span
+                v-for="item in workspace.profile.growth_focus"
+                :key="item"
+                class="memory-chip"
+              >
+                {{ item }}
+              </span>
+            </div>
+          </article>
         </div>
-        <ActivityFeed :items="workspace.activityFeed" />
-      </div>
+      </SurfacePanel>
     </section>
+
+    <SurfacePanel eyebrow="Recent Activity" title="What changed">
+      <ActivityFeed :items="activityItems" />
+    </SurfacePanel>
   </div>
 </template>

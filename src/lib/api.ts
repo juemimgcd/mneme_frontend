@@ -3,27 +3,44 @@ import type {
   AuthPayload,
   AuthToken,
   ChatExchange,
+  CompanionAnswerResult,
+  DocumentDeleteResult,
   DocumentItem,
+  GraphEdge,
+  GraphNode,
+  GraphQueryOptions,
+  GraphResult,
+  GrowthAdviceResult,
   GrowthReport,
   IndexSubmission,
   KnowledgeBase,
   MemoryLibrary,
+  MemoryRebuildResult,
   PersonalProfile,
+  TaskActionResult,
+  TaskRecord,
   User,
 } from '@/lib/types';
 import {
   mockChatHistory,
   mockChatQuery,
+  mockDeleteDocument,
   mockCreateKnowledgeBase,
+  mockDocumentMemoryLibrary,
   mockDocuments,
   mockGrowth,
+  mockAdvice,
   mockIndexDocument,
   mockKnowledgeBases,
   mockLogin,
   mockMe,
   mockMemoryLibrary,
+  mockCompanionReply,
   mockProfile,
   mockRegister,
+  mockTaskStatus,
+  mockCancelTask,
+  mockRetryTask,
   mockUploadDocuments,
 } from '@/mocks/api';
 
@@ -49,6 +66,25 @@ function asNumber(value: unknown, fallback = 0): number {
     const parsed = Number(value);
     if (Number.isFinite(parsed)) {
       return parsed;
+    }
+  }
+  return fallback;
+}
+
+function asBoolean(value: unknown, fallback = false): boolean {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+  if (typeof value === 'number') {
+    return value !== 0;
+  }
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (['true', '1', 'yes', 'on'].includes(normalized)) {
+      return true;
+    }
+    if (['false', '0', 'no', 'off'].includes(normalized)) {
+      return false;
     }
   }
   return fallback;
@@ -144,6 +180,9 @@ function normalizeDocument(raw: unknown): DocumentItem {
   const source = isObject(raw) ? raw : {};
   const fileName = asString(firstPresent(source, ['file_name', 'name', 'filename', 'title']), '未命名文档');
   const fileType = asString(firstPresent(source, ['file_type']), fileName.split('.').pop() ?? '');
+  const rawPageCount = firstPresent(source, ['page_count', 'pages']);
+  const rawChunkCount = firstPresent(source, ['chunk_count', 'chunks', 'chunk_total']);
+  const rawFileSize = firstPresent(source, ['file_size']);
   return {
     id: asString(firstPresent(source, ['id', 'document_id']), createClientId('doc')),
     user_id: asNumber(firstPresent(source, ['user_id']), 0),
@@ -152,10 +191,13 @@ function normalizeDocument(raw: unknown): DocumentItem {
     knowledge_base_id: asString(firstPresent(source, ['knowledge_base_id', 'kb_id']), ''),
     file_type: fileType,
     status: normalizeDocumentStatus(firstPresent(source, ['status', 'index_status'])),
-    page_count: asNumber(firstPresent(source, ['page_count', 'pages'])),
-    chunk_count: asNumber(firstPresent(source, ['chunk_count', 'chunks', 'chunk_total'])),
+    page_count: rawPageCount == null ? null : asNumber(rawPageCount),
+    chunk_count: rawChunkCount == null ? null : asNumber(rawChunkCount),
     created_at: asString(firstPresent(source, ['created_at', 'uploaded_at']), new Date().toISOString()),
-    size_label: asString(firstPresent(source, ['size_label']), source.file_size ? `${Math.round(asNumber(source.file_size) / 1024)} KB` : '--'),
+    size_label: asString(
+      firstPresent(source, ['size_label']),
+      rawFileSize == null ? '--' : `${Math.max(1, Math.round(asNumber(rawFileSize) / 1024))} KB`,
+    ),
     task_id: asString(firstPresent(source, ['task_id']), ''),
   };
 }
@@ -279,13 +321,254 @@ function normalizeGrowthReport(raw: unknown): GrowthReport {
   };
 }
 
+function normalizeAdviceAction(raw: unknown, index: number) {
+  const source = isObject(raw) ? raw : {};
+  return {
+    area: asString(firstPresent(source, ['area', 'title', 'name']), `Area ${index + 1}`),
+    why_now: asString(firstPresent(source, ['why_now', 'reason', 'summary']), ''),
+    action: asString(firstPresent(source, ['action']), ''),
+    first_step: asString(firstPresent(source, ['first_step']), ''),
+    evidence_entries: asArray<string>(firstPresent(source, ['evidence_entries'], [])),
+  };
+}
+
+function normalizeGrowthAdvice(raw: unknown): GrowthAdviceResult {
+  const source = isObject(raw) ? raw : {};
+  const focusGoal = firstPresent(source, ['focus_goal'], null);
+  return {
+    knowledge_base_id: asString(firstPresent(source, ['knowledge_base_id']), ''),
+    focus_goal: focusGoal == null ? null : asString(focusGoal),
+    advice_summary: asString(firstPresent(source, ['advice_summary', 'summary']), ''),
+    current_priorities: asArray<string>(firstPresent(source, ['current_priorities'], [])),
+    action_suggestions: asArray(firstPresent(source, ['action_suggestions'], [])).map(normalizeAdviceAction),
+    avoid_list: asArray<string>(firstPresent(source, ['avoid_list'], [])),
+    one_week_plan: asArray<string>(firstPresent(source, ['one_week_plan'], [])),
+    reflection_questions: asArray<string>(firstPresent(source, ['reflection_questions'], [])),
+  };
+}
+
+function normalizeCompanionCitation(raw: unknown, index: number) {
+  const source = isObject(raw) ? raw : {};
+  return {
+    document_id: asString(firstPresent(source, ['document_id']), `doc_${index + 1}`),
+    chunk_id: asString(firstPresent(source, ['chunk_id']), `chunk_${index + 1}`),
+    page_no:
+      firstPresent(source, ['page_no']) !== undefined
+        ? asNumber(firstPresent(source, ['page_no']), 0)
+        : null,
+    text: asString(firstPresent(source, ['text', 'content']), ''),
+    reason: asString(firstPresent(source, ['reason']), ''),
+  };
+}
+
+function normalizeCompanionAnswer(raw: unknown): CompanionAnswerResult {
+  const source = isObject(raw) ? raw : {};
+  return {
+    knowledge_base_id: asString(firstPresent(source, ['knowledge_base_id']), ''),
+    question: asString(firstPresent(source, ['question']), ''),
+    direct_answer: asString(firstPresent(source, ['direct_answer', 'answer']), ''),
+    citations: asArray(firstPresent(source, ['citations'], [])).map(normalizeCompanionCitation),
+    profile_snapshot: asString(firstPresent(source, ['profile_snapshot']), ''),
+    growth_snapshot: asString(firstPresent(source, ['growth_snapshot']), ''),
+    next_step_hint: asString(firstPresent(source, ['next_step_hint']), ''),
+    follow_up_questions: asArray<string>(firstPresent(source, ['follow_up_questions'], [])),
+    companion_message: asString(firstPresent(source, ['companion_message']), ''),
+  };
+}
+
 function normalizeIndexSubmission(raw: unknown, documentId: string): IndexSubmission {
   const source = isObject(raw) ? raw : {};
   return {
     document_id: asString(firstPresent(source, ['document_id', 'id']), documentId),
+    knowledge_base_id: asString(firstPresent(source, ['knowledge_base_id']), ''),
     status: normalizeDocumentStatus(firstPresent(source, ['status'], 'queued')),
     task_id: asString(firstPresent(source, ['task_id'])),
     message: asString(firstPresent(source, ['message', 'detail'])),
+  };
+}
+
+function normalizeTaskRecord(raw: unknown): TaskRecord {
+  const source = isObject(raw) ? raw : {};
+  return {
+    id: asString(firstPresent(source, ['id', 'task_id']), ''),
+    task_type: asString(firstPresent(source, ['task_type']), ''),
+    target_id: asString(firstPresent(source, ['target_id', 'document_id']), ''),
+    status: asString(firstPresent(source, ['status']), ''),
+    error_message: (() => {
+      const value = firstPresent(source, ['error_message', 'message'], null);
+      return value == null ? null : asString(value);
+    })(),
+    created_at: asString(firstPresent(source, ['created_at']), new Date().toISOString()),
+    updated_at: asString(firstPresent(source, ['updated_at']), new Date().toISOString()),
+  };
+}
+
+function normalizeTaskAction(raw: unknown): TaskActionResult {
+  const source = isObject(raw) ? raw : {};
+  const documentId = firstPresent(source, ['document_id'], null);
+  return {
+    task_id: asString(firstPresent(source, ['task_id', 'id']), ''),
+    status: asString(firstPresent(source, ['status']), ''),
+    document_id: documentId == null ? null : asString(documentId),
+    message: asString(firstPresent(source, ['message', 'detail']), ''),
+  };
+}
+
+function normalizeDocumentDeleteResult(raw: unknown): DocumentDeleteResult {
+  const source = isObject(raw) ? raw : {};
+  return {
+    document_id: asString(firstPresent(source, ['document_id']), ''),
+    knowledge_base_id: asString(firstPresent(source, ['knowledge_base_id']), ''),
+    chunk_count: asNumber(firstPresent(source, ['chunk_count']), 0),
+    deleted_memory_entry_count: asNumber(firstPresent(source, ['deleted_memory_entry_count']), 0),
+    deleted_task_count: asNumber(firstPresent(source, ['deleted_task_count']), 0),
+    deleted_vector_count: asNumber(firstPresent(source, ['deleted_vector_count']), 0),
+  };
+}
+
+function normalizeGraphNode(raw: unknown): GraphNode {
+  const source = isObject(raw) ? raw : {};
+  const metadata = isObject(firstPresent(source, ['metadata'], {}))
+    ? (firstPresent(source, ['metadata'], {}) as Record<string, unknown>)
+    : {};
+
+  const nodeType = asString(firstPresent(source, ['node_type']), 'document');
+  const safeNodeType: GraphNode['node_type'] =
+    nodeType === 'user' ||
+    nodeType === 'knowledge_base' ||
+    nodeType === 'document' ||
+    nodeType === 'memory_entry'
+      ? nodeType
+      : 'document';
+
+  const parentId = firstPresent(source, ['parent_id'], null);
+
+  return {
+    id: asString(firstPresent(source, ['id']), createClientId('graph_node')),
+    entity_id: asString(firstPresent(source, ['entity_id']), ''),
+    node_type: safeNodeType,
+    label: asString(firstPresent(source, ['label']), safeNodeType),
+    parent_id: parentId == null ? null : asString(parentId),
+    depth: asNumber(firstPresent(source, ['depth']), 0),
+    metadata,
+  };
+}
+
+function normalizeGraphEdge(raw: unknown): GraphEdge {
+  const source = isObject(raw) ? raw : {};
+  const metadata = isObject(firstPresent(source, ['metadata'], {}))
+    ? (firstPresent(source, ['metadata'], {}) as Record<string, unknown>)
+    : {};
+
+  const edgeType = asString(firstPresent(source, ['edge_type']), 'contains');
+  const safeEdgeType: GraphEdge['edge_type'] =
+    edgeType === 'owns' ||
+    edgeType === 'contains' ||
+    edgeType === 'extracts' ||
+    edgeType === 'related'
+      ? edgeType
+      : 'contains';
+
+  return {
+    id: asString(firstPresent(source, ['id']), createClientId('graph_edge')),
+    source: asString(firstPresent(source, ['source']), ''),
+    target: asString(firstPresent(source, ['target']), ''),
+    edge_type: safeEdgeType,
+    metadata,
+  };
+}
+
+function normalizeGraph(raw: unknown): GraphResult {
+  const source = isObject(raw) ? raw : {};
+  const nodes = asArray(firstPresent(source, ['nodes'], [])).map(normalizeGraphNode);
+  const edges = asArray(firstPresent(source, ['edges'], [])).map(normalizeGraphEdge);
+  const scope = asString(firstPresent(source, ['scope']), 'knowledge_base');
+  const safeScope: GraphResult['scope'] =
+    scope === 'user' || scope === 'knowledge_base' || scope === 'document'
+      ? scope
+      : 'knowledge_base';
+
+  const nodeTypeCounts = isObject(firstPresent(source, ['node_type_counts'], {}))
+    ? (firstPresent(source, ['node_type_counts'], {}) as Record<string, number>)
+    : {};
+  const edgeTypeCounts = isObject(firstPresent(source, ['edge_type_counts'], {}))
+    ? (firstPresent(source, ['edge_type_counts'], {}) as Record<string, number>)
+    : {};
+
+  const minSharedMemoryCount = firstPresent(source, ['min_shared_memory_count'], null);
+  const minRelationshipScore = firstPresent(source, ['min_relationship_score'], null);
+  const maxRelatedEdges = firstPresent(source, ['max_related_edges'], null);
+
+  return {
+    scope: safeScope,
+    generated_at: asString(firstPresent(source, ['generated_at']), new Date().toISOString()),
+    root_node_id: asString(firstPresent(source, ['root_node_id']), nodes[0]?.id ?? ''),
+    include_memory: asBoolean(firstPresent(source, ['include_memory']), false),
+    include_relationships: asBoolean(firstPresent(source, ['include_relationships']), false),
+    relationship_strategy: (() => {
+      const value = firstPresent(source, ['relationship_strategy'], null);
+      return value == null ? null : asString(value);
+    })(),
+    relationship_scope: (() => {
+      const value = firstPresent(source, ['relationship_scope'], null);
+      return value == null ? null : asString(value);
+    })(),
+    min_shared_memory_count: minSharedMemoryCount == null ? null : asNumber(minSharedMemoryCount),
+    min_relationship_score: minRelationshipScore == null ? null : asNumber(minRelationshipScore),
+    max_related_edges: maxRelatedEdges == null ? null : asNumber(maxRelatedEdges),
+    nodes,
+    edges,
+    node_count: asNumber(firstPresent(source, ['node_count']), nodes.length),
+    edge_count: asNumber(firstPresent(source, ['edge_count']), edges.length),
+    node_type_counts: nodeTypeCounts,
+    edge_type_counts: edgeTypeCounts,
+  };
+}
+
+function buildGraphQuery(options: GraphQueryOptions = {}) {
+  const params = new URLSearchParams();
+
+  if (options.includeMemory) {
+    params.set('include_memory', 'true');
+  }
+  if (options.includeRelationships) {
+    params.set('include_relationships', 'true');
+  }
+  if (options.minSharedMemoryCount !== undefined) {
+    params.set('min_shared_memory_count', String(options.minSharedMemoryCount));
+  }
+  if (options.minRelationshipScore !== undefined) {
+    params.set('min_relationship_score', String(options.minRelationshipScore));
+  }
+  if (options.maxRelatedEdges !== undefined) {
+    params.set('max_related_edges', String(options.maxRelatedEdges));
+  }
+  if (options.relationshipScope) {
+    params.set('relationship_scope', options.relationshipScope);
+  }
+
+  const query = params.toString();
+  return query ? `?${query}` : '';
+}
+
+function createEmptyGraph(scope: GraphResult['scope']): GraphResult {
+  return {
+    scope,
+    generated_at: new Date().toISOString(),
+    root_node_id: '',
+    include_memory: false,
+    include_relationships: false,
+    relationship_strategy: null,
+    relationship_scope: null,
+    min_shared_memory_count: null,
+    min_relationship_score: null,
+    max_related_edges: null,
+    nodes: [],
+    edges: [],
+    node_count: 0,
+    edge_count: 0,
+    node_type_counts: {},
+    edge_type_counts: {},
   };
 }
 
@@ -433,15 +716,8 @@ export const api = {
           documentId,
         ),
       async () => {
-        const mockDocument = await mockIndexDocument(documentId);
-        return normalizeIndexSubmission(
-          {
-            document_id: mockDocument.id,
-            status: mockDocument.status,
-            task_id: mockDocument.task_id,
-          },
-          documentId,
-        );
+        const submission = await mockIndexDocument(documentId);
+        return normalizeIndexSubmission(submission, documentId);
       },
     );
   },
@@ -477,17 +753,43 @@ export const api = {
     }
     return Promise.resolve([]);
   },
-  memoryLibrary(token: string, knowledgeBaseId: string, userId: number) {
+  memoryLibrary(token: string, knowledgeBaseId: string) {
     return withFallback(
       async () =>
         normalizeMemoryLibrary(
-          await requestJson<unknown>(
-            `/memory/knowledge-bases/${knowledgeBaseId}/library?user_id=${userId}`,
-            {},
-            token,
-          ),
+          await requestJson<unknown>(`/memory/knowledge-bases/${knowledgeBaseId}/library`, {}, token),
         ),
       () => mockMemoryLibrary(),
+    );
+  },
+  documentMemoryLibrary(token: string, documentId: string) {
+    return withFallback(
+      async () =>
+        normalizeMemoryLibrary(
+          await requestJson<unknown>(`/memory/documents/${documentId}/library`, {}, token),
+        ),
+      () => mockDocumentMemoryLibrary(documentId),
+    );
+  },
+  memoryRebuild(token: string, knowledgeBaseId: string) {
+    return withFallback(
+      async () =>
+        await requestJson<MemoryRebuildResult>(
+          `/memory/knowledge-bases/${knowledgeBaseId}/rebuild`,
+          { method: 'POST' },
+          token,
+        ),
+      async () => {
+        const data = await mockMemoryLibrary();
+        return {
+          knowledge_base_id: knowledgeBaseId,
+          document_count: 0,
+          processed_document_count: 0,
+          chunk_count: 0,
+          deleted_entry_count: 0,
+          entry_count: data.timeline.length,
+        };
+      },
     );
   },
   profile(token: string, knowledgeBaseId: string) {
@@ -510,6 +812,114 @@ export const api = {
           ),
         ),
       () => mockGrowth(),
+    );
+  },
+  advice(token: string, knowledgeBaseId: string, focusGoal?: string) {
+    return withFallback(
+      async () =>
+        normalizeGrowthAdvice(
+          await requestJson<unknown>(
+            `/advice/knowledge-bases/${knowledgeBaseId}`,
+            {
+              method: 'POST',
+              body: JSON.stringify({
+                focus_goal: focusGoal?.trim() ? focusGoal.trim() : null,
+              }),
+            },
+            token,
+          ),
+        ),
+      () => mockAdvice(focusGoal),
+    );
+  },
+  companionReply(token: string, knowledgeBaseId: string, question: string, topK: number) {
+    return withFallback(
+      async () =>
+        normalizeCompanionAnswer(
+          await requestJson<unknown>(
+            `/companion/knowledge-bases/${knowledgeBaseId}/reply`,
+            {
+              method: 'POST',
+              body: JSON.stringify({
+                question,
+                top_k: topK,
+              }),
+            },
+            token,
+          ),
+        ),
+      () => mockCompanionReply({ question, topK }),
+    );
+  },
+  taskStatus(token: string, taskId: string) {
+    return withFallback(
+      async () =>
+        normalizeTaskRecord(
+          await requestJson<unknown>(`/tasks/${taskId}`, {}, token),
+        ),
+      () => mockTaskStatus(taskId),
+    );
+  },
+  cancelTask(token: string, taskId: string) {
+    return withFallback(
+      async () =>
+        normalizeTaskAction(
+          await requestJson<unknown>(`/tasks/${taskId}/cancel`, { method: 'POST' }, token),
+        ),
+      () => mockCancelTask(taskId),
+    );
+  },
+  retryTask(token: string, taskId: string) {
+    return withFallback(
+      async () =>
+        normalizeTaskAction(
+          await requestJson<unknown>(`/tasks/${taskId}/retry`, { method: 'POST' }, token),
+        ),
+      () => mockRetryTask(taskId),
+    );
+  },
+  deleteDocument(token: string, documentId: string) {
+    return withFallback(
+      async () =>
+        normalizeDocumentDeleteResult(
+          await requestJson<unknown>(`/kb/documents/${documentId}`, { method: 'DELETE' }, token),
+        ),
+      () => mockDeleteDocument(documentId),
+    );
+  },
+  userGraph(token: string, options: GraphQueryOptions = {}) {
+    return withFallback(
+      async () =>
+        normalizeGraph(
+          await requestJson<unknown>(`/graph${buildGraphQuery(options)}`, {}, token),
+        ),
+      async () => createEmptyGraph('user'),
+    );
+  },
+  knowledgeBaseGraph(token: string, knowledgeBaseId: string, options: GraphQueryOptions = {}) {
+    return withFallback(
+      async () =>
+        normalizeGraph(
+          await requestJson<unknown>(
+            `/graph/knowledge-bases/${knowledgeBaseId}${buildGraphQuery(options)}`,
+            {},
+            token,
+          ),
+        ),
+      async () => createEmptyGraph('knowledge_base'),
+    );
+  },
+  documentGraph(token: string, documentId: string, options: GraphQueryOptions = {}) {
+    return withFallback(
+      async () =>
+        normalizeGraph(
+          await requestJson<unknown>(
+            `/graph/documents/${documentId}${buildGraphQuery(options)}`,
+            {},
+            token,
+          ),
+        ),
+      async () => createEmptyGraph('document'),
     );
   },
 };

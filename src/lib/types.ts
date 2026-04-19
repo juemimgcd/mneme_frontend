@@ -53,8 +53,8 @@ export interface DocumentItem {
     | 'vector_upserting'
     | 'indexed'
     | 'failed';
-  page_count: number;
-  chunk_count: number;
+  page_count: number | null;
+  chunk_count: number | null;
   created_at: string;
   size_label: string;
   task_id?: string;
@@ -99,6 +99,15 @@ export interface MemoryLibrary {
   by_theme: MemoryThemeGroup[];
 }
 
+export interface MemoryRebuildResult {
+  knowledge_base_id: string;
+  document_count: number;
+  processed_document_count: number;
+  chunk_count: number;
+  deleted_entry_count: number;
+  entry_count: number;
+}
+
 export interface ProfileInsight {
   theme_name: string;
   reason: string;
@@ -139,11 +148,127 @@ export interface GrowthReport {
   next_actions: string[];
 }
 
+export interface AdviceActionSuggestion {
+  area: string;
+  why_now: string;
+  action: string;
+  first_step: string;
+  evidence_entries: string[];
+}
+
+export interface GrowthAdviceResult {
+  knowledge_base_id: string;
+  focus_goal: string | null;
+  advice_summary: string;
+  current_priorities: string[];
+  action_suggestions: AdviceActionSuggestion[];
+  avoid_list: string[];
+  one_week_plan: string[];
+  reflection_questions: string[];
+}
+
+export interface CompanionCitation {
+  document_id: string;
+  chunk_id: string;
+  page_no: number | null;
+  text: string;
+  reason: string;
+}
+
+export interface CompanionAnswerResult {
+  knowledge_base_id: string;
+  question: string;
+  direct_answer: string;
+  citations: CompanionCitation[];
+  profile_snapshot: string;
+  growth_snapshot: string;
+  next_step_hint: string;
+  follow_up_questions: string[];
+  companion_message: string;
+}
+
 export interface IndexSubmission {
   document_id: string;
+  knowledge_base_id?: string;
   status: DocumentItem['status'];
   task_id?: string;
   message?: string;
+}
+
+export interface TaskRecord {
+  id: string;
+  task_type: string;
+  target_id: string;
+  status: string;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TaskActionResult {
+  task_id: string;
+  status: string;
+  document_id: string | null;
+  message: string;
+}
+
+export interface DocumentDeleteResult {
+  document_id: string;
+  knowledge_base_id: string;
+  chunk_count: number;
+  deleted_memory_entry_count: number;
+  deleted_task_count: number;
+  deleted_vector_count: number;
+}
+
+export type GraphNodeType = 'user' | 'knowledge_base' | 'document' | 'memory_entry';
+
+export type GraphEdgeType = 'owns' | 'contains' | 'extracts' | 'related';
+
+export interface GraphNode {
+  id: string;
+  entity_id: string;
+  node_type: GraphNodeType;
+  label: string;
+  parent_id: string | null;
+  depth: number;
+  metadata: Record<string, unknown>;
+}
+
+export interface GraphEdge {
+  id: string;
+  source: string;
+  target: string;
+  edge_type: GraphEdgeType;
+  metadata: Record<string, unknown>;
+}
+
+export interface GraphResult {
+  scope: 'user' | 'knowledge_base' | 'document';
+  generated_at: string;
+  root_node_id: string;
+  include_memory: boolean;
+  include_relationships: boolean;
+  relationship_strategy: string | null;
+  relationship_scope: string | null;
+  min_shared_memory_count: number | null;
+  min_relationship_score: number | null;
+  max_related_edges: number | null;
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  node_count: number;
+  edge_count: number;
+  node_type_counts: Record<string, number>;
+  edge_type_counts: Record<string, number>;
+}
+
+export interface GraphQueryOptions {
+  includeMemory?: boolean;
+  includeRelationships?: boolean;
+  minSharedMemoryCount?: number;
+  minRelationshipScore?: number;
+  maxRelatedEdges?: number;
+  relationshipScope?: 'knowledge_base' | 'user';
 }
 
 export interface DashboardMetric {
@@ -158,5 +283,5 @@ export interface ActivityItem {
   title: string;
   detail: string;
   timestamp: string;
-  tone: 'teal' | 'amber' | 'indigo';
+  tone: 'teal' | 'amber' | 'indigo' | 'coral';
 }

@@ -7,6 +7,7 @@ import WorkspaceDashboardView from '@/views/WorkspaceDashboardView.vue';
 import KnowledgeBasesView from '@/views/KnowledgeBasesView.vue';
 import DocumentsView from '@/views/DocumentsView.vue';
 import ChatView from '@/views/ChatView.vue';
+import GraphView from '@/views/GraphView.vue';
 import MemoryView from '@/views/MemoryView.vue';
 import InsightsView from '@/views/InsightsView.vue';
 import AppShell from '@/components/app/AppShell.vue';
@@ -53,6 +54,11 @@ const router = createRouter({
           path: 'chat',
           name: 'chat',
           component: ChatView,
+        },
+        {
+          path: 'graph',
+          name: 'graph',
+          component: GraphView,
         },
         {
           path: 'memory',

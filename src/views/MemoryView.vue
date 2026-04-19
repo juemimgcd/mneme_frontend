@@ -1,37 +1,81 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
+import { computed } from 'vue';
 import EmptyState from '@/components/common/EmptyState.vue';
+import SectionHeader from '@/components/common/SectionHeader.vue';
+import SurfacePanel from '@/components/common/SurfacePanel.vue';
 import TimelineList from '@/components/memory/TimelineList.vue';
+import { useSessionStore } from '@/stores/session';
 import { useWorkspaceStore } from '@/stores/workspace';
 
+const session = useSessionStore();
 const workspace = useWorkspaceStore();
+const totalEntries = computed(() => workspace.memoryLibrary?.timeline.length ?? 0);
+const themeCount = computed(() => workspace.memoryLibrary?.by_theme.length ?? 0);
+const typeCount = computed(() => Object.keys(workspace.memoryLibrary?.by_type ?? {}).length);
+
+async function rebuildMemory() {
+  if (!session.token) {
+    return;
+  }
+  await workspace.rebuildKnowledgeMemory(session.token);
+}
 </script>
 
 <template>
-  <div class="flex flex-col gap-10 max-w-7xl mx-auto pb-8">
-    <div class="flex flex-col gap-3">
-      <div class="flex items-center gap-2">
-        <div class="w-2 h-2 rounded-full bg-orange-400 shadow-[0_0_8px_rgba(251,146,60,0.8)]"></div>
-        <span class="text-xs font-semibold tracking-widest text-orange-400 uppercase">Memory Extraction</span>
-      </div>
-      <h2 class="text-3xl font-light text-slate-100 mt-2">不仅检索，还从对话中提取新事实</h2>
-      <p class="text-slate-400 text-sm max-w-2xl leading-relaxed">
-        Graph/Memory 模型将问答过程中产生的新的有效结论，按时间线沉淀入库，建立持续生长的护城河。
-      </p>
-    </div>
+  <div class="view-stack">
+    <SectionHeader
+      eyebrow="Memory"
+      title="Memory layer."
+      description="Read extracted entries, clusters, and rebuild state."
+    />
 
-    <div class="rounded-2xl border border-white/5 bg-slate-900/50 backdrop-blur-md p-6">
-      <div class="pb-4 border-b border-white/5 mb-6">
-        <h3 class="text-xs font-semibold tracking-widest text-cyan-400 uppercase mb-1">Structured Memory</h3>
-        <h4 class="text-lg font-medium text-slate-200">知识库记忆视图</h4>
-      </div>
-      
-      <TimelineList v-if="workspace.memoryLibrary" :library="workspace.memoryLibrary" />
-      <EmptyState
-        v-else
-        class="my-10"
-        title="记忆库暂为空"
-        description="等文档索引和记忆提取接通后，这里会显示主题化结果。"
-      />
-    </div>
+    <section class="memory-overview">
+      <SurfacePanel eyebrow="Rebuild" title="Memory extraction">
+        <div class="memory-overview__hero">
+          <article class="context-card workspace-overview__feature">
+            <header class="knowledge-card__header">
+              <strong>Current layer</strong>
+              <span class="inline-badge">{{ totalEntries }} entries</span>
+            </header>
+            <p>
+              {{ themeCount }} themes · {{ typeCount }} types
+            </p>
+          </article>
+
+          <div class="memory-overview__rail">
+            <button
+              class="primary-button"
+              type="button"
+              :disabled="workspace.memoryRebuildLoading"
+              @click="rebuildMemory"
+            >
+              {{ workspace.memoryRebuildLoading ? 'Rebuilding...' : 'Rebuild Memory' }}
+            </button>
+
+            <article v-if="workspace.lastMemoryRebuild" class="growth-card">
+              <header>
+                <strong>Latest rebuild</strong>
+                <span class="growth-card__trend" data-trend="up">
+                  {{ workspace.lastMemoryRebuild.entry_count }}
+                </span>
+              </header>
+              <p>
+                {{ workspace.lastMemoryRebuild.processed_document_count }} docs processed ·
+                {{ workspace.lastMemoryRebuild.deleted_entry_count }} replaced
+              </p>
+            </article>
+          </div>
+        </div>
+      </SurfacePanel>
+
+      <SurfacePanel eyebrow="Timeline" title="Memory view">
+        <TimelineList v-if="workspace.memoryLibrary" :library="workspace.memoryLibrary" />
+        <EmptyState
+          v-else
+          title="Memory is empty"
+          description="Once indexing and extraction are available, this view will show a structured timeline."
+        />
+      </SurfacePanel>
+    </section>
   </div>
 </template>

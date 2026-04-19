@@ -28,10 +28,10 @@ function submit() {
       <AppIcon name="upload" />
     </div>
     <div>
-      <h3>上传待索引材料</h3>
-      <p>支持 `.pdf`、`.txt`、`.md`。上传后可手动触发索引，适合迭代式整理个人记忆库。</p>
+      <h3>Upload source material</h3>
+      <p>Supports `.pdf`, `.txt`, and `.md`. Files enter the ingest queue before you trigger indexing.</p>
     </div>
-    <input aria-label="上传文档" type="file" multiple @change="handleFiles" />
-    <button class="primary-button" type="button" @click="submit">加入索引队列</button>
+    <input aria-label="Upload documents" type="file" multiple @change="handleFiles" />
+    <button class="primary-button" type="button" @click="submit">Add to queue</button>
   </div>
 </template>

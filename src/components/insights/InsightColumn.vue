@@ -11,7 +11,7 @@ defineProps<{
   <div class="insight-columns">
     <section class="insight-stack">
       <article v-if="profile" class="insight-card">
-        <strong>画像摘要</strong>
+        <strong>Profile Summary</strong>
         <p>{{ profile.profile_summary }}</p>
         <div class="chip-wrap">
           <span v-for="tag in profile.growth_focus" :key="tag" class="memory-chip">{{ tag }}</span>
@@ -43,7 +43,7 @@ defineProps<{
     <section class="growth-stack">
       <article v-if="growth" class="growth-card">
         <header>
-          <strong>阶段总结</strong>
+          <strong>Stage Summary</strong>
           <span class="growth-card__trend" data-trend="up">{{ growth.analysis_window }}</span>
         </header>
         <p>{{ growth.stage_summary }}</p>
@@ -65,8 +65,8 @@ defineProps<{
 
       <article v-if="growth?.next_actions.length" class="growth-card">
         <header>
-          <strong>下一步建议</strong>
-          <span class="growth-card__trend" data-trend="steady">{{ growth.next_actions.length }} 条</span>
+          <strong>Next Actions</strong>
+          <span class="growth-card__trend" data-trend="steady">{{ growth.next_actions.length }} items</span>
         </header>
         <p>{{ growth.next_actions.join(' / ') }}</p>
       </article>

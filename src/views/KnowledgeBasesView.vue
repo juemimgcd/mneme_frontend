@@ -1,5 +1,7 @@
-﻿<script setup lang="ts">
-import { reactive } from 'vue';
+<script setup lang="ts">
+import { computed, reactive } from 'vue';
+import SectionHeader from '@/components/common/SectionHeader.vue';
+import SurfacePanel from '@/components/common/SurfacePanel.vue';
 import KnowledgeBaseGrid from '@/components/knowledge/KnowledgeBaseGrid.vue';
 import { useSessionStore } from '@/stores/session';
 import { useWorkspaceStore } from '@/stores/workspace';
@@ -10,77 +12,129 @@ const form = reactive({
   name: '',
   description: '',
 });
+const runningCount = computed(
+  () =>
+    workspace.filteredDocuments.filter((item) =>
+      ['queued', 'indexing', 'parsing', 'chunking', 'embedding', 'vector_upserting'].includes(item.status),
+    ).length,
+);
+const latestTask = computed(() => {
+  const taskIds = workspace.filteredDocuments
+    .map((item) => item.task_id)
+    .filter((item): item is string => Boolean(item));
+
+  return taskIds
+    .map((id) => workspace.taskRecords[id])
+    .filter(Boolean)
+    .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())[0] ?? null;
+});
+const focusItems = computed(() =>
+  workspace.profile?.growth_focus.slice(0, 4) ??
+  workspace.growth?.recent_focus.slice(0, 4) ??
+  [],
+);
 
 async function createKnowledgeBase() {
-  if (!session.user || !session.token) return;
+  if (!session.user || !session.token) {
+    return;
+  }
   await workspace.createKnowledgeBase(form, session.user.id, session.token);
   form.name = '';
   form.description = '';
 }
 
 async function selectKnowledgeBase(id: string) {
-  if (!session.token) return;
+  if (!session.token) {
+    return;
+  }
   await workspace.selectKnowledgeBase(id, session.token);
 }
 </script>
 
 <template>
-  <div class="flex flex-col gap-10 max-w-7xl mx-auto pb-10">
-    <div class="flex flex-col gap-3">
-      <div class="flex items-center gap-2">
-        <div class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]"></div>
-        <span class="text-xs font-semibold tracking-widest text-emerald-400 uppercase">Knowledge Bases</span>
-      </div>
-      <h2 class="text-3xl font-light text-slate-100 mt-2">为不同的人生主题建立独立上下文</h2>
-      <p class="text-slate-400 text-sm max-w-2xl leading-relaxed">
-        前端将知识库作为所有索引、问答和分析动作的顶层上下文，实现多知识库隔离。
-      </p>
-    </div>
+  <div class="view-stack">
+    <SectionHeader
+      eyebrow="Collections"
+      title="Collection control."
+      description="Switch contexts, create a new collection, and inspect the active collection state."
+    />
 
-    <!-- Create PB Form -->
-    <div class="rounded-2xl border border-white/5 bg-slate-900/50 backdrop-blur-md p-6">
-      <div class="pb-4 border-b border-white/5 mb-6">
-        <h3 class="text-xs font-semibold tracking-widest text-cyan-400 uppercase mb-1">Create</h3>
-        <h4 class="text-lg font-medium text-slate-200">新建知识库</h4>
-      </div>
-      
-      <form class="flex flex-col md:flex-row gap-4 items-end" @submit.prevent="createKnowledgeBase">
-        <div class="flex-1 flex flex-col gap-2 w-full">
-          <label class="text-xs font-semibold text-slate-400 uppercase tracking-widest">名称</label>
-          <input 
-            v-model="form.name" 
-            maxlength="24" 
-            required 
-            class="px-4 py-3 rounded-xl bg-black/40 border border-white/10 text-slate-200 outline-none focus:border-emerald-500/50 focus:bg-white/5 transition-all text-sm w-full"
-            placeholder="知识库名称"
-          />
-        </div>
-        <div class="flex-[2] flex flex-col gap-2 w-full">
-          <label class="text-xs font-semibold text-slate-400 uppercase tracking-widest">说明</label>
-          <input 
-            v-model="form.description" 
-            maxlength="120" 
-            required 
-            class="px-4 py-3 rounded-xl bg-black/40 border border-white/10 text-slate-200 outline-none focus:border-emerald-500/50 focus:bg-white/5 transition-all text-sm w-full"
-            placeholder="简短描述内容"
-          />
-        </div>
-        <button 
-          type="submit"
-          class="w-full md:w-auto px-8 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-medium hover:shadow-[0_0_20px_rgba(52,211,153,0.4)] transition-all hover:scale-[1.02] active:scale-95 text-sm"
-        >
-          创建
-        </button>
-      </form>
-    </div>
+    <section class="collections-layout">
+      <SurfacePanel eyebrow="Create" title="New collection">
+        <form class="inline-form" @submit.prevent="createKnowledgeBase">
+          <label>
+            <span>Name</span>
+            <input v-model="form.name" maxlength="24" required />
+          </label>
+          <label>
+            <span>Description</span>
+            <input v-model="form.description" maxlength="120" required />
+          </label>
+          <button class="primary-button" type="submit">Create</button>
+        </form>
+      </SurfacePanel>
 
-    <!-- Grid -->
-    <div class="bg-white/5 border border-white/5 rounded-2xl p-6 backdrop-blur-md">
+      <SurfacePanel eyebrow="Active" title="Current collection">
+        <div v-if="workspace.currentKnowledgeBase" class="collections-panel">
+          <article class="context-card">
+            <header class="knowledge-card__header">
+              <strong>{{ workspace.currentKnowledgeBase.name }}</strong>
+              <span class="status-pill" :data-status="workspace.currentKnowledgeBase.status">
+                {{ workspace.currentKnowledgeBase.status }}
+              </span>
+            </header>
+            <p>{{ workspace.currentKnowledgeBase.description }}</p>
+            <dl class="context-card__meta">
+              <div>
+                <dt>Docs</dt>
+                <dd>{{ workspace.currentKnowledgeBase.document_count }}</dd>
+              </div>
+              <div>
+                <dt>Memory</dt>
+                <dd>{{ workspace.memoryLibrary?.timeline.length ?? workspace.currentKnowledgeBase.memory_count }}</dd>
+              </div>
+            </dl>
+          </article>
+
+          <article class="growth-card">
+            <header>
+              <strong>Queue</strong>
+              <span class="growth-card__trend" :data-trend="runningCount ? 'steady' : 'up'">
+                {{ runningCount }}
+              </span>
+            </header>
+            <p>{{ runningCount ? 'Tasks are still running for this collection.' : 'No active ingest tasks.' }}</p>
+          </article>
+
+          <article v-if="latestTask" class="growth-card">
+            <header>
+              <strong>Latest task</strong>
+              <span class="growth-card__trend" data-trend="steady">{{ latestTask.status }}</span>
+            </header>
+            <p>{{ new Date(latestTask.updated_at).toLocaleString('en-US') }}</p>
+          </article>
+
+          <article v-if="workspace.profile" class="context-card">
+            <strong>Profile</strong>
+            <p>{{ workspace.profile.profile_summary }}</p>
+          </article>
+
+          <article v-if="focusItems.length" class="context-card">
+            <strong>Focus</strong>
+            <div class="chip-wrap">
+              <span v-for="item in focusItems" :key="item" class="memory-chip">{{ item }}</span>
+            </div>
+          </article>
+        </div>
+      </SurfacePanel>
+    </section>
+
+    <SurfacePanel eyebrow="All Collections" title="Library">
       <KnowledgeBaseGrid
         :active-id="workspace.activeKnowledgeBaseId"
         :items="workspace.knowledgeBases"
         @select="selectKnowledgeBase"
       />
-    </div>
+    </SurfacePanel>
   </div>
 </template>

@@ -1,32 +1,105 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
+import { ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import EmptyState from '@/components/common/EmptyState.vue';
 import InsightColumn from '@/components/insights/InsightColumn.vue';
+import SectionHeader from '@/components/common/SectionHeader.vue';
+import SurfacePanel from '@/components/common/SurfacePanel.vue';
+import { mergeQuery, readQueryString } from '@/lib/route-query';
+import { useSessionStore } from '@/stores/session';
 import { useWorkspaceStore } from '@/stores/workspace';
 
+const route = useRoute();
+const router = useRouter();
+const session = useSessionStore();
 const workspace = useWorkspaceStore();
+const focusGoal = ref('');
+
+async function refreshSignals() {
+  if (!session.token) {
+    return;
+  }
+  await workspace.refreshKnowledgeOutputs(session.token);
+}
+
+async function rebuildMemory() {
+  if (!session.token) {
+    return;
+  }
+  await workspace.rebuildKnowledgeMemory(session.token);
+}
+
+async function generateAdvice() {
+  if (!session.token) {
+    return;
+  }
+  await workspace.generateAdvice(session.token, focusGoal.value);
+}
+
+watch(
+  () => route.query,
+  (query) => {
+    focusGoal.value = readQueryString(query, 'focus');
+  },
+  { immediate: true, deep: true },
+);
+
+watch(
+  focusGoal,
+  async (value) => {
+    const nextQuery = mergeQuery(route.query, {
+      focus: value || undefined,
+    });
+
+    if (JSON.stringify(nextQuery) === JSON.stringify(route.query)) {
+      return;
+    }
+
+    await router.replace({
+      path: route.path,
+      query: nextQuery,
+    });
+  },
+);
 </script>
 
 <template>
-  <div class="flex flex-col h-full gap-8 max-w-7xl mx-auto pb-8">
-    <div class="flex flex-col gap-3 shrink-0">
-      <div class="flex items-center gap-2">
-        <div class="w-2 h-2 rounded-full bg-rose-400 shadow-[0_0_8px_rgba(251,113,133,0.8)]"></div>
-        <span class="text-xs font-semibold tracking-widest text-rose-400 uppercase">Profile & Growth Insights</span>
-      </div>
-      <h2 class="text-3xl font-light text-slate-100 mt-2">把画像和成长分析收敛成可读、可比较的洞察面板</h2>
-      <p class="text-slate-400 text-sm max-w-2xl leading-relaxed">
-        这部分针对 Mneme 的增强能力做了独立的信息层，让未来 advice / companion 也能顺滑挂进来。
-      </p>
-    </div>
+  <div class="view-stack">
+    <SectionHeader
+      eyebrow="Signals"
+      title="Signals and next moves."
+      description="Read the stable layer, then generate a tighter action plan."
+    />
 
-    <!-- Insights Canvas -->
-    <div class="flex-1 flex flex-col rounded-2xl bg-white/5 border border-white/5 backdrop-blur-md overflow-hidden">
-      <div class="p-6 border-b border-white/5 bg-slate-950/40">
-        <h3 class="text-sm font-semibold tracking-widest text-cyan-400 uppercase mb-1">Insight Deck</h3>
-        <h4 class="text-lg font-medium text-slate-200">当前洞察</h4>
+    <SurfacePanel eyebrow="Refresh" title="Signal controls">
+      <div class="chat-composer__footer">
+        <button
+          class="ghost-button"
+          type="button"
+          :disabled="workspace.knowledgeRefreshLoading"
+          @click="refreshSignals"
+        >
+          {{ workspace.knowledgeRefreshLoading ? 'Refreshing...' : 'Refresh Signals' }}
+        </button>
+
+        <button
+          class="primary-button"
+          type="button"
+          :disabled="workspace.memoryRebuildLoading"
+          @click="rebuildMemory"
+        >
+          {{ workspace.memoryRebuildLoading ? 'Rebuilding...' : 'Rebuild Memory First' }}
+        </button>
+
+        <p v-if="workspace.lastMemoryRebuild" class="section-header__description">
+          Latest rebuild wrote {{ workspace.lastMemoryRebuild.entry_count }} entries across
+          {{ workspace.lastMemoryRebuild.processed_document_count }} docs.
+        </p>
       </div>
-      
-      <div class="flex-1 p-6 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
+    </SurfacePanel>
+
+    <div class="retrieve-layout">
+      <SurfacePanel eyebrow="Signal Deck" title="Current analysis">
         <InsightColumn
           v-if="workspace.profile || workspace.growth"
           :growth="workspace.growth"
@@ -34,10 +107,92 @@ const workspace = useWorkspaceStore();
         />
         <EmptyState
           v-else
-          title="还没有洞察结果"
-          description="等画像和成长分析接口输出稳定后，这里会展示最新分析。"
+          title="No signals yet"
+          description="Once profile and growth analysis are stable, the latest synthesis will appear here."
         />
-      </div>
+      </SurfacePanel>
+
+      <SurfacePanel eyebrow="Advice" title="Action layer">
+        <form class="chat-composer" @submit.prevent="generateAdvice">
+          <label>
+            <span>Focus Goal</span>
+            <input
+              v-model="focusGoal"
+              type="text"
+              placeholder="Optional. Example: tighten my RAG memory loop"
+            />
+          </label>
+
+          <div class="chat-composer__footer">
+            <button class="primary-button" type="submit" :disabled="workspace.adviceLoading">
+              {{ workspace.adviceLoading ? 'Generating...' : 'Generate Advice' }}
+            </button>
+          </div>
+        </form>
+
+        <div v-if="workspace.advice" class="advice-board">
+          <div class="advice-board__main">
+            <article class="growth-card growth-card--feature">
+              <header>
+                <strong>Summary</strong>
+                <span class="growth-card__trend" data-trend="up">Live</span>
+              </header>
+              <p>{{ workspace.advice.advice_summary }}</p>
+            </article>
+
+            <article
+              v-for="item in workspace.advice.action_suggestions"
+              :key="`${item.area}-${item.action}`"
+              class="growth-card"
+            >
+              <header>
+                <strong>{{ item.area }}</strong>
+                <span class="growth-card__trend" data-trend="steady">Action</span>
+              </header>
+              <p>{{ item.action }}</p>
+              <p><strong>Why now:</strong> {{ item.why_now }}</p>
+              <p><strong>First step:</strong> {{ item.first_step }}</p>
+              <div v-if="item.evidence_entries.length" class="chip-wrap">
+                <span v-for="entry in item.evidence_entries" :key="entry" class="memory-chip">
+                  {{ entry }}
+                </span>
+              </div>
+            </article>
+          </div>
+
+          <aside class="advice-board__rail">
+            <article v-if="workspace.advice.current_priorities.length" class="context-card">
+              <strong>Priorities</strong>
+              <div class="chip-wrap">
+                <span v-for="item in workspace.advice.current_priorities" :key="item" class="memory-chip">
+                  {{ item }}
+                </span>
+              </div>
+            </article>
+
+            <article v-if="workspace.advice.one_week_plan.length" class="context-card">
+              <strong>One Week</strong>
+              <p>{{ workspace.advice.one_week_plan.join(' / ') }}</p>
+            </article>
+
+            <article v-if="workspace.advice.avoid_list.length" class="context-card">
+              <strong>Avoid</strong>
+              <p>{{ workspace.advice.avoid_list.join(' / ') }}</p>
+            </article>
+
+            <article v-if="workspace.advice.reflection_questions.length" class="context-card">
+              <strong>Reflect</strong>
+              <p>{{ workspace.advice.reflection_questions.join(' / ') }}</p>
+            </article>
+          </aside>
+        </div>
+
+        <EmptyState
+          v-else
+          title="No advice yet"
+          description="Generate advice after signals are available."
+        />
+      </SurfacePanel>
     </div>
   </div>
 </template>

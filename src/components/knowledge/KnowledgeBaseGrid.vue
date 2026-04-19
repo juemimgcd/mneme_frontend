@@ -28,12 +28,20 @@ const emit = defineEmits<{
       <p>{{ item.description }}</p>
       <dl class="knowledge-card__meta">
         <div>
-          <dt>文档</dt>
+          <dt>Docs</dt>
           <dd>{{ item.document_count }}</dd>
         </div>
         <div>
-          <dt>记忆条目</dt>
+          <dt>Memory</dt>
           <dd>{{ item.memory_count }}</dd>
+        </div>
+        <div>
+          <dt>Updated</dt>
+          <dd>{{ new Date(item.updated_at).toLocaleDateString('en-US') }}</dd>
+        </div>
+        <div>
+          <dt>Mode</dt>
+          <dd>{{ item.is_default ? 'Default' : 'Custom' }}</dd>
         </div>
       </dl>
     </button>

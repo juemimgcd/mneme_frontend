@@ -3,12 +3,15 @@ import type {
   ActivityItem,
   AuthToken,
   ChatExchange,
+  CompanionAnswerResult,
   DashboardMetric,
   DocumentItem,
+  GrowthAdviceResult,
   GrowthReport,
   KnowledgeBase,
   MemoryLibrary,
   PersonalProfile,
+  TaskRecord,
   User,
 } from '@/lib/types';
 
@@ -103,6 +106,7 @@ export const documents: DocumentItem[] = [
     chunk_count: 0,
     created_at: '2026-04-18T10:12:00Z',
     size_label: '160 KB',
+    task_id: 'task_doc_product_interviews',
   },
 ];
 
@@ -224,29 +228,110 @@ export const growthMetrics: GrowthReport = {
   next_actions: ['优先清理待索引文档', '继续围绕固定主题做周复盘'],
 };
 
+export const growthAdvice: GrowthAdviceResult = {
+  knowledge_base_id: 'kb_life_writing',
+  focus_goal: 'Turn recent notes into reusable RAG memory',
+  advice_summary:
+    'The highest-leverage move is tightening one repeatable loop: index, rebuild memory, review the strongest cluster, and publish one compact output.',
+  current_priorities: [
+    'Stabilize rebuild cadence',
+    'Consolidate one theme cluster',
+    'Turn notes into reusable outputs',
+  ],
+  action_suggestions: [
+    {
+      area: 'Memory hygiene',
+      why_now: 'Recurring themes already exist, but they are still split across unevenly processed material.',
+      action: 'Run one clean rebuild after each indexing batch and review the newest entries immediately.',
+      first_step: 'Finish a rebuild for the active collection and verify the latest entries in memory.',
+      evidence_entries: ['从记录转向分析', '知识库即作品集'],
+    },
+    {
+      area: 'Output loop',
+      why_now: 'Your profile is strongest when raw notes get compressed into a concise narrative artifact.',
+      action: 'Ship one short weekly synthesis from the strongest memory cluster.',
+      first_step: 'Pick one theme and write a 300-word note with citations.',
+      evidence_entries: ['重建晨间节律', '知识库即作品集'],
+    },
+  ],
+  avoid_list: [
+    'Adding large uncategorized files without a rebuild pass',
+    'Switching themes before one weekly loop is complete',
+  ],
+  one_week_plan: [
+    'Day 1: refresh outputs',
+    'Day 3: review the top memory cluster',
+    'Day 5: draft one synthesis note',
+    'Day 7: compare the updated profile and growth signals',
+  ],
+  reflection_questions: [
+    'Which theme is becoming more precise, not just more frequent?',
+    'What output would most improve future retrieval quality?',
+  ],
+};
+
+export const companionAnswer: CompanionAnswerResult = {
+  knowledge_base_id: 'kb_life_writing',
+  question: 'What should I focus on next if I want better memory quality?',
+  direct_answer:
+    'Focus on one disciplined loop: finish indexing, rebuild memory, then turn the strongest cluster into a compact written output.',
+  citations: [
+    {
+      document_id: 'doc_annual_review_2025',
+      chunk_id: 'chunk_annual_17',
+      page_no: 6,
+      text: '我不再把效率理解成多做，而是把它理解成能否长期维持写作、运动、复盘这三个底盘动作。',
+      reason: 'This supports optimizing for a stable loop instead of adding more material.',
+    },
+  ],
+  profile_snapshot:
+    'The profile layer describes a narrative learner who improves by turning raw material into structured reflection.',
+  growth_snapshot:
+    'Recent growth indicates a shift from collecting material toward extracting stable themes and reusable memory.',
+  next_step_hint: 'Run one memory rebuild after the latest documents finish indexing.',
+  follow_up_questions: [
+    'Which theme should become the next output?',
+    'What documents are still weakening retrieval quality?',
+  ],
+  companion_message:
+    'You do not need more input right now. You need one tighter cycle that converts existing material into cleaner memory.',
+};
+
+export const taskRecords: TaskRecord[] = [
+  {
+    id: 'task_doc_product_interviews',
+    task_type: 'document_index',
+    target_id: 'doc_product_interviews',
+    status: 'indexing',
+    error_message: null,
+    created_at: '2026-04-18T10:13:00Z',
+    updated_at: '2026-04-18T10:15:00Z',
+  },
+];
+
 export const dashboardMetrics: DashboardMetric[] = [
   {
-    label: '知识库',
+    label: 'Collections',
     value: '3',
-    change: '+1 本周',
+    change: '+1 this week',
     tone: 'teal',
   },
   {
-    label: '已索引文档',
+    label: 'Indexed Docs',
     value: '44',
-    change: '86 条记忆',
+    change: '86 memory items',
     tone: 'indigo',
   },
   {
-    label: '最近 7 天提问',
+    label: '7-Day Queries',
     value: '19',
-    change: '检索成功率 94%',
+    change: '94% retrieval hit rate',
     tone: 'amber',
   },
   {
-    label: '待处理索引',
+    label: 'Pending Index',
     value: '1',
-    change: '建议尽快完成',
+    change: 'needs attention',
     tone: 'coral',
   },
 ];
@@ -254,23 +339,23 @@ export const dashboardMetrics: DashboardMetric[] = [
 export const activityFeed: ActivityItem[] = [
   {
     id: 'activity_1',
-    title: '年度复盘完成索引',
-    detail: '新增 64 个 chunk，可用于问答与主题分析。',
-    timestamp: '今天 12:20',
+    title: 'Annual review finished indexing',
+    detail: 'Added 64 chunks and made them available for retrieval and theme analysis.',
+    timestamp: 'Today 12:20',
     tone: 'teal',
   },
   {
     id: 'activity_2',
-    title: '产品研究库开始新一轮索引',
-    detail: '系统已接收《用户访谈第 4 轮》并进入异步处理。',
-    timestamp: '今天 10:12',
+    title: 'Product research started a new index run',
+    detail: 'The system accepted round four of user interviews and moved it into async processing.',
+    timestamp: 'Today 10:12',
     tone: 'amber',
   },
   {
     id: 'activity_3',
-    title: '画像报告更新',
-    detail: '从最近两周材料中提炼出“叙事型学习者”标签。',
-    timestamp: '昨天 21:40',
+    title: 'Profile report refreshed',
+    detail: 'Recent material strengthened the "narrative learner" tag.',
+    timestamp: 'Yesterday 21:40',
     tone: 'indigo',
   },
 ];
