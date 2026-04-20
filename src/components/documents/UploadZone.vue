@@ -28,10 +28,10 @@ function submit() {
       <AppIcon name="upload" />
     </div>
     <div>
-      <h3>Upload source material</h3>
-      <p>Supports `.pdf`, `.txt`, and `.md`. Files enter the ingest queue before you trigger indexing.</p>
+      <h3>Add reading material</h3>
+      <p>Supports `.pdf`, `.txt`, and `.md`. New files are queued, processed, and then added to your notebook.</p>
     </div>
     <input aria-label="Upload documents" type="file" multiple @change="handleFiles" />
-    <button class="primary-button" type="button" @click="submit">Add to queue</button>
+    <button class="primary-button" type="button" @click="submit">Add to library</button>
   </div>
 </template>
