@@ -128,10 +128,10 @@ function handleKeydown(event: KeyboardEvent) {
 <style scoped>
 .chat-dock {
   display: grid;
-  gap: 0.85rem;
-  padding: 1rem;
+  gap: var(--space-3);
+  padding: var(--space-4);
   border: 1px solid var(--app-line);
-  border-radius: 22px;
+  border-radius: var(--radius-xl);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 62%),
     color-mix(in srgb, var(--app-panel) 90%, transparent);
@@ -140,13 +140,13 @@ function handleKeydown(event: KeyboardEvent) {
 
 .chat-dock__body {
   display: grid;
-  gap: 0.75rem;
+  gap: var(--space-2);
 }
 
 .chat-dock__lead {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.55rem;
+  gap: var(--space-2);
 }
 
 .chat-dock__badge {
@@ -159,7 +159,7 @@ function handleKeydown(event: KeyboardEvent) {
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.05);
   color: var(--app-ink-soft);
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--app-font-mono);
   font-size: 0.72rem;
 }
 
@@ -171,9 +171,9 @@ function handleKeydown(event: KeyboardEvent) {
   border: 0;
   background: transparent;
   color: var(--app-ink);
-  font-family: 'Newsreader', 'Fraunces', serif;
-  font-size: 1.08rem;
-  line-height: 1.55;
+  font-family: var(--app-font-body);
+  font-size: var(--text-md);
+  line-height: var(--lh-relaxed);
   resize: none;
   outline: none;
 }
@@ -186,7 +186,7 @@ function handleKeydown(event: KeyboardEvent) {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  gap: 0.85rem;
+  gap: var(--space-3);
   align-items: center;
 }
 
@@ -224,7 +224,7 @@ function handleKeydown(event: KeyboardEvent) {
   align-items: center;
   gap: 0.55rem;
   color: var(--app-ink-soft);
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: var(--app-font-mono);
   font-size: 0.72rem;
 }
 

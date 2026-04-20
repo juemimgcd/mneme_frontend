@@ -66,7 +66,7 @@ const dashboardMetrics = computed<DashboardMetric[]>(() => [
     label: 'Conversations',
     value: String(workspace.chats.length),
     change: lastExchange.value ? formatTimestamp(lastExchange.value.created_at) : 'No conversations yet',
-    tone: 'amber',
+    tone: 'indigo',
   },
   {
     label: 'In Progress',
@@ -91,7 +91,7 @@ const activityItems = computed<ActivityItem[]>(() => {
         ? 'coral'
         : latestTask.value.status === 'completed'
           ? 'teal'
-          : 'amber',
+          : 'indigo',
     });
   }
 
@@ -115,7 +115,7 @@ const activityItems = computed<ActivityItem[]>(() => {
       title: latestDocument.name,
       detail: `${latestDocument.status} · ${latestDocument.file_type?.toUpperCase() || 'FILE'}`,
       timestamp: formatTimestamp(latestDocument.created_at),
-      tone: latestDocument.status === 'indexed' ? 'teal' : latestDocument.status === 'failed' ? 'coral' : 'amber',
+      tone: latestDocument.status === 'indexed' ? 'teal' : latestDocument.status === 'failed' ? 'coral' : 'indigo',
     });
   }
 
@@ -257,3 +257,23 @@ const activityItems = computed<ActivityItem[]>(() => {
     </SurfacePanel>
   </div>
 </template>
+
+<style scoped>
+.workspace-overview {
+  gap: var(--space-4);
+}
+
+.workspace-note-list,
+.reading-note-list {
+  gap: var(--space-3);
+}
+
+.workspace-note-row p,
+.reading-note-row p {
+  line-height: var(--lh-relaxed);
+}
+
+.workspace-overview__feature strong {
+  font-size: var(--text-lg);
+}
+</style>

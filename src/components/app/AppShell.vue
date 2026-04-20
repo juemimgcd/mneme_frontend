@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, watch } from 'vue';
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router';
+import { gsap } from 'gsap';
 import AppIcon from '@/components/common/AppIcon.vue';
 import { mergeQuery, readQueryString } from '@/lib/route-query';
 import { useTheme } from '@/composables/useTheme';
@@ -56,6 +57,29 @@ const focusItems = computed(() =>
 const appQuery = computed(() =>
   workspace.activeKnowledgeBaseId ? { kb: workspace.activeKnowledgeBaseId } : {},
 );
+let shellReveal: gsap.core.Timeline | null = null;
+
+function runPageReveal() {
+  if (document.documentElement.classList.contains('reduced-motion')) {
+    return;
+  }
+
+  const shell = document.querySelector('.app-shell');
+  if (!shell) {
+    return;
+  }
+
+  shellReveal?.kill();
+  shellReveal = gsap.timeline({
+    defaults: { duration: 0.42, ease: 'power2.out' },
+  });
+  shellReveal.from(shell.querySelectorAll('.app-topbar, .app-main .view-stack'), {
+    y: 18,
+    opacity: 0,
+    stagger: 0.08,
+    clearProps: 'transform,opacity',
+  });
+}
 
 onMounted(async () => {
   if (session.user && session.token && !workspace.knowledgeBases.length) {
@@ -71,6 +95,9 @@ onMounted(async () => {
   ) {
     await workspace.selectKnowledgeBase(queryKnowledgeBaseId, session.token);
   }
+
+  await nextTick();
+  runPageReveal();
 });
 
 watch(
@@ -105,6 +132,18 @@ watch(
     });
   },
 );
+
+watch(
+  () => route.path,
+  async () => {
+    await nextTick();
+    runPageReveal();
+  },
+);
+
+onBeforeUnmount(() => {
+  shellReveal?.kill();
+});
 
 async function handleKnowledgeBaseChange(event: Event) {
   const nextId = (event.target as HTMLSelectElement).value;
