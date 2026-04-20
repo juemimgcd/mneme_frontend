@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import DocumentsTable from '@/components/documents/DocumentsTable.vue';
 import EmptyState from '@/components/common/EmptyState.vue';
@@ -7,6 +7,7 @@ import UploadZone from '@/components/documents/UploadZone.vue';
 import SectionHeader from '@/components/common/SectionHeader.vue';
 import SurfacePanel from '@/components/common/SurfacePanel.vue';
 import { mergeQuery, readQueryString } from '@/lib/route-query';
+import type { KnowledgeBase } from '@/lib/types';
 import { useSessionStore } from '@/stores/session';
 import { useWorkspaceStore } from '@/stores/workspace';
 
@@ -14,6 +15,8 @@ const route = useRoute();
 const router = useRouter();
 const session = useSessionStore();
 const workspace = useWorkspaceStore();
+const uploadLoading = ref(false);
+const uploadResetKey = ref(0);
 
 const indexedCount = computed(
   () => workspace.filteredDocuments.filter((item) => item.status === 'indexed').length,
@@ -24,12 +27,25 @@ const pendingCount = computed(
       ['queued', 'indexing', 'parsing', 'chunking', 'embedding', 'vector_upserting'].includes(item.status),
     ).length,
 );
+const uploadShelf = computed<KnowledgeBase | null>(
+  () => workspace.currentKnowledgeBase ?? workspace.knowledgeBases[0] ?? null,
+);
 
-async function onUpload(files: File[]) {
+async function onUpload(payload: { files: File[]; knowledgeBaseId: string; autoIndex: boolean }) {
   if (!session.token) {
     return;
   }
-  await workspace.uploadDocuments(session.token, files);
+
+  uploadLoading.value = true;
+  try {
+    const uploaded = await workspace.uploadDocuments(session.token, payload.files, payload.knowledgeBaseId);
+    if (payload.autoIndex) {
+      await Promise.all(uploaded.map((item) => workspace.indexDocument(session.token as string, item.id)));
+    }
+    uploadResetKey.value += 1;
+  } finally {
+    uploadLoading.value = false;
+  }
 }
 
 async function onIndex(documentId: string) {
@@ -146,13 +162,31 @@ watch(
       description="Upload files, process them, and preview the notes extracted from each document."
     />
 
-    <section class="dashboard-grid">
+    <section class="library-ingest-grid">
       <SurfacePanel eyebrow="Upload" title="Add files">
-        <UploadZone @upload="onUpload" />
+        <UploadZone
+          :knowledge-bases="workspace.knowledgeBases"
+          :active-knowledge-base-id="workspace.activeKnowledgeBaseId"
+          :loading="uploadLoading"
+          :reset-key="uploadResetKey"
+          @upload="onUpload"
+        />
       </SurfacePanel>
 
       <SurfacePanel eyebrow="Status" title="Processing snapshot">
         <div class="growth-stack library-status-list">
+          <article v-if="uploadShelf" class="theme-card library-status-row library-status-row--hero">
+            <header>
+              <strong>{{ uploadShelf.name }}</strong>
+              <span class="status-pill" :data-status="uploadShelf.status">
+                {{ uploadShelf.status }}
+              </span>
+            </header>
+            <p>
+              {{ uploadShelf.description || 'The current shelf is ready for new source material and note extraction.' }}
+            </p>
+          </article>
+
           <article class="growth-card library-status-row">
             <header>
               <strong>Ready to use</strong>
@@ -302,3 +336,24 @@ watch(
     </section>
   </div>
 </template>
+
+<style scoped>
+.library-ingest-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.8fr);
+  gap: 1rem;
+}
+
+.library-status-row--hero {
+  background:
+    radial-gradient(circle at top right, rgba(122, 162, 255, 0.14), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 76%),
+    color-mix(in srgb, var(--app-panel) 92%, transparent);
+}
+
+@media (max-width: 1040px) {
+  .library-ingest-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

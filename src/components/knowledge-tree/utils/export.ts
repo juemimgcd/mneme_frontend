@@ -1,4 +1,4 @@
-import type { TreeData, TreeNode, TreeEdge } from '../types'
+import type { TreeData, TreeNode } from '../types'
 
 /**
  * 将树数据导出为 Mermaid 图表语法
@@ -81,7 +81,6 @@ export function exportToCSV(treeData: TreeData): string {
  * 将树数据导出为 Markdown 大纲
  */
 export function exportToMarkdown(treeData: TreeData): string {
-  const nodeMap = new Map(treeData.nodes.map(n => [n.id, n]))
   const rootNodes = treeData.nodes.filter(n => n.depth === 0)
 
   let markdown = '# 知识库树形结构\n\n'
