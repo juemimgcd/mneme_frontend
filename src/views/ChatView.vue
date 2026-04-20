@@ -453,7 +453,7 @@ async function uploadFromChat() {
   font-family: var(--app-font-display);
   font-size: clamp(1.55rem, 2vw, 2.1rem);
   font-weight: 500;
-  line-height: var(--lh-tight);
+  line-height: var(--lh-base);
 }
 
 .chat-page__description {

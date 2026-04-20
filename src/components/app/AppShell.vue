@@ -73,7 +73,7 @@ function runPageReveal() {
   shellReveal = gsap.timeline({
     defaults: { duration: 0.42, ease: 'power2.out' },
   });
-  shellReveal.from(shell.querySelectorAll('.app-topbar, .app-main > *'), {
+  shellReveal.from(shell.querySelectorAll('.app-topbar, .app-main .view-stack'), {
     y: 18,
     opacity: 0,
     stagger: 0.08,
@@ -134,7 +134,7 @@ watch(
 );
 
 watch(
-  () => route.fullPath,
+  () => route.path,
   async () => {
     await nextTick();
     runPageReveal();

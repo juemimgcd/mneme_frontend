@@ -1,4 +1,4 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&family=Spline+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&family=Spline+Sans:wght@400;500;600;700&display=swap');
 
 :root {
   color-scheme: dark;
@@ -3653,13 +3653,13 @@ textarea:focus-visible {
 /* Modernized token system + cohesive component states */
 :root {
   --space-0: 0;
-  --space-1: 0.5rem;
-  --space-2: 0.75rem;
-  --space-3: 1rem;
-  --space-4: 1.5rem;
-  --space-5: 2rem;
-  --space-6: 2.5rem;
-  --space-7: 3rem;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-7: 2rem;
 
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
@@ -3678,7 +3678,7 @@ textarea:focus-visible {
 }
 
 .app-shell {
-  --app-font-body: 'Spline Sans', 'Source Sans 3', sans-serif;
+  --app-font-body: 'Spline Sans', sans-serif;
   --app-font-display: 'Fraunces', serif;
   --app-font-mono: 'IBM Plex Mono', monospace;
 
@@ -3703,17 +3703,7 @@ textarea:focus-visible {
   --app-rust: #ff8f84;
 }
 
-:root[data-theme='light'] .app-shell {
-  --app-font-body: 'Spline Sans', 'Source Sans 3', sans-serif;
-  --app-font-display: 'Fraunces', serif;
-  --app-font-mono: 'IBM Plex Mono', monospace;
-}
-
-.app-shell,
-.app-shell button,
-.app-shell input,
-.app-shell select,
-.app-shell textarea {
+.app-shell {
   font-family: var(--app-font-body);
 }
 
@@ -3751,6 +3741,7 @@ textarea:focus-visible {
 .secondary-button,
 .ghost-button {
   min-height: 44px;
+  min-width: 44px;
   border-radius: 14px;
   transition: transform var(--motion-fast), box-shadow var(--motion-fast), border-color var(--motion-fast), background-color var(--motion-fast), color var(--motion-fast), opacity var(--motion-fast);
 }
