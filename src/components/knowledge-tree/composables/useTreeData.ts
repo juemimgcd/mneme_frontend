@@ -1,8 +1,13 @@
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { api } from '@/lib/api'
-import type { TreeNode, TreeEdge, GraphResponse } from '../types'
+import { useSessionStore } from '@/stores/session'
+import { useWorkspaceStore } from '@/stores/workspace'
+import type { GraphResult } from '@/lib/types'
+import type { TreeNode, TreeEdge } from '../types'
 
 export function useTreeData() {
+  const session = useSessionStore()
+  const workspace = useWorkspaceStore()
   const nodes = ref<TreeNode[]>([])
   const edges = ref<TreeEdge[]>([])
   const loading = ref(false)
@@ -12,40 +17,25 @@ export function useTreeData() {
   /**
    * 从后端加载完整树数据
    */
-  async function loadTree(userId?: string) {
+  async function loadTree() {
     loading.value = true
     error.value = null
 
     try {
-      const response = await api.get<GraphResponse>(
-        '/graph?include_memory=true&include_relationships=true'
-      )
+      const token = session.token ?? ''
+      const response =
+        workspace.activeKnowledgeBaseId && token
+          ? await api.knowledgeBaseGraph(token, workspace.activeKnowledgeBaseId, {
+              includeMemory: true,
+              includeRelationships: true,
+            })
+          : await api.userGraph(token, {
+              includeMemory: true,
+              includeRelationships: true,
+            })
 
-      // 转换后端数据格式到前端树节点格式
-      nodes.value = response.nodes.map(node => ({
-        id: node.entity_id,
-        nodeType: node.node_type,
-        label: node.label,
-        description: node.metadata?.description,
-        parentId: node.parent_id,
-        depth: node.depth,
-        state: 'default' as const,
-        isExpanded: node.depth === 0, // 根节点默认展开
-        hasChildren: (node.metadata?.children_count || 0) > 0,
-        childrenCount: node.metadata?.children_count,
-        childrenLoaded: false,
-        importance: node.metadata?.importance_score,
-        entryType: node.metadata?.entry_type,
-        metadata: node.metadata
-      }))
-
-      edges.value = response.edges.map(edge => ({
-        id: edge.id,
-        source: edge.source,
-        target: edge.target,
-        edgeType: edge.edge_type,
-        metadata: edge.metadata
-      }))
+      nodes.value = response.nodes.map(mapGraphNode)
+      edges.value = response.edges.map(mapGraphEdge)
     } catch (err) {
       error.value = err instanceof Error ? err.message : '加载树数据失败'
       console.error('Failed to load tree:', err)
@@ -76,36 +66,25 @@ export function useTreeData() {
     node.state = 'loading'
 
     try {
-      let childResponse: GraphResponse | null = null
+      const token = session.token ?? ''
+      let childResponse: GraphResult | null = null
 
-      if (node.nodeType === 'knowledge_base') {
-        childResponse = await api.get<GraphResponse>(
-          `/graph/knowledge-bases/${nodeId}?include_memory=true&include_relationships=true`
-        )
+      if (!token) {
+        childResponse = null
+      } else if (node.nodeType === 'knowledge_base') {
+        childResponse = await api.knowledgeBaseGraph(token, nodeId, {
+          includeMemory: true,
+          includeRelationships: true,
+        })
       } else if (node.nodeType === 'document') {
-        childResponse = await api.get<GraphResponse>(
-          `/graph/documents/${nodeId}?include_memory=true&include_relationships=true`
-        )
+        childResponse = await api.documentGraph(token, nodeId, {
+          includeMemory: true,
+          includeRelationships: true,
+        })
       }
 
       if (childResponse) {
-        // 合并新节点和边
-        const newNodes = childResponse.nodes.map(n => ({
-          id: n.entity_id,
-          nodeType: n.node_type,
-          label: n.label,
-          description: n.metadata?.description,
-          parentId: n.parent_id,
-          depth: n.depth,
-          state: 'default' as const,
-          isExpanded: false,
-          hasChildren: (n.metadata?.children_count || 0) > 0,
-          childrenCount: n.metadata?.children_count,
-          childrenLoaded: false,
-          importance: n.metadata?.importance_score,
-          entryType: n.metadata?.entry_type,
-          metadata: n.metadata
-        }))
+        const newNodes = childResponse.nodes.map(mapGraphNode)
 
         // 使用 Map 去重，避免竞态条件
         const nodeMap = new Map(nodes.value.map(n => [n.id, n]))
@@ -116,13 +95,7 @@ export function useTreeData() {
         })
         nodes.value = Array.from(nodeMap.values())
 
-        const newEdges = childResponse.edges.map(e => ({
-          id: e.id,
-          source: e.source,
-          target: e.target,
-          edgeType: e.edge_type,
-          metadata: e.metadata
-        }))
+        const newEdges = childResponse.edges.map(mapGraphEdge)
 
         const edgeMap = new Map(edges.value.map(e => [e.id, e]))
         newEdges.forEach(e => {
@@ -169,7 +142,8 @@ export function useTreeData() {
     let current = nodes.value.find(n => n.id === nodeId)
 
     while (current?.parentId) {
-      const parent = nodes.value.find(n => n.id === current.parentId)
+      const parentId = current.parentId
+      const parent = nodes.value.find(n => n.id === parentId)
       if (!parent) break
       ancestors.unshift(parent)
       current = parent
@@ -199,5 +173,40 @@ export function useTreeData() {
     getChildren,
     getAncestors,
     expandAncestors
+  }
+}
+
+function mapGraphNode(node: GraphResult['nodes'][number]): TreeNode {
+  const metadata = node.metadata ?? {}
+  const rawDescription = metadata.description
+  const rawChildrenCount = metadata.children_count
+  const rawImportance = metadata.importance_score
+  const rawEntryType = metadata.entry_type
+
+  return {
+    id: node.entity_id || node.id,
+    nodeType: node.node_type,
+    label: node.label,
+    description: typeof rawDescription === 'string' ? rawDescription : undefined,
+    parentId: node.parent_id ?? undefined,
+    depth: node.depth,
+    state: 'default',
+    isExpanded: node.depth === 0,
+    hasChildren: typeof rawChildrenCount === 'number' ? rawChildrenCount > 0 : false,
+    childrenCount: typeof rawChildrenCount === 'number' ? rawChildrenCount : undefined,
+    childrenLoaded: false,
+    importance: typeof rawImportance === 'number' ? rawImportance : undefined,
+    entryType: typeof rawEntryType === 'string' ? rawEntryType : undefined,
+    metadata: metadata as TreeNode['metadata'],
+  }
+}
+
+function mapGraphEdge(edge: GraphResult['edges'][number]): TreeEdge {
+  return {
+    id: edge.id,
+    source: edge.source,
+    target: edge.target,
+    edgeType: edge.edge_type,
+    metadata: edge.metadata as TreeEdge['metadata'],
   }
 }

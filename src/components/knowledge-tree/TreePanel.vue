@@ -71,7 +71,7 @@
 </template>
 
 <script setup lang="ts">
-import type { TreeNode } from '../types'
+import type { TreeNode } from './types'
 
 interface Props {
   node: TreeNode

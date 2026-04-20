@@ -1,10 +1,8 @@
 import { ref, watchEffect } from 'vue';
 
-const STORAGE_KEY = 'mneme-theme';
-const preferred = window.matchMedia('(prefers-color-scheme: dark)');
+const STORAGE_KEY = 'mneme-theme-v2';
 const theme = ref<'light' | 'dark'>(
-  (localStorage.getItem(STORAGE_KEY) as 'light' | 'dark' | null) ??
-    (preferred.matches ? 'dark' : 'light'),
+  (localStorage.getItem(STORAGE_KEY) as 'light' | 'dark' | null) ?? 'dark',
 );
 
 export function useTheme() {

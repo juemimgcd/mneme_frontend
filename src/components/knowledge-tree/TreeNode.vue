@@ -68,7 +68,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { TreeNode as TreeNodeType } from '../types'
+import type { TreeNode as TreeNodeType } from './types'
 
 interface Props {
   node: TreeNodeType

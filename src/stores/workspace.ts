@@ -283,14 +283,18 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     knowledgeBases.value = decorateKnowledgeBases(knowledgeBases.value, documents.value);
   }
 
-  async function uploadDocuments(token: string, files: File[]) {
-    if (!activeKnowledgeBaseId.value || !currentUserId.value) {
+  async function uploadDocuments(token: string, files: File[], knowledgeBaseId?: string) {
+    const targetKnowledgeBaseId = knowledgeBaseId || activeKnowledgeBaseId.value;
+    if (!targetKnowledgeBaseId || !currentUserId.value) {
       throw new Error('请先选择知识库');
     }
-    const uploaded = await api.uploadDocuments(token, currentUserId.value, activeKnowledgeBaseId.value, files);
+    const uploaded = await api.uploadDocuments(token, currentUserId.value, targetKnowledgeBaseId, files);
     documents.value = [...uploaded, ...documents.value];
-    selectedDocumentId.value = uploaded[0]?.id ?? selectedDocumentId.value;
+    if (targetKnowledgeBaseId === activeKnowledgeBaseId.value) {
+      selectedDocumentId.value = uploaded[0]?.id ?? selectedDocumentId.value;
+    }
     knowledgeBases.value = decorateKnowledgeBases(knowledgeBases.value, documents.value);
+    return uploaded;
   }
 
   async function indexDocument(token: string, documentId: string) {
