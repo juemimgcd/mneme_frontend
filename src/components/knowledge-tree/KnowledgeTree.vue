@@ -61,7 +61,7 @@
               :is-selected="selectedNodeId === node.id"
               :is-highlighted="highlightedNodeIds.has(node.id)"
               :is-search-match="searchMatches.has(node.id)"
-              @toggle="handleToggleNode"
+              @toggle="handleToggle"
               @select="handleSelectNode"
               @hover="handleHoverNode"
               @unhover="handleUnhoverNode"
@@ -87,17 +87,16 @@ import TreeNode from './TreeNode.vue'
 import TreePanel from './TreePanel.vue'
 import { useTreeData } from './composables/useTreeData'
 import { useTreeInteraction } from './composables/useTreeInteraction'
-import type { TreeNode as TreeNodeType, TreeEdge } from './types'
+import type { TreeNode as TreeNodeType } from './types'
 
 // 数据管理
-const { nodes, edges, loading, error, loadTree, expandNode } = useTreeData()
+const { nodes, edges, loading, error, loadTree, expandNode, collapseNode } = useTreeData()
 
 // 交互管理
 const {
   selectedNodeId,
   highlightedNodeIds,
   expandedNodeIds,
-  handleToggleNode,
   handleSelectNode,
   handleHoverNode,
   handleUnhoverNode,
@@ -156,6 +155,22 @@ const visibleEdges = computed(() => {
 })
 
 // 方法
+async function handleToggle(nodeId: string) {
+  const node = nodes.value.find(item => item.id === nodeId)
+  if (!node) {
+    return
+  }
+
+  if (expandedNodeIds.value.has(nodeId)) {
+    expandedNodeIds.value.delete(nodeId)
+    collapseNode(nodeId)
+    return
+  }
+
+  expandedNodeIds.value.add(nodeId)
+  await expandNode(nodeId)
+}
+
 function handleSearch() {
   if (!searchQuery.value) {
     searchMatches.value.clear()
@@ -176,8 +191,9 @@ function handleSearch() {
       let current = node
       while (current.parentId) {
         expandedNodeIds.value.add(current.parentId)
-        current = nodes.value.find(n => n.id === current.parentId)!
-        if (!current) break
+        const parent = nodes.value.find(n => n.id === current.parentId)
+        if (!parent) break
+        current = parent
       }
     }
   })
@@ -244,7 +260,7 @@ function redrawEdges() {
   
   // 强制重新渲染（触发 Vue 的响应式更新）
   edgesSvg.value.style.display = 'none'
-  edgesSvg.value.offsetHeight // 触发重排
+  void edgesSvg.value.getBoundingClientRect().height
   edgesSvg.value.style.display = 'block'
 }
 </script>

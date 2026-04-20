@@ -475,8 +475,8 @@ function relationshipStrength(value: number | null) {
 function relationCardStyle(score: number | null) {
   const strength = relationshipStrength(score);
   return {
-    '--relation-border': `rgba(122, 97, 72, ${0.16 + strength * 0.22})`,
-    '--relation-bg': `linear-gradient(135deg, rgba(122, 97, 72, ${0.04 + strength * 0.08}), rgba(108, 123, 99, ${0.03 + strength * 0.06}) 82%), var(--ua-elevated)`,
+    '--relation-border': `rgba(109, 141, 255, ${0.18 + strength * 0.2})`,
+    '--relation-bg': `linear-gradient(135deg, rgba(109, 141, 255, ${0.05 + strength * 0.08}), rgba(95, 208, 177, ${0.03 + strength * 0.06}) 82%), var(--ua-elevated)`,
   };
 }
 
@@ -657,10 +657,10 @@ function nodeRadius(node: GraphNode, degree: number) {
 
 function nodeColor(nodeType: GraphNode['node_type']) {
   const palette = {
-    user: '#8d745f',
-    knowledge_base: '#8b694b',
-    document: '#6f8296',
-    memory_entry: '#738365',
+    user: '#8fb2ff',
+    knowledge_base: '#6d8dff',
+    document: '#64d2ff',
+    memory_entry: '#5fd0b1',
   } satisfies Record<GraphNode['node_type'], string>;
 
   return palette[nodeType];
@@ -677,10 +677,10 @@ function nodeStyle(node: PositionedNode) {
 function createPositionedNode(node: GraphNode, x: number, y: number, degree = 0): PositionedNode {
   const radius = nodeRadius(node, degree);
   const metricsMap = {
-    user: { width: 180, height: 54 },
-    knowledge_base: { width: 196, height: 58 },
-    document: { width: 188, height: 56 },
-    memory_entry: { width: 164, height: 46 },
+    user: { width: 160, height: 46 },
+    knowledge_base: { width: 176, height: 48 },
+    document: { width: 170, height: 48 },
+    memory_entry: { width: 148, height: 40 },
   } satisfies Record<GraphNode['node_type'], { width: number; height: number }>;
 
   const metrics = metricsMap[node.node_type];
@@ -2008,28 +2008,21 @@ watch(
                   @dblclick.stop="selectNode(node.id); centerOnNode(node.id)"
                   @keydown.enter="selectNode(node.id)"
                 >
-                  <rect class="graph-node-card-svg__panel" :width="node.width" :height="node.height" rx="12" />
-                  <rect class="graph-node-card-svg__paperline" x="0.5" y="23" :width="node.width - 1" height="1" rx="0.5" />
-                  <rect class="graph-node-card-svg__bar" width="4" :height="node.height" rx="2" />
-                  <circle class="graph-node-card-svg__pin" cx="13" cy="11.5" r="1.9" />
-                  <circle class="graph-node-card-svg__handle" :cx="node.width / 2" cy="0" r="3.5" />
-                  <circle class="graph-node-card-svg__handle" :cx="node.width / 2" :cy="node.height" r="3.5" />
-                  <text class="graph-node-card-svg__type" x="16" y="18">
+                  <rect class="graph-node-card-svg__panel" :width="node.width" :height="node.height" rx="11" />
+                  <rect class="graph-node-card-svg__bar" x="10" y="8" width="3" :height="node.height - 16" rx="1.5" />
+                  <text class="graph-node-card-svg__type" x="20" y="16">
                     {{ nodeTypeLabel(node.node_type) }}
                   </text>
-                  <text class="graph-node-card-svg__degree" :x="node.width - 14" y="18">
-                    {{ node.degree }}
-                  </text>
-                  <text class="graph-node-card-svg__label" x="16" y="35">
-                    {{ truncateLabel(node.label, node.width > 176 ? 24 : 21) }}
+                  <text class="graph-node-card-svg__label" x="20" y="30">
+                    {{ truncateLabel(node.label, node.width > 170 ? 22 : 18) }}
                   </text>
                   <text
                     v-if="isNodeLabelVisible(node)"
                     class="graph-node-card-svg__summary"
-                    x="16"
-                    :y="node.height - 10"
+                    x="20"
+                    :y="node.height - 8"
                   >
-                    {{ truncateLabel(nodeSummary(node), 26) }}
+                    {{ truncateLabel(nodeSummary(node), 22) }}
                   </text>
                 </g>
               </g>
@@ -2285,12 +2278,12 @@ watch(
   --ua-text: #2f271f;
   --ua-text-secondary: #655a4e;
   --ua-text-muted: #8c7d6b;
-  --ua-border: rgba(124, 96, 71, 0.16);
-  --ua-border-strong: rgba(124, 96, 71, 0.28);
+  --ua-border: rgba(49, 66, 88, 0.5);
+  --ua-border-strong: rgba(72, 94, 122, 0.72);
   --ua-glass: rgba(255, 252, 246, 0.88);
-  --ua-edge: rgba(124, 96, 71, 0.28);
-  --ua-edge-dim: rgba(124, 96, 71, 0.08);
-  --ua-dot: rgba(124, 96, 71, 0.11);
+  --ua-edge: rgba(109, 141, 255, 0.28);
+  --ua-edge-dim: rgba(109, 141, 255, 0.08);
+  --ua-dot: rgba(109, 141, 255, 0.11);
   --ua-shadow: 0 24px 48px rgba(76, 57, 33, 0.08);
   position: relative;
   display: flex;
@@ -2300,9 +2293,9 @@ watch(
   border: 1px solid var(--ua-border);
   border-radius: 26px;
   background:
-    radial-gradient(circle at 18% 0%, rgba(166, 139, 91, 0.14), transparent 24rem),
-    radial-gradient(circle at 84% 22%, rgba(106, 125, 146, 0.12), transparent 28rem),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.55), transparent 14rem),
+    radial-gradient(circle at 18% 0%, rgba(109, 141, 255, 0.14), transparent 24rem),
+    radial-gradient(circle at 84% 22%, rgba(95, 208, 177, 0.08), transparent 28rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 14rem),
     var(--ua-root);
   color: var(--ua-text);
   box-shadow: var(--ua-shadow);
@@ -2319,26 +2312,26 @@ watch(
 }
 
 :global(:root[data-theme='dark'] .graph-explorer) {
-  --ua-root: #15110e;
-  --ua-surface: #1c1713;
-  --ua-elevated: #221c17;
-  --ua-panel: #2b241d;
-  --ua-accent: #b08d69;
-  --ua-accent-dim: #c7a47f;
-  --ua-accent-bright: #e7c9a8;
-  --ua-text: #efe4d5;
-  --ua-text-secondary: #c3b4a2;
-  --ua-text-muted: #8f7f6c;
-  --ua-border: rgba(176, 141, 105, 0.16);
-  --ua-border-strong: rgba(176, 141, 105, 0.3);
-  --ua-glass: rgba(27, 22, 18, 0.84);
-  --ua-edge: rgba(176, 141, 105, 0.28);
-  --ua-edge-dim: rgba(176, 141, 105, 0.09);
-  --ua-dot: rgba(239, 228, 213, 0.05);
-  --ua-shadow: 0 28px 56px rgba(0, 0, 0, 0.22);
+  --ua-root: #0b1118;
+  --ua-surface: #121923;
+  --ua-elevated: #17202c;
+  --ua-panel: #1d2836;
+  --ua-accent: #6d8dff;
+  --ua-accent-dim: #84a6ff;
+  --ua-accent-bright: #b3cbff;
+  --ua-text: #eff5ff;
+  --ua-text-secondary: #b3bfd0;
+  --ua-text-muted: #76859b;
+  --ua-border: rgba(49, 66, 88, 0.5);
+  --ua-border-strong: rgba(72, 94, 122, 0.72);
+  --ua-glass: rgba(16, 23, 33, 0.84);
+  --ua-edge: rgba(109, 141, 255, 0.3);
+  --ua-edge-dim: rgba(109, 141, 255, 0.1);
+  --ua-dot: rgba(239, 245, 255, 0.05);
+  --ua-shadow: 0 30px 64px rgba(0, 0, 0, 0.34);
   background:
-    radial-gradient(circle at 18% 0%, rgba(176, 141, 105, 0.13), transparent 24rem),
-    radial-gradient(circle at 84% 22%, rgba(106, 125, 146, 0.12), transparent 28rem),
+    radial-gradient(circle at 18% 0%, rgba(109, 141, 255, 0.14), transparent 24rem),
+    radial-gradient(circle at 84% 22%, rgba(95, 208, 177, 0.08), transparent 28rem),
     linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 10rem),
     var(--ua-root);
 }
@@ -2358,7 +2351,7 @@ watch(
   padding: 0.78rem 0.9rem;
   border-bottom: 1px solid var(--ua-border);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.3), transparent 76%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 76%),
     var(--ua-glass);
   backdrop-filter: blur(10px);
 }
@@ -2378,14 +2371,14 @@ watch(
   border: 1px solid var(--ua-border-strong);
   border-radius: 10px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.5), transparent 70%),
-    linear-gradient(135deg, rgba(124, 96, 71, 0.14), transparent),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 70%),
+    linear-gradient(135deg, rgba(109, 141, 255, 0.14), transparent),
     var(--ua-elevated);
   color: var(--ua-accent-bright);
   font-family: Georgia, 'Times New Roman', serif;
   font-size: 1.35rem;
   line-height: 1;
-  box-shadow: 0 6px 16px rgba(90, 67, 49, 0.06);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
 }
 
 .graph-brand p,
@@ -2439,7 +2432,7 @@ watch(
   padding: 0.45rem 0.65rem;
   border: 1px solid var(--ua-border);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.38);
+  background: rgba(255, 255, 255, 0.04);
   color: var(--ua-text-secondary);
   font-size: 0.68rem;
   font-weight: 800;
@@ -2473,7 +2466,7 @@ watch(
   border-radius: 12px;
   border-color: var(--ua-border);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.42), transparent 70%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 70%),
     var(--ua-elevated);
   color: var(--ua-text-secondary);
   box-shadow: none;
@@ -2483,7 +2476,7 @@ watch(
 .graph-explorer .primary-button:hover {
   border-color: var(--ua-border-strong);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.54), transparent 70%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 70%),
     color-mix(in srgb, var(--ua-accent) 9%, var(--ua-elevated));
   color: var(--ua-accent-bright);
   transform: none;
@@ -2505,7 +2498,7 @@ watch(
   padding: 0.52rem 0.82rem;
   border-bottom: 1px solid var(--ua-border);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.24), transparent 78%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 78%),
     var(--ua-glass);
 }
 
@@ -2587,10 +2580,10 @@ watch(
   border: 1px solid var(--ua-border-strong);
   border-radius: 18px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.52), transparent 72%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 72%),
     linear-gradient(135deg, color-mix(in srgb, var(--ua-accent) 8%, transparent), transparent 72%),
     var(--ua-elevated);
-  box-shadow: 0 18px 36px rgba(82, 61, 34, 0.14);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.28);
   backdrop-filter: blur(10px);
 }
 
@@ -2602,7 +2595,7 @@ watch(
   padding: 0.7rem 0.8rem;
   border: 1px solid transparent;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.04);
   text-align: left;
 }
 
@@ -2650,7 +2643,7 @@ watch(
   padding: 0.42rem 0.82rem;
   border-bottom: 1px solid var(--ua-border);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent 78%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 78%),
     var(--ua-glass);
 }
 
@@ -2675,7 +2668,7 @@ watch(
   padding: 0.35rem 0.62rem;
   border: 1px solid var(--ua-border);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.26);
+  background: rgba(255, 255, 255, 0.04);
   color: var(--ua-text-secondary);
   font-size: 0.72rem;
   font-weight: 750;
@@ -2727,9 +2720,9 @@ watch(
   border: 1px solid color-mix(in srgb, var(--ua-accent) 34%, transparent);
   border-radius: 999px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.4), transparent 75%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 75%),
     var(--ua-glass);
-  box-shadow: 0 10px 24px rgba(76, 57, 33, 0.12);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
   backdrop-filter: blur(8px);
 }
 
@@ -2777,7 +2770,7 @@ watch(
   padding: 0.28rem 0.46rem;
   border: 1px solid var(--ua-border);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.04);
   backdrop-filter: blur(8px);
 }
 
@@ -2807,10 +2800,10 @@ watch(
   border-radius: 0;
   background:
     radial-gradient(circle at 32% 22%, color-mix(in srgb, var(--ua-accent) 6%, transparent), transparent 20rem),
-    radial-gradient(circle at 68% 68%, rgba(106, 125, 146, 0.05), transparent 20rem),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent 14rem),
+    radial-gradient(circle at 68% 68%, rgba(95, 208, 177, 0.05), transparent 20rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 14rem),
     var(--graph-bg);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
   cursor: grab;
   touch-action: none;
   user-select: none;
@@ -2822,7 +2815,7 @@ watch(
   inset: 0;
   background-image:
     radial-gradient(circle, var(--graph-grid) 1px, transparent 1.5px),
-    linear-gradient(180deg, transparent 0, transparent 31px, rgba(124, 96, 71, 0.024) 31px, rgba(124, 96, 71, 0.024) 32px);
+    linear-gradient(180deg, transparent 0, transparent 31px, rgba(109, 141, 255, 0.024) 31px, rgba(109, 141, 255, 0.024) 32px);
   background-position: 0 0;
   background-size: 20px 20px, 100% 32px;
   mask-image: radial-gradient(circle at 50% 50%, #000 0%, transparent 88%);
@@ -2850,8 +2843,8 @@ watch(
 }
 
 .graph-band rect {
-  fill: rgba(255, 255, 255, 0.16);
-  stroke: rgba(124, 96, 71, 0.1);
+  fill: rgba(255, 255, 255, 0.03);
+  stroke: rgba(109, 141, 255, 0.12);
   stroke-width: 1;
   stroke-dasharray: 5 9;
 }
@@ -2868,16 +2861,16 @@ watch(
 
 .graph-band[data-type='knowledge_base'] rect,
 .graph-group[data-type='knowledge_base'] rect {
-  stroke: rgba(124, 96, 71, 0.2);
+  stroke: rgba(109, 141, 255, 0.24);
 }
 
 .graph-band[data-type='document'] rect,
 .graph-group[data-type='document'] rect {
-  stroke: rgba(106, 125, 146, 0.18);
+  stroke: rgba(95, 208, 177, 0.18);
 }
 
 .graph-group rect {
-  fill: rgba(255, 255, 255, 0.12);
+  fill: rgba(255, 255, 255, 0.02);
   stroke-width: 1;
   stroke-dasharray: 4 7;
 }
@@ -2895,11 +2888,11 @@ watch(
 }
 
 .graph-edge[data-type='extracts'] {
-  stroke: rgba(166, 139, 91, 0.42);
+  stroke: rgba(95, 208, 177, 0.42);
 }
 
 .graph-edge--related {
-  stroke: rgba(124, 96, 71, 0.28);
+  stroke: rgba(109, 141, 255, 0.28);
   stroke-dasharray: 3 8;
 }
 
@@ -2916,15 +2909,15 @@ watch(
 
 .graph-node-card-svg {
   cursor: pointer;
-  filter: drop-shadow(0 3px 8px rgba(70, 51, 27, 0.07));
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.18));
   transition:
     opacity 180ms ease,
     filter 180ms ease;
 }
 
 .graph-node-card-svg__panel {
-  fill: color-mix(in srgb, var(--ua-elevated) 92%, white);
-  stroke: color-mix(in srgb, var(--node-color) 12%, var(--ua-border));
+  fill: color-mix(in srgb, var(--ua-elevated) 95%, #02050a);
+  stroke: color-mix(in srgb, var(--node-color) 10%, var(--ua-border));
   stroke-width: 1px;
   transition:
     fill 180ms ease,
@@ -2932,69 +2925,56 @@ watch(
     stroke-width 180ms ease;
 }
 
-.graph-node-card-svg__paperline {
-  fill: rgba(148, 117, 87, 0.08);
-  opacity: 0.9;
-}
-
 .graph-node-card-svg__bar {
-  fill: color-mix(in srgb, var(--node-color) 88%, white);
-}
-
-.graph-node-card-svg__pin {
-  fill: color-mix(in srgb, var(--node-color) 36%, white);
-  stroke: rgba(255, 250, 241, 0.9);
-  stroke-width: 0.8px;
-}
-
-.graph-node-card-svg__handle {
-  fill: rgba(111, 109, 102, 0.2);
-  stroke: rgba(251, 247, 239, 0.82);
-  stroke-width: 1px;
-  opacity: 0.75;
+  fill: color-mix(in srgb, var(--node-color) 78%, white 10%);
+  opacity: 0.96;
 }
 
 .graph-node-card-svg__type,
-.graph-node-card-svg__degree,
 .graph-node-card-svg__summary {
   fill: var(--node-color);
   font-family: 'IBM Plex Mono', 'JetBrains Mono', 'Fira Code', monospace;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  font-size: 9px;
+  font-weight: 760;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
-}
-
-.graph-node-card-svg__degree {
-  text-anchor: end;
-  fill: var(--ua-text-muted);
 }
 
 .graph-node-card-svg__label {
   fill: var(--ua-text);
-  font-family: 'Newsreader', Georgia, 'Times New Roman', serif;
-  font-size: 13.4px;
-  font-weight: 500;
+  font-family: 'Inter', 'Source Sans 3', sans-serif;
+  font-size: 12.2px;
+  font-weight: 620;
+  letter-spacing: -0.01em;
 }
 
 .graph-node-card-svg__summary {
-  fill: var(--ua-text-secondary);
-  font-size: 8.2px;
-  font-weight: 600;
+  fill: var(--ua-text-muted);
+  font-size: 7.4px;
+  font-weight: 620;
   letter-spacing: 0.02em;
   text-transform: none;
 }
 
 .graph-node-card-svg:hover,
 .graph-node-card-svg.is-selected {
-  filter: drop-shadow(0 7px 16px rgba(70, 51, 27, 0.09));
+  filter: drop-shadow(0 12px 26px rgba(0, 0, 0, 0.24));
 }
 
 .graph-node-card-svg:hover .graph-node-card-svg__panel,
 .graph-node-card-svg.is-selected .graph-node-card-svg__panel {
   stroke: var(--ua-accent);
-  stroke-width: 1.6px;
-  fill: color-mix(in srgb, var(--node-color) 5%, rgba(250, 244, 235, 0.96));
+  stroke-width: 1.45px;
+  fill: color-mix(in srgb, var(--node-color) 7%, rgba(19, 25, 35, 0.98));
+}
+
+.graph-node-card-svg:focus-visible {
+  filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0)) drop-shadow(0 0 0 5px rgba(122, 162, 255, 0.14));
+}
+
+.graph-node-card-svg:focus-visible .graph-node-card-svg__panel {
+  stroke: color-mix(in srgb, var(--ua-accent-bright) 86%, white);
+  stroke-width: 1.8px;
 }
 
 .graph-node-card-svg.is-current .graph-node-card-svg__panel {
@@ -3048,11 +3028,11 @@ watch(
   border: 1px solid var(--ua-border-strong);
   border-radius: 12px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.52), transparent 72%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 72%),
     linear-gradient(135deg, color-mix(in srgb, var(--ua-accent) 9%, transparent), transparent 65%),
     var(--ua-elevated);
   color: var(--ua-text);
-  box-shadow: 0 10px 22px rgba(82, 61, 34, 0.1);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.24);
   backdrop-filter: blur(8px);
   pointer-events: none;
 }
@@ -3097,8 +3077,8 @@ watch(
   overflow: auto;
   border-left: 1px solid var(--ua-border);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.3), transparent 76%),
-    color-mix(in srgb, var(--ua-surface) 84%, var(--ua-root));
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 76%),
+    color-mix(in srgb, var(--ua-surface) 90%, black);
 }
 
 .graph-panel {
@@ -3165,7 +3145,7 @@ watch(
   padding: 0.26rem 0.48rem;
   border: 1px solid var(--ua-border);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.04);
   color: var(--ua-text-secondary);
   font-size: 0.68rem;
   font-weight: 700;
@@ -3183,7 +3163,7 @@ watch(
   border: 1px solid var(--ua-border);
   border-radius: 12px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.48), transparent 70%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 70%),
     var(--ua-elevated);
 }
 
@@ -3238,13 +3218,16 @@ watch(
   display: inline-flex;
   align-items: center;
   min-height: 24px;
-  padding: 0.2rem 0.45rem;
-  border: 1px solid var(--ua-border-strong);
+  padding: 0.18rem 0.48rem;
+  border: 1px solid color-mix(in srgb, var(--ua-accent) 22%, transparent);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--ua-accent) 10%, transparent);
-  color: var(--ua-accent);
-  font-size: 0.68rem;
-  font-weight: 800;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 65%),
+    color-mix(in srgb, var(--ua-accent) 11%, transparent);
+  color: color-mix(in srgb, var(--ua-accent-bright) 78%, white);
+  font-size: 0.65rem;
+  font-weight: 760;
+  letter-spacing: 0.08em;
 }
 
 .graph-search__results,
@@ -3281,21 +3264,21 @@ watch(
   padding: 0.72rem 0.76rem;
   border-radius: 10px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.54), transparent 72%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 72%),
     linear-gradient(135deg, color-mix(in srgb, var(--node-card-color, var(--ua-accent)) 7%, transparent), transparent 62%),
     var(--ua-elevated);
 }
 
 .graph-node-card[data-type='knowledge_base'] {
-  --node-card-color: #8b694b;
+  --node-card-color: #6d8dff;
 }
 
 .graph-node-card[data-type='document'] {
-  --node-card-color: #6f8296;
+  --node-card-color: #64d2ff;
 }
 
 .graph-node-card[data-type='user'] {
-  --node-card-color: #8d745f;
+  --node-card-color: #8fb2ff;
 }
 
 .graph-node-card span {
@@ -3356,12 +3339,15 @@ watch(
 
 .memory-chip {
   display: inline-flex;
-  padding: 0.18rem 0.38rem;
-  border: 1px solid var(--ua-border);
+  padding: 0.18rem 0.42rem;
+  border: 1px solid color-mix(in srgb, white 7%, var(--ua-border));
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.28);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 70%),
+    rgba(255, 255, 255, 0.03);
   color: var(--ua-text-secondary);
-  font-size: 0.66rem;
+  font-size: 0.64rem;
+  font-weight: 650;
 }
 
 :deep(.empty-state) {
