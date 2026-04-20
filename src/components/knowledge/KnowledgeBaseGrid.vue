@@ -12,11 +12,11 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="knowledge-grid">
+  <div class="knowledge-grid knowledge-grid--list">
     <button
       v-for="item in items"
       :key="item.id"
-      class="knowledge-card"
+      class="knowledge-card knowledge-card--list"
       type="button"
       :data-active="item.id === activeId"
       @click="emit('select', item.id)"

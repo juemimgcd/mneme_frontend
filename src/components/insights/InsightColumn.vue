@@ -9,9 +9,12 @@ defineProps<{
 
 <template>
   <div class="insight-columns">
-    <section class="insight-stack">
-      <article v-if="profile" class="insight-card">
-        <strong>Profile Summary</strong>
+    <section class="insight-stack review-list">
+      <article v-if="profile" class="insight-card review-item review-item--summary">
+        <header class="knowledge-card__header">
+          <strong>Profile Summary</strong>
+          <span class="inline-badge">Profile</span>
+        </header>
         <p>{{ profile.profile_summary }}</p>
         <div class="chip-wrap">
           <span v-for="tag in profile.growth_focus" :key="tag" class="memory-chip">{{ tag }}</span>
@@ -21,9 +24,12 @@ defineProps<{
       <article
         v-for="item in profile?.main_themes ?? []"
         :key="item.theme_name"
-        class="insight-card"
+        class="insight-card review-item"
       >
-        <strong>{{ item.theme_name }}</strong>
+        <header class="knowledge-card__header">
+          <strong>{{ item.theme_name }}</strong>
+          <span class="inline-badge">Theme</span>
+        </header>
         <p>{{ item.reason }}</p>
         <div class="chip-wrap">
           <span v-for="tag in item.evidence_entries" :key="tag" class="memory-chip">{{ tag }}</span>
@@ -33,17 +39,20 @@ defineProps<{
       <article
         v-for="item in profile?.ability_tags ?? []"
         :key="item.ability_name"
-        class="insight-card"
+        class="insight-card review-item"
       >
-        <strong>{{ item.ability_name }}</strong>
+        <header class="knowledge-card__header">
+          <strong>{{ item.ability_name }}</strong>
+          <span class="inline-badge">Ability</span>
+        </header>
         <p>{{ item.reason }}</p>
       </article>
     </section>
 
-    <section class="growth-stack">
-      <article v-if="growth" class="growth-card">
+    <section class="growth-stack review-list">
+      <article v-if="growth" class="growth-card review-item review-item--summary">
         <header>
-          <strong>Stage Summary</strong>
+          <strong>Current Stage</strong>
           <span class="growth-card__trend" data-trend="up">{{ growth.analysis_window }}</span>
         </header>
         <p>{{ growth.stage_summary }}</p>
@@ -52,7 +61,7 @@ defineProps<{
       <article
         v-for="item in growth?.theme_changes ?? []"
         :key="`${item.theme_name}-${item.change_type}`"
-        class="growth-card"
+        class="growth-card review-item"
       >
         <header>
           <strong>{{ item.theme_name }}</strong>
@@ -63,9 +72,9 @@ defineProps<{
         <p>{{ item.reason }}</p>
       </article>
 
-      <article v-if="growth?.next_actions.length" class="growth-card">
+      <article v-if="growth?.next_actions.length" class="growth-card review-item">
         <header>
-          <strong>Next Actions</strong>
+          <strong>Next Notes</strong>
           <span class="growth-card__trend" data-trend="steady">{{ growth.next_actions.length }} items</span>
         </header>
         <p>{{ growth.next_actions.join(' / ') }}</p>

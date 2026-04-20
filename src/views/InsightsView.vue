@@ -66,20 +66,20 @@ watch(
 <template>
   <div class="view-stack">
     <SectionHeader
-      eyebrow="Signals"
-      title="Signals and next moves."
-      description="Read the stable layer, then generate a tighter action plan."
+      eyebrow="Review"
+      title="Read the current thread."
+      description="Review stable patterns from the notebook, then turn them into a tighter next-step plan."
     />
 
-    <SurfacePanel eyebrow="Refresh" title="Signal controls">
-      <div class="chat-composer__footer">
+    <SurfacePanel eyebrow="Refresh" title="Review controls">
+      <div class="chat-composer__footer review-toolbar">
         <button
           class="ghost-button"
           type="button"
           :disabled="workspace.knowledgeRefreshLoading"
           @click="refreshSignals"
         >
-          {{ workspace.knowledgeRefreshLoading ? 'Refreshing...' : 'Refresh Signals' }}
+          {{ workspace.knowledgeRefreshLoading ? 'Refreshing...' : 'Refresh Review' }}
         </button>
 
         <button
@@ -88,7 +88,7 @@ watch(
           :disabled="workspace.memoryRebuildLoading"
           @click="rebuildMemory"
         >
-          {{ workspace.memoryRebuildLoading ? 'Rebuilding...' : 'Rebuild Memory First' }}
+          {{ workspace.memoryRebuildLoading ? 'Rebuilding...' : 'Rebuild Notes First' }}
         </button>
 
         <p v-if="workspace.lastMemoryRebuild" class="section-header__description">
@@ -99,7 +99,7 @@ watch(
     </SurfacePanel>
 
     <div class="retrieve-layout">
-      <SurfacePanel eyebrow="Signal Deck" title="Current analysis">
+      <SurfacePanel eyebrow="Review Deck" title="Current reading">
         <InsightColumn
           v-if="workspace.profile || workspace.growth"
           :growth="workspace.growth"
@@ -107,32 +107,32 @@ watch(
         />
         <EmptyState
           v-else
-          title="No signals yet"
-          description="Once profile and growth analysis are stable, the latest synthesis will appear here."
+          title="No review yet"
+          description="Once profile and growth analysis are stable, the latest reading will appear here."
         />
       </SurfacePanel>
 
-      <SurfacePanel eyebrow="Advice" title="Action layer">
+      <SurfacePanel eyebrow="Advice" title="Action notes">
         <form class="chat-composer" @submit.prevent="generateAdvice">
           <label>
-            <span>Focus Goal</span>
-            <input
-              v-model="focusGoal"
-              type="text"
-              placeholder="Optional. Example: tighten my RAG memory loop"
-            />
-          </label>
+              <span>Focus Goal</span>
+              <input
+                v-model="focusGoal"
+                type="text"
+                placeholder="Optional. Example: turn scattered notes into a weekly plan"
+              />
+            </label>
 
           <div class="chat-composer__footer">
             <button class="primary-button" type="submit" :disabled="workspace.adviceLoading">
-              {{ workspace.adviceLoading ? 'Generating...' : 'Generate Advice' }}
+              {{ workspace.adviceLoading ? 'Generating...' : 'Generate Plan' }}
             </button>
           </div>
         </form>
 
-        <div v-if="workspace.advice" class="advice-board">
+        <div v-if="workspace.advice" class="advice-board advice-board--dense">
           <div class="advice-board__main">
-            <article class="growth-card growth-card--feature">
+            <article class="growth-card growth-card--feature review-item review-item--summary">
               <header>
                 <strong>Summary</strong>
                 <span class="growth-card__trend" data-trend="up">Live</span>
@@ -143,7 +143,7 @@ watch(
             <article
               v-for="item in workspace.advice.action_suggestions"
               :key="`${item.area}-${item.action}`"
-              class="growth-card"
+              class="growth-card review-item"
             >
               <header>
                 <strong>{{ item.area }}</strong>
@@ -161,7 +161,7 @@ watch(
           </div>
 
           <aside class="advice-board__rail">
-            <article v-if="workspace.advice.current_priorities.length" class="context-card">
+            <article v-if="workspace.advice.current_priorities.length" class="context-card review-item">
               <strong>Priorities</strong>
               <div class="chip-wrap">
                 <span v-for="item in workspace.advice.current_priorities" :key="item" class="memory-chip">
@@ -170,17 +170,17 @@ watch(
               </div>
             </article>
 
-            <article v-if="workspace.advice.one_week_plan.length" class="context-card">
+            <article v-if="workspace.advice.one_week_plan.length" class="context-card review-item">
               <strong>One Week</strong>
               <p>{{ workspace.advice.one_week_plan.join(' / ') }}</p>
             </article>
 
-            <article v-if="workspace.advice.avoid_list.length" class="context-card">
+            <article v-if="workspace.advice.avoid_list.length" class="context-card review-item">
               <strong>Avoid</strong>
               <p>{{ workspace.advice.avoid_list.join(' / ') }}</p>
             </article>
 
-            <article v-if="workspace.advice.reflection_questions.length" class="context-card">
+            <article v-if="workspace.advice.reflection_questions.length" class="context-card review-item">
               <strong>Reflect</strong>
               <p>{{ workspace.advice.reflection_questions.join(' / ') }}</p>
             </article>
@@ -189,8 +189,8 @@ watch(
 
         <EmptyState
           v-else
-          title="No advice yet"
-          description="Generate advice after signals are available."
+          title="No action plan yet"
+          description="Generate a plan after the review view has data."
         />
       </SurfacePanel>
     </div>
