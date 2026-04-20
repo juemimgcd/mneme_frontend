@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { FileUp, Sparkles } from 'lucide-vue-next';
+import { gsap } from 'gsap';
 import ChatComposer from '@/components/chat/ChatComposer.vue';
 import SourceCard from '@/components/chat/SourceCard.vue';
 import SurfacePanel from '@/components/common/SurfacePanel.vue';
@@ -26,6 +27,9 @@ const uploadLoading = ref(false);
 const pendingQuestion = ref('');
 const threadRef = ref<HTMLElement | null>(null);
 const uploadInputRef = ref<HTMLInputElement | null>(null);
+const toolsPanelRef = ref<HTMLElement | null>(null);
+const toolsBackdropRef = ref<HTMLElement | null>(null);
+let toolsTween: gsap.core.Timeline | null = null;
 
 const promptSuggestions = [
   'Summarize the strongest themes from my recent notes.',
@@ -96,6 +100,35 @@ watch(
   },
   { deep: true, immediate: true },
 );
+
+watch(
+  toolsOpen,
+  async (open) => {
+    if (!open || document.documentElement.classList.contains('reduced-motion')) {
+      return;
+    }
+
+    await nextTick();
+    if (!toolsPanelRef.value || !toolsBackdropRef.value) {
+      return;
+    }
+
+    toolsTween?.kill();
+    toolsTween = gsap
+      .timeline({ defaults: { ease: 'power2.out', duration: 0.24 } })
+      .fromTo(toolsBackdropRef.value, { opacity: 0 }, { opacity: 1 }, 0)
+      .fromTo(
+        toolsPanelRef.value,
+        { xPercent: 8, opacity: 0 },
+        { xPercent: 0, opacity: 1, clearProps: 'transform,opacity' },
+        0,
+      );
+  },
+);
+
+onBeforeUnmount(() => {
+  toolsTween?.kill();
+});
 
 async function submit(payload: { question: string; topK: number }) {
   if (!session.token) {
@@ -186,7 +219,7 @@ async function uploadFromChat() {
         </p>
       </div>
 
-      <button class="ghost-button chat-page__tools-trigger" type="button" @click="toolsOpen = true">
+      <button class="secondary-button chat-page__tools-trigger" type="button" @click="toolsOpen = true">
         Open Tools
       </button>
     </div>
@@ -269,15 +302,15 @@ async function uploadFromChat() {
       </div>
     </SurfacePanel>
 
-    <div v-if="toolsOpen" class="chat-tools__backdrop" @click="toolsOpen = false" />
+    <div v-if="toolsOpen" ref="toolsBackdropRef" class="chat-tools__backdrop" @click="toolsOpen = false" />
     <aside class="chat-tools" :data-open="toolsOpen">
-      <div class="chat-tools__panel">
+      <div ref="toolsPanelRef" class="chat-tools__panel">
         <div class="chat-tools__header">
           <div>
             <p class="chat-tools__eyebrow">Tools rail</p>
             <h2>Upload, scope, and draft</h2>
           </div>
-          <button class="ghost-button chat-page__tools-trigger" type="button" @click="toolsOpen = false">
+          <button class="secondary-button chat-page__tools-trigger" type="button" @click="toolsOpen = false">
             Close
           </button>
         </div>
@@ -383,19 +416,19 @@ async function uploadFromChat() {
 
 <style scoped>
 .chat-page {
-  gap: 0.85rem;
+  gap: var(--space-3);
 }
 
 .chat-page__header {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--space-3);
   align-items: start;
 }
 
 .chat-page__heading {
   display: grid;
-  gap: 0.3rem;
+  gap: var(--space-1);
 }
 
 .chat-page__eyebrow {
@@ -417,17 +450,17 @@ async function uploadFromChat() {
 .chat-page__title-row h1 {
   margin: 0;
   color: var(--app-ink);
-  font-family: 'Fraunces', serif;
+  font-family: var(--app-font-display);
   font-size: clamp(1.55rem, 2vw, 2.1rem);
   font-weight: 500;
-  line-height: 1.05;
+  line-height: var(--lh-tight);
 }
 
 .chat-page__description {
   max-width: 72ch;
   margin: 0;
   color: var(--app-ink-soft);
-  line-height: 1.55;
+  line-height: var(--lh-relaxed);
 }
 
 .chat-page__tools-trigger {
@@ -463,8 +496,8 @@ async function uploadFromChat() {
 
 .chat-turn {
   display: grid;
-  gap: 0.9rem;
-  padding: 1rem 0;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
   border-bottom: 1px solid color-mix(in srgb, var(--app-line) 72%, transparent);
 }
 
@@ -475,17 +508,17 @@ async function uploadFromChat() {
 .chat-turn__question,
 .chat-turn__answer-main {
   display: grid;
-  gap: 0.45rem;
+  gap: var(--space-1);
   max-width: min(78ch, 100%);
-  padding: 1rem 1.05rem;
-  border-radius: 20px;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
 }
 
 .chat-turn__question {
   justify-self: end;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 78%),
-    color-mix(in srgb, var(--app-panel-muted) 88%, transparent);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 72%),
+    color-mix(in srgb, var(--app-panel-muted) 94%, transparent);
   border: 1px solid color-mix(in srgb, var(--app-line) 80%, transparent);
 }
 
@@ -496,8 +529,8 @@ async function uploadFromChat() {
 
 .chat-turn__answer-main {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 78%),
-    color-mix(in srgb, var(--app-panel) 94%, transparent);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 74%),
+    color-mix(in srgb, var(--app-panel) 96%, transparent);
   border: 1px solid color-mix(in srgb, var(--app-line) 84%, transparent);
 }
 
@@ -510,9 +543,9 @@ async function uploadFromChat() {
 .chat-turn__answer-main p {
   margin: 0;
   color: var(--app-ink);
-  font-family: 'Newsreader', 'Fraunces', serif;
-  font-size: 1.02rem;
-  line-height: 1.7;
+  font-family: var(--app-font-body);
+  font-size: var(--text-md);
+  line-height: var(--lh-relaxed);
 }
 
 .chat-turn__eyebrow,
@@ -534,7 +567,7 @@ async function uploadFromChat() {
 
 .chat-empty {
   display: grid;
-  gap: 1.5rem;
+  gap: var(--space-5);
   align-content: center;
   min-height: 100%;
 }
@@ -548,17 +581,17 @@ async function uploadFromChat() {
 .chat-empty__hero h2 {
   margin: 0;
   color: var(--app-ink);
-  font-family: 'Fraunces', serif;
+  font-family: var(--app-font-display);
   font-size: clamp(2rem, 2.8vw, 3rem);
   font-weight: 500;
-  line-height: 1.02;
+  line-height: var(--lh-tight);
 }
 
 .chat-empty__hero p {
   margin: 0;
   color: var(--app-ink-soft);
-  font-size: 1rem;
-  line-height: 1.7;
+  font-size: var(--text-md);
+  line-height: var(--lh-relaxed);
 }
 
 .chat-empty__suggestions {
@@ -568,13 +601,13 @@ async function uploadFromChat() {
 }
 
 .chat-empty__chip {
-  padding: 0.7rem 1rem;
+  padding: var(--space-2) var(--space-4);
   border: 1px solid var(--app-line);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.05);
   color: var(--app-ink);
   cursor: pointer;
-  transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease;
+  transition: transform var(--motion-fast), border-color var(--motion-fast), background-color var(--motion-fast);
 }
 
 .chat-empty__chip:hover {
@@ -616,7 +649,7 @@ async function uploadFromChat() {
     color-mix(in srgb, var(--app-paper-strong) 96%, transparent);
   box-shadow: -16px 0 40px rgba(0, 0, 0, 0.32);
   transform: translateX(104%);
-  transition: transform 240ms ease;
+  transition: transform var(--motion-mid);
   pointer-events: auto;
 }
 
@@ -629,24 +662,24 @@ async function uploadFromChat() {
   justify-content: space-between;
   gap: 1rem;
   align-items: start;
-  padding-bottom: 1rem;
+  padding-bottom: var(--space-3);
   border-bottom: 1px solid color-mix(in srgb, var(--app-line) 78%, transparent);
 }
 
 .chat-tools__header h2 {
   margin: 0.2rem 0 0;
   color: var(--app-ink);
-  font-family: 'Fraunces', serif;
+  font-family: var(--app-font-display);
   font-size: 1.3rem;
   font-weight: 500;
 }
 
 .chat-tools__content {
   display: grid;
-  gap: 0.9rem;
+  gap: var(--space-3);
   align-content: start;
   overflow-y: auto;
-  padding-top: 1rem;
+  padding-top: var(--space-3);
 }
 
 .chat-tools__card {
@@ -659,7 +692,7 @@ async function uploadFromChat() {
 .chat-tools__card p {
   margin: 0;
   color: var(--app-ink-soft);
-  line-height: 1.65;
+  line-height: var(--lh-relaxed);
 }
 
 .chat-tools__card strong {
@@ -670,7 +703,7 @@ async function uploadFromChat() {
 
 .chat-tools__field {
   display: grid;
-  gap: 0.35rem;
+  gap: var(--space-1);
 }
 
 .chat-tools__field select,

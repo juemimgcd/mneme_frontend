@@ -1,6 +1,4 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;600;700&family=IBM+Plex+Mono:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&family=Spline+Sans:wght@400;500;600;700&display=swap');
 
 :root {
   color-scheme: dark;
@@ -3649,5 +3647,201 @@ textarea:focus-visible {
 
   .app-shell .data-table {
     min-width: 640px;
+  }
+}
+
+/* Modernized token system + cohesive component states */
+:root {
+  --space-0: 0;
+  --space-1: 0.5rem;
+  --space-2: 0.75rem;
+  --space-3: 1rem;
+  --space-4: 1.5rem;
+  --space-5: 2rem;
+  --space-6: 2.5rem;
+  --space-7: 3rem;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+
+  --lh-tight: 1.2;
+  --lh-base: 1.5;
+  --lh-relaxed: 1.7;
+
+  --motion-fast: 160ms cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-mid: 240ms cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-slow: 360ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.app-shell {
+  --app-font-body: 'Spline Sans', 'Source Sans 3', sans-serif;
+  --app-font-display: 'Fraunces', serif;
+  --app-font-mono: 'IBM Plex Mono', monospace;
+
+  --app-paper: #0a0f18;
+  --app-paper-strong: #0f1622;
+  --app-paper-muted: #141e2c;
+  --app-sidebar: #0b111c;
+  --app-sidebar-strong: #101a2a;
+  --app-panel: #172234;
+  --app-panel-muted: #1d2b42;
+  --app-ink: #edf3ff;
+  --app-ink-soft: #a8b6d0;
+  --app-ink-muted: #7888a6;
+  --app-line: #23324b;
+  --app-line-strong: #32496c;
+  --app-shadow: 0 24px 56px rgba(3, 8, 18, 0.48);
+  --app-accent: #6f94ff;
+  --app-accent-strong: #9ab4ff;
+  --app-accent-soft: rgba(111, 148, 255, 0.2);
+  --app-sage: #53d2ac;
+  --app-gold: #edbf72;
+  --app-rust: #ff8f84;
+}
+
+:root[data-theme='light'] .app-shell {
+  --app-font-body: 'Spline Sans', 'Source Sans 3', sans-serif;
+  --app-font-display: 'Fraunces', serif;
+  --app-font-mono: 'IBM Plex Mono', monospace;
+}
+
+.app-shell,
+.app-shell button,
+.app-shell input,
+.app-shell select,
+.app-shell textarea {
+  font-family: var(--app-font-body);
+}
+
+.app-shell h1,
+.app-shell h2,
+.app-shell h3,
+.app-shell .brandmark strong,
+.app-shell .app-topbar__title,
+.app-shell .surface-panel__title,
+.app-shell .section-header__title,
+.app-shell .metric-card__value {
+  font-family: var(--app-font-display);
+}
+
+.app-shell .app-topbar,
+.app-shell .surface-panel,
+.app-shell .metric-card,
+.app-shell .context-card,
+.app-shell .chat-bubble {
+  border-radius: var(--radius-xl);
+  border-color: color-mix(in srgb, var(--app-line) 88%, transparent);
+  box-shadow: var(--app-shadow);
+}
+
+.app-shell .app-sidebar {
+  padding: var(--space-4) var(--space-3);
+  gap: var(--space-4);
+}
+
+.app-shell .app-topbar {
+  padding: var(--space-3) var(--space-4);
+}
+
+.primary-button,
+.secondary-button,
+.ghost-button {
+  min-height: 44px;
+  border-radius: 14px;
+  transition: transform var(--motion-fast), box-shadow var(--motion-fast), border-color var(--motion-fast), background-color var(--motion-fast), color var(--motion-fast), opacity var(--motion-fast);
+}
+
+.primary-button {
+  border-color: color-mix(in srgb, var(--app-accent) 42%, transparent);
+  background: linear-gradient(135deg, var(--app-accent), var(--app-accent-strong));
+  color: #091122;
+  box-shadow: 0 12px 26px rgba(85, 125, 219, 0.35);
+}
+
+.secondary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0.85rem 1.15rem;
+  border: 1px solid var(--app-line-strong);
+  background: color-mix(in srgb, var(--app-panel) 94%, transparent);
+  color: var(--app-ink);
+  font-weight: 700;
+}
+
+.ghost-button {
+  border-color: color-mix(in srgb, var(--app-line) 94%, transparent);
+  background: color-mix(in srgb, var(--app-panel) 90%, transparent);
+}
+
+.primary-button:hover,
+.secondary-button:hover,
+.ghost-button:hover {
+  transform: translateY(-1px);
+  border-color: var(--app-line-strong);
+}
+
+.primary-button:active,
+.secondary-button:active,
+.ghost-button:active {
+  transform: translateY(0);
+}
+
+.primary-button:disabled,
+.secondary-button:disabled,
+.ghost-button:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.app-shell input,
+.app-shell select,
+.app-shell textarea {
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--app-line) 90%, transparent);
+  background: color-mix(in srgb, var(--app-panel) 92%, transparent);
+  color: var(--app-ink);
+  transition: border-color var(--motion-fast), box-shadow var(--motion-fast), background-color var(--motion-fast);
+}
+
+.app-shell input:hover,
+.app-shell select:hover,
+.app-shell textarea:hover {
+  border-color: var(--app-line-strong);
+}
+
+.status-pill,
+.inline-badge,
+.memory-chip {
+  min-height: 26px;
+  font-family: var(--app-font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+}
+
+.status-pill[data-status='ready'],
+.status-pill[data-status='indexed'],
+.status-pill[data-status='completed'],
+.inline-badge {
+  background: color-mix(in srgb, var(--app-accent) 18%, transparent);
+  color: var(--app-accent-strong);
+}
+
+.app-topbar__status {
+  gap: var(--space-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primary-button,
+  .secondary-button,
+  .ghost-button,
+  .chat-empty__chip {
+    transition: none;
   }
 }
