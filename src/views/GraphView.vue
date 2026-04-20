@@ -1,5 +1,17 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, reactive, ref, shallowRef, watch } from 'vue';
+import {
+  forceCenter,
+  forceCollide,
+  forceLink,
+  forceManyBody,
+  forceSimulation,
+  forceX,
+  forceY,
+  type Simulation,
+  type SimulationLinkDatum,
+  type SimulationNodeDatum,
+} from 'd3-force';
 import { gsap } from 'gsap';
 import { useRoute, useRouter } from 'vue-router';
 import EmptyState from '@/components/common/EmptyState.vue';
@@ -15,10 +27,13 @@ type GraphScope = 'knowledge_base' | 'user' | 'document';
 type GraphLayoutMode = 'tree' | 'constellation';
 type GraphFilter = 'all' | 'documents' | 'memory';
 
-interface PositionedNode extends GraphNode {
+interface PositionedNode extends GraphNode, SimulationNodeDatum {
   x: number;
   y: number;
   radius: number;
+  width: number;
+  height: number;
+  degree: number;
 }
 
 interface PositionedEdge extends GraphEdge {
@@ -27,12 +42,30 @@ interface PositionedEdge extends GraphEdge {
   path: string;
 }
 
+interface ForceEdge extends SimulationLinkDatum<PositionedNode> {
+  id: string;
+  source: string | PositionedNode;
+  target: string | PositionedNode;
+  edge_type: GraphEdge['edge_type'];
+  metadata: GraphEdge['metadata'];
+}
+
+interface GraphLayout {
+  width: number;
+  height: number;
+  nodes: PositionedNode[];
+  edges: PositionedEdge[];
+  treeEdges: PositionedEdge[];
+  relatedEdges: PositionedEdge[];
+}
+
 const route = useRoute();
 const router = useRouter();
 const session = useSessionStore();
 const workspace = useWorkspaceStore();
 
 const stageRef = ref<HTMLDivElement | null>(null);
+const svgRef = ref<SVGSVGElement | null>(null);
 const graph = ref<GraphResult | null>(null);
 const loading = ref(false);
 const error = ref('');
@@ -45,11 +78,12 @@ const minRelationshipScore = ref(0.35);
 const maxRelatedEdges = ref(80);
 const graphDocumentId = ref('');
 const focusMode = ref(true);
-const layoutMode = ref<GraphLayoutMode>('constellation');
+const layoutMode = ref<GraphLayoutMode>('tree');
 const graphFilter = ref<GraphFilter>('all');
 const searchQuery = ref('');
 const viewportTween = ref<gsap.core.Tween | null>(null);
 const hoveredNodeId = ref('');
+const graphSimulation = shallowRef<Simulation<PositionedNode, ForceEdge> | null>(null);
 const viewport = reactive({
   scale: 1,
   x: 0,
@@ -58,6 +92,14 @@ const viewport = reactive({
   lastClientX: 0,
   lastClientY: 0,
 });
+const nodeDrag = reactive({
+  id: '',
+  pointerId: 0,
+  startClientX: 0,
+  startClientY: 0,
+  moved: false,
+});
+const suppressNodeClick = ref(false);
 
 const selectedNode = computed(() =>
   graph.value?.nodes.find((node) => node.id === selectedNodeId.value) ?? null,
@@ -155,36 +197,42 @@ const graphTransform = computed(
 const currentWorkspaceDocumentNodeId = computed(() =>
   workspace.selectedDocumentId ? `document:${workspace.selectedDocumentId}` : '',
 );
-const selectedNeighborhood = computed(() => {
-  const nodeId = selectedNodeId.value;
+const activeHighlightNodeId = computed(() => hoveredNodeId.value || selectedNodeId.value);
+const highlightedNodeIds = computed(() => {
+  const nodeId = activeHighlightNodeId.value;
   const payload = visibleGraph.value;
-  const related = new Set<string>();
+  const highlighted = new Set<string>();
   if (!payload || !nodeId) {
-    return related;
+    return highlighted;
   }
 
-  related.add(nodeId);
+  highlighted.add(nodeId);
   for (const edge of payload.edges) {
     if (edge.source === nodeId) {
-      related.add(edge.target);
+      highlighted.add(edge.target);
     }
     if (edge.target === nodeId) {
-      related.add(edge.source);
+      highlighted.add(edge.source);
     }
   }
 
-  const selected = payload.nodes.find((node) => node.id === nodeId);
-  if (selected?.parent_id) {
-    related.add(selected.parent_id);
+  return highlighted;
+});
+const highlightedEdgeIds = computed(() => {
+  const nodeId = activeHighlightNodeId.value;
+  const payload = visibleGraph.value;
+  const highlighted = new Set<string>();
+  if (!payload || !nodeId) {
+    return highlighted;
   }
 
-  for (const node of payload.nodes) {
-    if (node.parent_id === nodeId) {
-      related.add(node.id);
+  for (const edge of payload.edges) {
+    if (edge.source === nodeId || edge.target === nodeId) {
+      highlighted.add(edge.id);
     }
   }
 
-  return related;
+  return highlighted;
 });
 const selectionActionLabel = computed(() => {
   if (!selectedNode.value) {
@@ -350,23 +398,6 @@ function relationshipStrength(value: number | null) {
   return Math.min(Math.max(value, 0), 1);
 }
 
-function relatedEdgeStyle(edge: GraphEdge) {
-  const strength = relationshipStrength(
-    typeof edge.metadata.relationship_score === 'number' ? edge.metadata.relationship_score : null,
-  );
-  const strokeWidth = 1.8 + strength * 3.2;
-  const opacity = 0.26 + strength * 0.64;
-  const dash = 10 - strength * 4;
-  const gap = 10 - strength * 3;
-
-  return {
-    strokeWidth: `${strokeWidth}px`,
-    strokeOpacity: String(opacity),
-    stroke: `color-mix(in srgb, #5eead4 ${Math.round(44 + strength * 40)}%, #f59e0b)`,
-    strokeDasharray: `${dash} ${gap}`,
-  };
-}
-
 function relationCardStyle(score: number | null) {
   const strength = relationshipStrength(score);
   return {
@@ -425,19 +456,78 @@ function stopViewportAnimation() {
   viewportTween.value = null;
 }
 
-function createPositionedNode(node: GraphNode, x: number, y: number): PositionedNode {
-  const radiusMap = {
-    user: 25,
-    knowledge_base: 30,
-    document: 19,
-    memory_entry: 11,
+function createEmptyLayout(): GraphLayout {
+  return {
+    width: 1240,
+    height: 680,
+    nodes: [],
+    edges: [],
+    treeEdges: [],
+    relatedEdges: [],
+  };
+}
+
+function createDegreeMap(payload: GraphResult) {
+  const degreeMap = new Map<string, number>();
+  for (const node of payload.nodes) {
+    degreeMap.set(node.id, 0);
+  }
+  for (const edge of payload.edges) {
+    degreeMap.set(edge.source, (degreeMap.get(edge.source) ?? 0) + 1);
+    degreeMap.set(edge.target, (degreeMap.get(edge.target) ?? 0) + 1);
+  }
+  return degreeMap;
+}
+
+function nodeRadius(node: GraphNode, degree: number) {
+  const baseMap = {
+    user: 18,
+    knowledge_base: 19,
+    document: 13,
+    memory_entry: 9,
   } satisfies Record<GraphNode['node_type'], number>;
+
+  return Math.min(baseMap[node.node_type] + Math.sqrt(Math.max(degree, 0)) * 3.2, 34);
+}
+
+function nodeColor(nodeType: GraphNode['node_type']) {
+  const palette = {
+    user: '#7dd3fc',
+    knowledge_base: '#c4b5fd',
+    document: '#f59e0b',
+    memory_entry: '#22d3ee',
+  } satisfies Record<GraphNode['node_type'], string>;
+
+  return palette[nodeType];
+}
+
+function nodeStyle(node: PositionedNode) {
+  const color = nodeColor(node.node_type);
+  return {
+    '--node-color': color,
+    '--node-glow': `${color}66`,
+  };
+}
+
+function createPositionedNode(node: GraphNode, x: number, y: number, degree = 0): PositionedNode {
+  const radius = nodeRadius(node, degree);
+  const metricsMap = {
+    user: { width: 172, height: 52 },
+    knowledge_base: { width: 188, height: 56 },
+    document: { width: 176, height: 52 },
+    memory_entry: { width: 156, height: 44 },
+  } satisfies Record<GraphNode['node_type'], { width: number; height: number }>;
+
+  const metrics = metricsMap[node.node_type];
 
   return {
     ...node,
     x,
     y,
-    radius: radiusMap[node.node_type],
+    radius,
+    width: metrics.width,
+    height: metrics.height,
+    degree,
   };
 }
 
@@ -450,12 +540,14 @@ function createPositionedEdges(payload: GraphResult, positioned: Map<string, Pos
         return null;
       }
 
-      const midX = (sourceNode.x + targetNode.x) / 2;
-      const curve = edge.edge_type === 'related' ? Math.max(70, Math.abs(sourceNode.y - targetNode.y) * 0.28) : 0;
-      const path =
-        edge.edge_type === 'related'
-          ? `M ${sourceNode.x} ${sourceNode.y} C ${midX} ${sourceNode.y - curve}, ${midX} ${targetNode.y + curve}, ${targetNode.x} ${targetNode.y}`
-          : `M ${sourceNode.x} ${sourceNode.y} C ${midX} ${sourceNode.y}, ${midX} ${targetNode.y}, ${targetNode.x} ${targetNode.y}`;
+      const direction = targetNode.x >= sourceNode.x ? 1 : -1;
+      const sourceX = sourceNode.x + direction * (sourceNode.width / 2);
+      const targetX = targetNode.x - direction * (targetNode.width / 2);
+      const sourceY = sourceNode.y;
+      const targetY = targetNode.y;
+      const deltaX = Math.abs(targetX - sourceX);
+      const curveOffset = Math.min(Math.max(deltaX * 0.35, 36), 96);
+      const path = `M ${sourceX} ${sourceY} C ${sourceX + direction * curveOffset} ${sourceY}, ${targetX - direction * curveOffset} ${targetY}, ${targetX} ${targetY}`;
 
       return {
         ...edge,
@@ -479,9 +571,11 @@ function finalizeLayout(width: number, height: number, positioned: Map<string, P
   };
 }
 
-function buildTreeLayout(payload: GraphResult) {
-  const width = 1240;
-  const baseHeight = 680;
+function buildTreeLayout(payload: GraphResult, degreeMap: Map<string, number>) {
+  const width = 1600;
+  const baseHeight = 900;
+  const centerX = width / 2;
+
   const byDepth = new Map<number, GraphNode[]>();
   for (const node of payload.nodes) {
     const depthNodes = byDepth.get(node.depth) ?? [];
@@ -491,25 +585,57 @@ function buildTreeLayout(payload: GraphResult) {
 
   const maxDepth = Math.max(...payload.nodes.map((node) => node.depth), 1);
   const maxDepthSize = Math.max(...Array.from(byDepth.values()).map((items) => items.length), 1);
-  const height = Math.max(baseHeight, maxDepthSize * 82 + 180);
-  const depthGap = (width - 240) / maxDepth;
+  const height = Math.max(baseHeight, maxDepthSize * 110 + 220);
+  const horizontalGap = Math.max(180, Math.floor((width / 2 - 170) / Math.max(maxDepth, 1)));
   const positioned = new Map<string, PositionedNode>();
 
-  for (const [depth, nodes] of byDepth) {
+  for (const [depth, nodes] of [...byDepth.entries()].sort((a, b) => a[0] - b[0])) {
     const ordered = [...nodes].sort((a, b) => {
       const parentCompare = (a.parent_id ?? '').localeCompare(b.parent_id ?? '');
       return parentCompare || a.label.localeCompare(b.label);
     });
-    const laneGap = (height - 180) / Math.max(ordered.length, 1);
+
+    if (depth === 0) {
+      const rootY = height / 2;
+      ordered.forEach((node) => {
+        positioned.set(node.id, createPositionedNode(node, centerX, rootY, degreeMap.get(node.id) ?? 0));
+      });
+      continue;
+    }
+
+    const leftNodes: GraphNode[] = [];
+    const rightNodes: GraphNode[] = [];
     ordered.forEach((node, index) => {
-      positioned.set(node.id, createPositionedNode(node, 120 + depth * depthGap, 90 + laneGap * (index + 0.5)));
+      if (index % 2 === 0) {
+        rightNodes.push(node);
+      } else {
+        leftNodes.push(node);
+      }
     });
+
+    const positionSide = (sideNodes: GraphNode[], direction: -1 | 1) => {
+      if (!sideNodes.length) {
+        return;
+      }
+      const verticalGap = Math.max(84, (height - 180) / Math.max(sideNodes.length, 1));
+      const startY = height / 2 - ((sideNodes.length - 1) * verticalGap) / 2;
+      const x = centerX + direction * depth * horizontalGap;
+      sideNodes.forEach((node, index) => {
+        positioned.set(
+          node.id,
+          createPositionedNode(node, x, startY + index * verticalGap, degreeMap.get(node.id) ?? 0),
+        );
+      });
+    };
+
+    positionSide(leftNodes, -1);
+    positionSide(rightNodes, 1);
   }
 
   return finalizeLayout(width, height, positioned, payload);
 }
 
-function buildConstellationLayout(payload: GraphResult) {
+function buildConstellationLayout(payload: GraphResult, degreeMap: Map<string, number>) {
   const width = 1240;
   const height = Math.max(760, Math.ceil(payload.nodes.length / 18) * 180 + 580);
   const centerX = width / 2;
@@ -520,7 +646,7 @@ function buildConstellationLayout(payload: GraphResult) {
       : payload.root_node_id || payload.nodes[0]?.id;
   const rootNode = payload.nodes.find((node) => node.id === rootId) ?? payload.nodes[0];
   const positioned = new Map<string, PositionedNode>();
-  positioned.set(rootNode.id, createPositionedNode(rootNode, centerX, centerY));
+  positioned.set(rootNode.id, createPositionedNode(rootNode, centerX, centerY, degreeMap.get(rootNode.id) ?? 0));
 
   const distances = new Map<string, number>([[rootNode.id, 0]]);
   const queue = [rootNode.id];
@@ -573,6 +699,7 @@ function buildConstellationLayout(payload: GraphResult) {
           node,
           centerX + orbitRadius * Math.cos(angle),
           centerY + orbitRadius * Math.sin(angle),
+          degreeMap.get(node.id) ?? 0,
         ),
       );
     });
@@ -582,23 +709,119 @@ function buildConstellationLayout(payload: GraphResult) {
 }
 
 function buildLayout(payload: GraphResult | null) {
-  const width = 1240;
-  const baseHeight = 680;
   if (!payload || !payload.nodes.length) {
-    return {
-      width,
-      height: baseHeight,
-      nodes: [] as PositionedNode[],
-      edges: [] as PositionedEdge[],
-      treeEdges: [] as PositionedEdge[],
-      relatedEdges: [] as PositionedEdge[],
-    };
+    return createEmptyLayout();
   }
 
-  return layoutMode.value === 'constellation' ? buildConstellationLayout(payload) : buildTreeLayout(payload);
+  const degreeMap = createDegreeMap(payload);
+  return layoutMode.value === 'constellation'
+    ? buildConstellationLayout(payload, degreeMap)
+    : buildTreeLayout(payload, degreeMap);
 }
 
-const layout = computed(() => buildLayout(visibleGraph.value));
+const layout = ref<GraphLayout>(createEmptyLayout());
+
+function edgeWeight(edge: Pick<GraphEdge, 'edge_type' | 'metadata'>) {
+  const relationshipScore = edge.metadata.relationship_score;
+  const sharedMemoryCount = edge.metadata.shared_memory_count;
+  if (typeof relationshipScore === 'number') {
+    return Math.min(Math.max(relationshipScore, 0), 1);
+  }
+  if (typeof sharedMemoryCount === 'number') {
+    return Math.min(sharedMemoryCount / 8, 1);
+  }
+  return edge.edge_type === 'related' ? 0.5 : 0.65;
+}
+
+function edgeRenderStyle(edge: PositionedEdge) {
+  const weight = edgeWeight(edge);
+  const width = edge.edge_type === 'related' ? 0.9 + weight * 2.4 : 0.8 + weight * 1.6;
+  return {
+    '--edge-width': `${width}px`,
+    '--edge-opacity': String(edge.edge_type === 'related' ? 0.22 + weight * 0.42 : 0.24 + weight * 0.28),
+  };
+}
+
+function forceDistance(edge: ForceEdge) {
+  const weight = edgeWeight(edge);
+  if (edge.edge_type === 'related') {
+    return 170 - weight * 42;
+  }
+  if (edge.edge_type === 'extracts') {
+    return 92;
+  }
+  return 132 - weight * 24;
+}
+
+function forceStrength(edge: ForceEdge) {
+  const weight = edgeWeight(edge);
+  if (edge.edge_type === 'related') {
+    return 0.14 + weight * 0.18;
+  }
+  return 0.38 + weight * 0.22;
+}
+
+function stopGraphSimulation() {
+  graphSimulation.value?.stop();
+  graphSimulation.value = null;
+}
+
+function clampNodeToBounds(node: PositionedNode) {
+  const padding = node.radius + 18;
+  node.x = Math.min(Math.max(node.x ?? layout.value.width / 2, padding), layout.value.width - padding);
+  node.y = Math.min(Math.max(node.y ?? layout.value.height / 2, padding), layout.value.height - padding);
+}
+
+function restartGraphSimulation(payload: GraphResult | null) {
+  stopGraphSimulation();
+  layout.value = buildLayout(payload);
+
+  if (!payload || !layout.value.nodes.length) {
+    return;
+  }
+
+  const positioned = new Map(layout.value.nodes.map((node) => [node.id, node]));
+  layout.value.edges = createPositionedEdges(payload, positioned);
+  layout.value.treeEdges = layout.value.edges.filter((edge) => edge.edge_type !== 'related');
+  layout.value.relatedEdges = layout.value.edges.filter((edge) => edge.edge_type === 'related');
+
+  const links = payload.edges
+    .filter((edge) => positioned.has(edge.source) && positioned.has(edge.target))
+    .map<ForceEdge>((edge) => ({
+      id: edge.id,
+      source: edge.source,
+      target: edge.target,
+      edge_type: edge.edge_type,
+      metadata: edge.metadata,
+    }));
+
+  graphSimulation.value = forceSimulation<PositionedNode, ForceEdge>(layout.value.nodes)
+    .force(
+      'link',
+      forceLink<PositionedNode, ForceEdge>(links)
+        .id((node) => node.id)
+        .distance(forceDistance)
+        .strength(forceStrength),
+    )
+    .force('charge', forceManyBody<PositionedNode>().strength((node) => -150 - Math.sqrt(node.degree) * 38))
+    .force('center', forceCenter<PositionedNode>(layout.value.width / 2, layout.value.height / 2).strength(0.035))
+    .force(
+      'collide',
+      forceCollide<PositionedNode>()
+        .radius((node) => node.radius + 5)
+        .strength(0.78)
+        .iterations(2),
+    )
+    .force('x', forceX<PositionedNode>(layout.value.width / 2).strength(layoutMode.value === 'tree' ? 0.024 : 0.012))
+    .force('y', forceY<PositionedNode>(layout.value.height / 2).strength(layoutMode.value === 'tree' ? 0.018 : 0.01))
+    .alpha(0.95)
+    .alphaDecay(0.035)
+    .on('tick', () => {
+      for (const node of layout.value.nodes) {
+        clampNodeToBounds(node);
+      }
+    });
+}
 
 function animateViewport(target: { scale?: number; x?: number; y?: number }, duration = 0.48) {
   stopViewportAnimation();
@@ -689,16 +912,55 @@ function zoomOut() {
   zoomTo(viewport.scale - 0.14, true);
 }
 
-function handleWheel(event: WheelEvent) {
-  event.preventDefault();
-  zoomTo(viewport.scale + (event.deltaY < 0 ? 0.12 : -0.12), false);
+function clientToSvgPoint(event: PointerEvent | WheelEvent) {
+  const svg = svgRef.value;
+  if (!svg) {
+    return null;
+  }
+
+  const rect = svg.getBoundingClientRect();
+  return {
+    x: ((event.clientX - rect.left) / Math.max(rect.width, 1)) * layout.value.width,
+    y: ((event.clientY - rect.top) / Math.max(rect.height, 1)) * layout.value.height,
+  };
 }
 
-function startPan(event: PointerEvent) {
-  if (event.pointerType === 'mouse' && event.button !== 0) {
+function clientToGraphPoint(event: PointerEvent | WheelEvent) {
+  const point = clientToSvgPoint(event);
+  if (!point) {
+    return null;
+  }
+
+  return {
+    x: (point.x - viewport.x) / viewport.scale,
+    y: (point.y - viewport.y) / viewport.scale,
+    svgX: point.x,
+    svgY: point.y,
+  };
+}
+
+function handleWheel(event: WheelEvent) {
+  event.preventDefault();
+  const graphPoint = clientToGraphPoint(event);
+  if (!graphPoint) {
+    zoomTo(viewport.scale + (event.deltaY < 0 ? 0.12 : -0.12), false);
     return;
   }
 
+  const nextScale = clampScale(viewport.scale * (event.deltaY < 0 ? 1.12 : 0.88));
+  stopViewportAnimation();
+  viewport.scale = nextScale;
+  viewport.x = graphPoint.svgX - graphPoint.x * nextScale;
+  viewport.y = graphPoint.svgY - graphPoint.y * nextScale;
+}
+
+function startPan(event: PointerEvent) {
+  if (event.pointerType === 'mouse' && ![0, 1, 2].includes(event.button)) {
+    return;
+  }
+
+  event.preventDefault();
+  (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
   stopViewportAnimation();
   viewport.panning = true;
   viewport.lastClientX = event.clientX;
@@ -725,11 +987,11 @@ function endPan() {
 }
 
 function isNodeMuted(nodeId: string) {
-  if (!focusMode.value || !selectedNodeId.value) {
+  if (!focusMode.value || !activeHighlightNodeId.value) {
     return false;
   }
 
-  return !selectedNeighborhood.value.has(nodeId);
+  return !highlightedNodeIds.value.has(nodeId);
 }
 
 function isNodeSearchMatch(nodeId: string) {
@@ -745,11 +1007,85 @@ function clearHoveredNode() {
 }
 
 function isEdgeMuted(edge: PositionedEdge) {
-  if (!focusMode.value || !selectedNodeId.value) {
+  if (!focusMode.value || !activeHighlightNodeId.value) {
     return false;
   }
 
-  return edge.source !== selectedNodeId.value && edge.target !== selectedNodeId.value;
+  return !highlightedEdgeIds.value.has(edge.id);
+}
+
+function isEdgeHighlighted(edge: PositionedEdge) {
+  return highlightedEdgeIds.value.has(edge.id);
+}
+
+function isNodeLabelVisible(node: PositionedNode) {
+  return node.degree >= 3 || viewport.scale > 1.18 || node.id === hoveredNodeId.value || node.id === selectedNodeId.value;
+}
+
+function startNodeDrag(event: PointerEvent, node: PositionedNode) {
+  if (event.pointerType === 'mouse' && event.button !== 0) {
+    return;
+  }
+
+  event.preventDefault();
+  (event.currentTarget as SVGElement).setPointerCapture?.(event.pointerId);
+  const point = clientToGraphPoint(event);
+  nodeDrag.id = node.id;
+  nodeDrag.pointerId = event.pointerId;
+  nodeDrag.startClientX = event.clientX;
+  nodeDrag.startClientY = event.clientY;
+  nodeDrag.moved = false;
+  node.fx = point?.x ?? node.x;
+  node.fy = point?.y ?? node.y;
+  graphSimulation.value?.alphaTarget(0.3).restart();
+}
+
+function moveNodeDrag(event: PointerEvent) {
+  if (!nodeDrag.id || event.pointerId !== nodeDrag.pointerId) {
+    return;
+  }
+
+  const node = layout.value.nodes.find((item) => item.id === nodeDrag.id);
+  const point = clientToGraphPoint(event);
+  if (!node || !point) {
+    return;
+  }
+
+  event.preventDefault();
+  const movedDistance = Math.hypot(event.clientX - nodeDrag.startClientX, event.clientY - nodeDrag.startClientY);
+  nodeDrag.moved = nodeDrag.moved || movedDistance > 3;
+  node.fx = point.x;
+  node.fy = point.y;
+  node.x = point.x;
+  node.y = point.y;
+}
+
+function endNodeDrag(event: PointerEvent) {
+  if (!nodeDrag.id || event.pointerId !== nodeDrag.pointerId) {
+    return;
+  }
+
+  const node = layout.value.nodes.find((item) => item.id === nodeDrag.id);
+  if (node) {
+    node.fx = null;
+    node.fy = null;
+  }
+  graphSimulation.value?.alphaTarget(0);
+  suppressNodeClick.value = nodeDrag.moved;
+  nodeDrag.id = '';
+  nodeDrag.pointerId = 0;
+  nodeDrag.moved = false;
+
+  window.setTimeout(() => {
+    suppressNodeClick.value = false;
+  }, 0);
+}
+
+function handleNodeClick(nodeId: string) {
+  if (suppressNodeClick.value) {
+    return;
+  }
+  selectNode(nodeId);
 }
 
 async function loadGraph() {
@@ -782,7 +1118,6 @@ async function loadGraph() {
     }
 
     selectedNodeId.value = graph.value.root_node_id || graph.value.nodes[0]?.id || '';
-    resetViewport(false);
   } catch (loadError) {
     error.value = loadError instanceof Error ? loadError.message : 'Unable to load graph.';
     graph.value = null;
@@ -950,8 +1285,24 @@ watch(
   { immediate: true },
 );
 
+watch(
+  () => [visibleGraph.value, layoutMode.value] as const,
+  ([payload]) => {
+    restartGraphSimulation(payload);
+    if (!payload?.nodes.length) {
+      return;
+    }
+    if (!selectedNodeId.value || !payload.nodes.some((node) => node.id === selectedNodeId.value)) {
+      selectedNodeId.value = payload.root_node_id || payload.nodes[0]?.id || '';
+    }
+    resetViewport(false);
+  },
+  { immediate: true },
+);
+
 onBeforeUnmount(() => {
   stopViewportAnimation();
+  stopGraphSimulation();
   clearHoveredNode();
   endPan();
 });
@@ -972,7 +1323,7 @@ watch(
     graphDocumentId.value = readQueryString(query, 'graphDoc');
     searchQuery.value = readQueryString(query, 'find');
     const nextLayout = readQueryString(query, 'layout');
-    layoutMode.value = nextLayout === 'tree' || nextLayout === 'constellation' ? nextLayout : 'constellation';
+    layoutMode.value = nextLayout === 'tree' || nextLayout === 'constellation' ? nextLayout : 'tree';
     const nextFilter = readQueryString(query, 'filter');
     graphFilter.value = nextFilter === 'documents' || nextFilter === 'memory' || nextFilter === 'all' ? nextFilter : 'all';
   },
@@ -1180,100 +1531,88 @@ watch(
 
           <svg
             v-else
+            ref="svgRef"
             class="knowledge-graph"
             :viewBox="`0 0 ${layout.width} ${layout.height}`"
             role="img"
             aria-label="Knowledge graph"
+            @contextmenu.prevent
           >
-            <defs>
-              <linearGradient id="graphRootFill" x1="0%" x2="100%" y1="0%" y2="100%">
-                <stop offset="0%" stop-color="#f8fafc" />
-                <stop offset="100%" stop-color="#93c5fd" />
-              </linearGradient>
-              <filter id="graphGlow" height="180%" width="180%" x="-40%" y="-40%">
-                <feGaussianBlur result="coloredBlur" stdDeviation="5" />
-                <feMerge>
-                  <feMergeNode in="coloredBlur" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-            </defs>
-
-            <g :transform="graphTransform">
-              <g v-if="layoutMode === 'constellation'" class="knowledge-graph__rings">
-                <circle :cx="layout.width / 2" :cy="layout.height / 2" r="185" />
-                <circle :cx="layout.width / 2" :cy="layout.height / 2" r="335" />
-                <circle :cx="layout.width / 2" :cy="layout.height / 2" r="485" />
+            <g class="graph-layer" :transform="graphTransform">
+              <g class="graph-layer__edges">
+                <line
+                  v-for="edge in layout.edges"
+                  :key="edge.id"
+                  class="graph-edge"
+                  :class="{
+                    'is-highlighted': isEdgeHighlighted(edge),
+                    'is-dimmed': isEdgeMuted(edge),
+                    'graph-edge--related': edge.edge_type === 'related',
+                  }"
+                  :x1="edge.sourceNode.x"
+                  :y1="edge.sourceNode.y"
+                  :x2="edge.targetNode.x"
+                  :y2="edge.targetNode.y"
+                  :data-type="edge.edge_type"
+                  :style="edgeRenderStyle(edge)"
+                />
               </g>
 
-              <path
-                v-for="edge in layout.relatedEdges"
-                :key="edge.id"
-                class="knowledge-graph__edge knowledge-graph__edge--related"
-                :d="edge.path"
-                :data-active="edge.source === selectedNodeId || edge.target === selectedNodeId"
-                :data-muted="isEdgeMuted(edge)"
-                :style="relatedEdgeStyle(edge)"
-              />
+              <g class="graph-layer__nodes">
+                <circle
+                  v-for="node in layout.nodes"
+                  :key="node.id"
+                  class="graph-node"
+                  :class="{
+                    'is-selected': node.id === selectedNodeId,
+                    'is-dimmed': isNodeMuted(node.id),
+                    'is-search-match': isNodeSearchMatch(node.id),
+                    'is-current': isCurrentWorkspaceDocument(node.id),
+                  }"
+                  :cx="node.x"
+                  :cy="node.y"
+                  :r="node.radius"
+                  :data-type="node.node_type"
+                  :style="nodeStyle(node)"
+                  tabindex="0"
+                  role="button"
+                  @pointerdown.stop="startNodeDrag($event, node)"
+                  @pointermove.stop="moveNodeDrag"
+                  @pointerup.stop="endNodeDrag"
+                  @pointercancel.stop="endNodeDrag"
+                  @mouseenter="setHoveredNode(node.id)"
+                  @mouseleave="clearHoveredNode"
+                  @focus="setHoveredNode(node.id)"
+                  @blur="clearHoveredNode"
+                  @click.stop="handleNodeClick(node.id)"
+                  @dblclick.stop="selectNode(node.id); centerOnNode(node.id)"
+                  @keydown.enter="selectNode(node.id)"
+                />
+              </g>
 
-              <path
-                v-for="edge in layout.treeEdges"
-                :key="edge.id"
-                class="knowledge-graph__edge"
-                :d="edge.path"
-                :data-type="edge.edge_type"
-                :data-active="edge.source === selectedNodeId || edge.target === selectedNodeId"
-                :data-muted="isEdgeMuted(edge)"
-              />
+              <g class="graph-layer__labels">
+                <template v-for="edge in layout.relatedEdges" :key="`label-${edge.id}`">
+                  <text
+                    v-if="isEdgeHighlighted(edge) && viewport.scale > 0.86"
+                    class="graph-edge-label"
+                    :class="{ 'is-dimmed': isEdgeMuted(edge) }"
+                    :x="(edge.sourceNode.x + edge.targetNode.x) / 2"
+                    :y="(edge.sourceNode.y + edge.targetNode.y) / 2"
+                  >
+                    {{ edgeLabel(edge) }}
+                  </text>
+                </template>
 
-              <template v-for="edge in layout.relatedEdges" :key="`label-${edge.id}`">
-                <g
-                  v-if="selectedNodeId && (edge.source === selectedNodeId || edge.target === selectedNodeId)"
-                  class="knowledge-graph__edge-label"
-                  :transform="`translate(${(edge.sourceNode.x + edge.targetNode.x) / 2}, ${(edge.sourceNode.y + edge.targetNode.y) / 2})`"
-                >
-                  <text>{{ edgeLabel(edge) }}</text>
-                </g>
-              </template>
-
-              <g
-                v-for="node in layout.nodes"
-                :key="node.id"
-                class="knowledge-graph__node"
-                :class="`knowledge-graph__node--${node.node_type}`"
-                :data-selected="node.id === selectedNodeId"
-                :data-muted="isNodeMuted(node.id)"
-                :data-match="isNodeSearchMatch(node.id)"
-                :data-current="isCurrentWorkspaceDocument(node.id)"
-                :transform="`translate(${node.x}, ${node.y})`"
-                tabindex="0"
-                role="button"
-                @pointerdown.stop
-                @mouseenter="setHoveredNode(node.id)"
-                @mouseleave="clearHoveredNode"
-                @focus="setHoveredNode(node.id)"
-                @blur="clearHoveredNode"
-                @click.stop="selectNode(node.id)"
-                @dblclick.stop="selectNode(node.id); centerOnNode(node.id)"
-                @keydown.enter="selectNode(node.id)"
-              >
-                <circle :r="node.radius + 12" class="knowledge-graph__halo" />
-                <circle :r="node.radius" class="knowledge-graph__dot" />
                 <text
-                  v-if="node.node_type !== 'memory_entry' || node.id === selectedNodeId"
-                  class="knowledge-graph__label"
-                  :x="node.radius + 14"
-                  y="-5"
+                  v-for="node in layout.nodes"
+                  v-show="isNodeLabelVisible(node)"
+                  :key="`node-label-${node.id}`"
+                  class="graph-label"
+                  :class="{ 'is-dimmed': isNodeMuted(node.id) }"
+                  :x="node.x"
+                  :y="node.y + node.radius + 15"
                 >
-                  {{ truncateLabel(node.label) }}
-                </text>
-                <text
-                  v-if="node.node_type !== 'memory_entry' || node.id === selectedNodeId"
-                  class="knowledge-graph__sub"
-                  :x="node.radius + 14"
-                  y="15"
-                >
-                  {{ nodeDescription(node) }}
+                  {{ truncateLabel(node.label, node.degree >= 5 ? 28 : 20) }}
                 </text>
               </g>
             </g>
@@ -1447,3 +1786,192 @@ watch(
     </section>
   </div>
 </template>
+
+<style scoped>
+.graph-stage {
+  --graph-bg: #111315;
+  --graph-bg-elevated: #181b1f;
+  --graph-grid: rgba(255, 255, 255, 0.035);
+  --graph-edge: rgba(220, 226, 235, 0.28);
+  --graph-edge-hot: rgba(248, 250, 252, 0.82);
+  --graph-label: #e5e7eb;
+  position: relative;
+  min-height: 780px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 22% 20%, rgba(196, 181, 253, 0.14), transparent 28%),
+    radial-gradient(circle at 78% 74%, rgba(34, 211, 238, 0.12), transparent 30%),
+    linear-gradient(135deg, #0d0f12 0%, var(--graph-bg) 48%, #17110b 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.025),
+    0 28px 80px rgba(0, 0, 0, 0.24);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.graph-stage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--graph-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--graph-grid) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: radial-gradient(circle at 50% 50%, #000 0%, transparent 76%);
+  pointer-events: none;
+}
+
+.graph-stage[data-panning='true'] {
+  cursor: grabbing;
+}
+
+.knowledge-graph {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 780px;
+  min-width: 0;
+  min-height: 780px;
+}
+
+.graph-layer__labels {
+  pointer-events: none;
+}
+
+.graph-edge {
+  stroke: var(--graph-edge);
+  stroke-width: var(--edge-width, 1px);
+  stroke-linecap: round;
+  opacity: var(--edge-opacity, 0.28);
+  transition:
+    opacity 180ms ease,
+    stroke 180ms ease,
+    stroke-width 180ms ease;
+}
+
+.graph-edge[data-type='extracts'] {
+  stroke: rgba(245, 158, 11, 0.46);
+}
+
+.graph-edge--related {
+  stroke: color-mix(in srgb, #22d3ee 62%, #f59e0b);
+  stroke-dasharray: 5 8;
+}
+
+.graph-edge.is-highlighted {
+  stroke: var(--graph-edge-hot);
+  stroke-width: max(var(--edge-width, 1px), 2.2px);
+  opacity: 0.92;
+}
+
+.graph-edge.is-dimmed {
+  opacity: 0.05;
+}
+
+.graph-node {
+  fill: var(--node-color);
+  stroke: var(--graph-bg);
+  stroke-width: 2.4px;
+  cursor: grab;
+  filter:
+    drop-shadow(0 0 9px var(--node-glow))
+    drop-shadow(0 8px 16px rgba(0, 0, 0, 0.28));
+  transition:
+    opacity 180ms ease,
+    fill 180ms ease,
+    stroke 180ms ease,
+    stroke-width 180ms ease,
+    filter 180ms ease;
+}
+
+.graph-node:hover,
+.graph-node.is-selected {
+  stroke: rgba(255, 255, 255, 0.9);
+  stroke-width: 3px;
+  filter:
+    drop-shadow(0 0 16px var(--node-glow))
+    drop-shadow(0 14px 26px rgba(0, 0, 0, 0.36));
+}
+
+.graph-node.is-current {
+  stroke: #f8fafc;
+}
+
+.graph-node.is-search-match {
+  stroke: #fef08a;
+}
+
+.graph-node.is-dimmed {
+  opacity: 0.13;
+  filter: none;
+}
+
+.graph-label,
+.graph-edge-label {
+  fill: var(--graph-label);
+  font-family: 'IBM Plex Mono', 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  paint-order: stroke;
+  pointer-events: none;
+  stroke: rgba(10, 12, 14, 0.82);
+  stroke-linejoin: round;
+  stroke-width: 4px;
+  text-anchor: middle;
+  transition: opacity 180ms ease;
+}
+
+.graph-edge-label {
+  fill: rgba(226, 232, 240, 0.78);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.graph-label.is-dimmed,
+.graph-edge-label.is-dimmed {
+  opacity: 0;
+}
+
+.graph-tooltip {
+  border-color: rgba(148, 163, 184, 0.22);
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 60%),
+    rgba(17, 19, 21, 0.92);
+  color: #f8fafc;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(14px);
+}
+
+.graph-tooltip span,
+.graph-tooltip small {
+  color: rgba(226, 232, 240, 0.68);
+}
+
+.graph-loading {
+  color: rgba(226, 232, 240, 0.74);
+}
+
+.graph-loading span {
+  border-color: rgba(226, 232, 240, 0.18);
+  border-top-color: #22d3ee;
+}
+
+@media (max-width: 640px) {
+  .graph-stage {
+    min-height: 560px;
+    border-radius: 22px;
+  }
+
+  .knowledge-graph {
+    height: 560px;
+    min-height: 560px;
+  }
+}
+</style>

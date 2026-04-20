@@ -799,15 +799,11 @@ textarea:focus-visible {
 
 .graph-stage {
   position: relative;
-  min-height: 680px;
+  min-height: 800px;
   overflow: auto;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 28px;
-  background:
-    radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.08), transparent 26%),
-    radial-gradient(circle at 80% 12%, rgba(251, 146, 60, 0.08), transparent 18%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 22%),
-    #05070d;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
   cursor: grab;
 }
 
@@ -815,10 +811,7 @@ textarea:focus-visible {
   content: '';
   position: absolute;
   inset: 0;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 48px 48px;
+  background-image: none;
   pointer-events: none;
 }
 
@@ -837,12 +830,11 @@ textarea:focus-visible {
   gap: 0.2rem;
   max-width: 220px;
   padding: 0.75rem 0.85rem;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 16px;
-  background: rgba(8, 11, 18, 0.92);
-  color: #f8fafc;
-  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(18px);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1f2937;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   pointer-events: none;
 }
 
@@ -854,7 +846,7 @@ textarea:focus-visible {
 
 .graph-tooltip span,
 .graph-tooltip small {
-  color: rgba(226, 232, 240, 0.68);
+  color: #6b7280;
 }
 
 .graph-loading {
@@ -864,14 +856,14 @@ textarea:focus-visible {
   display: grid;
   place-items: center;
   gap: 0.8rem;
-  color: rgba(248, 250, 252, 0.72);
+  color: #6b7280;
 }
 
 .graph-loading span {
   width: 52px;
   height: 52px;
-  border: 2px solid rgba(255, 255, 255, 0.16);
-  border-top-color: rgba(255, 255, 255, 0.88);
+  border: 2px solid #e5e7eb;
+  border-top-color: #9ca3af;
   border-radius: 999px;
   animation: graph-spin 1s linear infinite;
 }
@@ -881,8 +873,8 @@ textarea:focus-visible {
   z-index: 1;
   display: block;
   width: 100%;
-  min-width: 1040px;
-  min-height: 680px;
+  min-width: 1200px;
+  min-height: 800px;
 }
 
 .knowledge-graph__rings circle {
@@ -894,18 +886,19 @@ textarea:focus-visible {
 
 .knowledge-graph__edge {
   fill: none;
-  stroke: rgba(148, 163, 184, 0.34);
-  stroke-width: 2;
+  stroke: #d1d5db;
+  stroke-width: 1.2;
   stroke-linecap: round;
   transition: opacity 220ms ease, stroke 220ms ease;
 }
 
 .knowledge-graph__edge[data-type='extracts'] {
-  stroke: rgba(249, 115, 22, 0.2);
+  stroke: #fbbf24;
 }
 
 .knowledge-graph__edge[data-active='true'] {
-  stroke: rgba(255, 255, 255, 0.74);
+  stroke: #374151;
+  stroke-width: 1.8;
 }
 
 .knowledge-graph__edge[data-muted='true'] {
@@ -913,22 +906,20 @@ textarea:focus-visible {
 }
 
 .knowledge-graph__edge--related {
-  stroke: rgba(94, 234, 212, 0.48);
-  stroke-dasharray: 5 8;
-  stroke-width: 2.4;
-  filter: url(#graphGlow);
+  stroke: #9ca3af;
+  stroke-dasharray: 4 6;
+  stroke-width: 1.2;
+  filter: none;
   transition:
     opacity 220ms ease,
     stroke 220ms ease,
-    stroke-width 220ms ease,
-    stroke-opacity 220ms ease,
-    stroke-dasharray 220ms ease;
+    stroke-width 220ms ease;
 }
 
 .knowledge-graph__edge-label text {
-  fill: rgba(226, 232, 240, 0.72);
-  font-size: 11px;
-  letter-spacing: 0.06em;
+  fill: #9ca3af;
+  font-size: 10px;
+  letter-spacing: 0.04em;
   text-anchor: middle;
   text-transform: uppercase;
 }
@@ -942,81 +933,47 @@ textarea:focus-visible {
   outline: none;
 }
 
-.knowledge-graph__halo {
-  fill: rgba(255, 255, 255, 0.05);
-  opacity: 0;
+.knowledge-graph__rect {
+  fill: #f3f4f6;
+  stroke: #d1d5db;
+  stroke-width: 1;
+  transition: fill 180ms ease, stroke 180ms ease, opacity 180ms ease;
 }
 
-.knowledge-graph__dot {
-  stroke: rgba(255, 255, 255, 0.22);
-  stroke-width: 2;
-  filter: url(#graphGlow);
+.knowledge-graph__node[data-selected='true'] .knowledge-graph__rect,
+.knowledge-graph__node:hover .knowledge-graph__rect {
+  fill: #eef2f7;
+  stroke: #9ca3af;
 }
 
-.knowledge-graph__node--user .knowledge-graph__dot {
-  fill: url(#graphRootFill);
+.knowledge-graph__node[data-match='true'] .knowledge-graph__rect {
+  stroke: #6b7280;
 }
 
-.knowledge-graph__node--knowledge_base .knowledge-graph__dot {
-  fill: #22d3ee;
-}
-
-.knowledge-graph__node--document .knowledge-graph__dot {
-  fill: #f59e0b;
-}
-
-.knowledge-graph__node--memory_entry .knowledge-graph__dot {
-  fill: #c084fc;
-}
-
-.knowledge-graph__node[data-selected='true'] .knowledge-graph__halo,
-.knowledge-graph__node:hover .knowledge-graph__halo {
-  opacity: 1;
-}
-
-.knowledge-graph__node[data-selected='true'] .knowledge-graph__dot {
-  stroke: rgba(255, 255, 255, 0.94);
-  stroke-width: 3;
-}
-
-.knowledge-graph__node[data-match='true'] .knowledge-graph__dot {
-  stroke: rgba(94, 234, 212, 0.92);
-  stroke-width: 3;
-}
-
-.knowledge-graph__node[data-match='true'] .knowledge-graph__label {
-  fill: #ccfbf1;
-}
-
-.knowledge-graph__node[data-current='true'] .knowledge-graph__halo {
-  opacity: 1;
-  fill: rgba(245, 158, 11, 0.12);
-}
-
-.knowledge-graph__node[data-current='true'] .knowledge-graph__dot {
-  stroke: rgba(245, 158, 11, 0.92);
-  stroke-width: 3;
+.knowledge-graph__node[data-current='true'] .knowledge-graph__rect {
+  stroke: #4b5563;
 }
 
 .knowledge-graph__node[data-muted='true'] {
-  opacity: 0.18;
+  opacity: 0.22;
 }
 
 .knowledge-graph__label,
 .knowledge-graph__sub {
   pointer-events: none;
-  fill: #f8fafc;
+  text-anchor: middle;
 }
 
 .knowledge-graph__label {
-  font-size: 14px;
-  font-weight: 700;
+  fill: #111827;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .knowledge-graph__sub {
-  fill: rgba(226, 232, 240, 0.56);
-  font-size: 11px;
-  letter-spacing: 0.05em;
+  fill: #6b7280;
+  font-size: 10px;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
