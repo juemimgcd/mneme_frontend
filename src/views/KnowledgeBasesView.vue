@@ -55,13 +55,13 @@ async function selectKnowledgeBase(id: string) {
   <div class="view-stack">
     <SectionHeader
       eyebrow="Collections"
-      title="Collection control."
-      description="Switch contexts, create a new collection, and inspect the active collection state."
+      title="Shape the library."
+      description="Create collections, switch between them, and keep the active shelf in view."
     />
 
     <section class="collections-layout">
-      <SurfacePanel eyebrow="Create" title="New collection">
-        <form class="inline-form" @submit.prevent="createKnowledgeBase">
+      <SurfacePanel eyebrow="Create" title="Add a collection">
+        <form class="inline-form inline-form--dense" @submit.prevent="createKnowledgeBase">
           <label>
             <span>Name</span>
             <input v-model="form.name" maxlength="24" required />
@@ -74,9 +74,9 @@ async function selectKnowledgeBase(id: string) {
         </form>
       </SurfacePanel>
 
-      <SurfacePanel eyebrow="Active" title="Current collection">
-        <div v-if="workspace.currentKnowledgeBase" class="collections-panel">
-          <article class="context-card">
+      <SurfacePanel eyebrow="Active" title="Open collection">
+        <div v-if="workspace.currentKnowledgeBase" class="collections-panel collections-panel--dense">
+          <article class="context-card collection-row collection-row--summary">
             <header class="knowledge-card__header">
               <strong>{{ workspace.currentKnowledgeBase.name }}</strong>
               <span class="status-pill" :data-status="workspace.currentKnowledgeBase.status">
@@ -96,30 +96,30 @@ async function selectKnowledgeBase(id: string) {
             </dl>
           </article>
 
-          <article class="growth-card">
+          <article class="growth-card collection-row">
             <header>
               <strong>Queue</strong>
               <span class="growth-card__trend" :data-trend="runningCount ? 'steady' : 'up'">
                 {{ runningCount }}
               </span>
             </header>
-            <p>{{ runningCount ? 'Tasks are still running for this collection.' : 'No active ingest tasks.' }}</p>
+            <p>{{ runningCount ? 'New material is still being processed for this shelf.' : 'No active processing right now.' }}</p>
           </article>
 
-          <article v-if="latestTask" class="growth-card">
+          <article v-if="latestTask" class="growth-card collection-row">
             <header>
-              <strong>Latest task</strong>
+              <strong>Latest update</strong>
               <span class="growth-card__trend" data-trend="steady">{{ latestTask.status }}</span>
             </header>
             <p>{{ new Date(latestTask.updated_at).toLocaleString('en-US') }}</p>
           </article>
 
-          <article v-if="workspace.profile" class="context-card">
+          <article v-if="workspace.profile" class="context-card collection-row">
             <strong>Profile</strong>
             <p>{{ workspace.profile.profile_summary }}</p>
           </article>
 
-          <article v-if="focusItems.length" class="context-card">
+          <article v-if="focusItems.length" class="context-card collection-row">
             <strong>Focus</strong>
             <div class="chip-wrap">
               <span v-for="item in focusItems" :key="item" class="memory-chip">{{ item }}</span>
@@ -129,7 +129,7 @@ async function selectKnowledgeBase(id: string) {
       </SurfacePanel>
     </section>
 
-    <SurfacePanel eyebrow="All Collections" title="Library">
+    <SurfacePanel eyebrow="All Collections" title="Shelf">
       <KnowledgeBaseGrid
         :active-id="workspace.activeKnowledgeBaseId"
         :items="workspace.knowledgeBases"

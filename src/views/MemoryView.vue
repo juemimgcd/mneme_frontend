@@ -25,14 +25,14 @@ async function rebuildMemory() {
   <div class="view-stack">
     <SectionHeader
       eyebrow="Memory"
-      title="Memory layer."
-      description="Read extracted entries, clusters, and rebuild state."
+      title="Extracted notes."
+      description="Read what the notebook has pulled out, grouped by time, theme, and type."
     />
 
     <section class="memory-overview">
-      <SurfacePanel eyebrow="Rebuild" title="Memory extraction">
-        <div class="memory-overview__hero">
-          <article class="context-card workspace-overview__feature">
+      <SurfacePanel eyebrow="Rebuild" title="Note extraction">
+        <div class="memory-overview__hero memory-overview__hero--dense">
+          <article class="context-card workspace-overview__feature memory-summary-row">
             <header class="knowledge-card__header">
               <strong>Current layer</strong>
               <span class="inline-badge">{{ totalEntries }} entries</span>
@@ -42,17 +42,17 @@ async function rebuildMemory() {
             </p>
           </article>
 
-          <div class="memory-overview__rail">
+          <div class="memory-note-list">
             <button
               class="primary-button"
               type="button"
               :disabled="workspace.memoryRebuildLoading"
               @click="rebuildMemory"
             >
-              {{ workspace.memoryRebuildLoading ? 'Rebuilding...' : 'Rebuild Memory' }}
+              {{ workspace.memoryRebuildLoading ? 'Rebuilding...' : 'Rebuild Notes' }}
             </button>
 
-            <article v-if="workspace.lastMemoryRebuild" class="growth-card">
+            <article v-if="workspace.lastMemoryRebuild" class="growth-card memory-summary-row">
               <header>
                 <strong>Latest rebuild</strong>
                 <span class="growth-card__trend" data-trend="up">
@@ -68,12 +68,12 @@ async function rebuildMemory() {
         </div>
       </SurfacePanel>
 
-      <SurfacePanel eyebrow="Timeline" title="Memory view">
+      <SurfacePanel eyebrow="Timeline" title="Notebook memory">
         <TimelineList v-if="workspace.memoryLibrary" :library="workspace.memoryLibrary" />
         <EmptyState
           v-else
-          title="Memory is empty"
-          description="Once indexing and extraction are available, this view will show a structured timeline."
+          title="No extracted notes yet"
+          description="Once processing finishes, this view will show a structured timeline of notes."
         />
       </SurfacePanel>
     </section>
