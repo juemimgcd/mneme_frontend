@@ -1,5 +1,7 @@
 ﻿@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;600;700&family=IBM+Plex+Mono:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap');
+
 :root {
   color-scheme: light;
   --font-sans: 'Inter', sans-serif;
@@ -2494,5 +2496,1119 @@ textarea:focus-visible {
 @keyframes graph-spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+.app-shell {
+  --app-paper: #f3ecdf;
+  --app-paper-strong: #fbf7f0;
+  --app-paper-muted: #ece1d0;
+  --app-sidebar: #e7dccb;
+  --app-sidebar-strong: #ddd0bc;
+  --app-panel: #fffdf8;
+  --app-panel-muted: #f3eadc;
+  --app-ink: #2d261f;
+  --app-ink-soft: #62584b;
+  --app-ink-muted: #8f816f;
+  --app-line: #d7c8b2;
+  --app-line-strong: #c3b096;
+  --app-shadow: 0 18px 38px rgba(85, 66, 38, 0.08);
+  --app-accent: #7c6047;
+  --app-accent-strong: #5c4432;
+  --app-accent-soft: rgba(124, 96, 71, 0.14);
+  --app-sage: #6c7b63;
+  --app-slate: #6a7d92;
+  --app-rust: #9d664f;
+  --app-gold: #a68b5b;
+  --app-rule: rgba(124, 96, 71, 0.075);
+  color-scheme: light;
+  position: relative;
+  font-family: 'Source Sans 3', sans-serif;
+  color: var(--app-ink);
+  background:
+    radial-gradient(circle at top left, rgba(166, 139, 91, 0.16), transparent 26rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.5), transparent 14rem),
+    var(--app-paper);
+}
+
+:root[data-theme='dark'] .app-shell {
+  --app-paper: #181411;
+  --app-paper-strong: #221d18;
+  --app-paper-muted: #28211b;
+  --app-sidebar: #15110e;
+  --app-sidebar-strong: #1b1612;
+  --app-panel: #241e18;
+  --app-panel-muted: #2c251d;
+  --app-ink: #efe5d8;
+  --app-ink-soft: #c6b8a8;
+  --app-ink-muted: #948573;
+  --app-line: #3c3026;
+  --app-line-strong: #594634;
+  --app-shadow: 0 24px 56px rgba(0, 0, 0, 0.22);
+  --app-accent: #b08d69;
+  --app-accent-strong: #d6b48f;
+  --app-accent-soft: rgba(176, 141, 105, 0.16);
+  --app-sage: #8d9a7c;
+  --app-slate: #92a3b4;
+  --app-rust: #bf8a73;
+  --app-gold: #cfb17b;
+  --app-rule: rgba(239, 229, 216, 0.04);
+  color-scheme: dark;
+  background:
+    radial-gradient(circle at top left, rgba(176, 141, 105, 0.14), transparent 24rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 12rem),
+    var(--app-paper);
+}
+
+.app-shell * {
+  border-color: var(--app-line);
+}
+
+.app-shell a {
+  color: var(--app-accent-strong);
+}
+
+.app-shell strong,
+.app-shell h1,
+.app-shell h2,
+.app-shell h3,
+.app-shell .brandmark strong,
+.app-shell .app-topbar__title,
+.app-shell .section-header__title,
+.app-shell .surface-panel__title,
+.app-shell .metric-card__value {
+  font-family: 'Newsreader', 'Fraunces', serif;
+  letter-spacing: -0.02em;
+}
+
+.app-shell .app-sidebar,
+.app-shell .app-shell__content,
+.app-shell .app-topbar,
+.app-shell .surface-panel,
+.app-shell .metric-card,
+.app-shell .knowledge-card,
+.app-shell .context-card,
+.app-shell .theme-card,
+.app-shell .growth-card,
+.app-shell .chat-bubble,
+.app-shell .source-card,
+.app-shell .upload-zone {
+  position: relative;
+}
+
+.app-shell .app-sidebar {
+  gap: 1.2rem;
+  padding: 1.1rem 1rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 10rem),
+    linear-gradient(180deg, var(--app-sidebar), var(--app-sidebar-strong));
+  color: var(--app-ink);
+  border-right: 1px solid var(--app-line);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.18);
+}
+
+.app-shell .brandmark {
+  gap: 0.85rem;
+}
+
+.app-shell .brandmark__glyph {
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--app-line-strong);
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.5), transparent 68%),
+    var(--app-panel);
+  color: var(--app-accent-strong);
+  box-shadow: 0 6px 16px rgba(82, 61, 34, 0.06);
+}
+
+.app-shell .brandmark span:last-child {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.app-shell .brandmark strong {
+  font-size: 1.22rem;
+  color: var(--app-ink);
+}
+
+.app-shell .brandmark small,
+.app-shell .app-sidebar__caption,
+.app-shell .section-header__eyebrow,
+.app-shell .surface-panel__eyebrow,
+.app-shell .app-topbar__eyebrow {
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--app-ink-muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.app-shell .app-sidebar__note,
+.app-shell .app-sidebar__footer {
+  padding: 0.85rem 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.26), transparent 88%),
+    color-mix(in srgb, var(--app-panel) 94%, var(--app-paper-muted));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.app-shell .app-sidebar__footer strong,
+.app-shell .app-sidebar__note strong {
+  color: var(--app-ink);
+}
+
+.app-shell .app-nav {
+  gap: 0.15rem;
+}
+
+.app-shell .app-nav__link {
+  min-height: 40px;
+  padding: 0.62rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  color: var(--app-ink-soft);
+  font-size: 0.95rem;
+}
+
+.app-shell .app-nav__link.router-link-active,
+.app-shell .app-nav__link:hover {
+  border-color: transparent;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--app-accent) 10%, transparent), transparent 72%),
+    rgba(255, 255, 255, 0.14);
+  color: var(--app-ink);
+  transform: translateX(0);
+  box-shadow: inset 2px 0 0 var(--app-accent);
+}
+
+.app-shell .app-icon {
+  width: 1rem;
+  height: 1rem;
+  opacity: 0.68;
+  stroke-width: 1.6;
+}
+
+.app-shell .app-shell__content {
+  padding: 1.2rem 1.35rem 1.75rem;
+  background: transparent;
+}
+
+.app-shell .app-shell__content::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.28), transparent 12rem),
+    repeating-linear-gradient(
+      180deg,
+      transparent 0,
+      transparent 29px,
+      var(--app-rule) 29px,
+      var(--app-rule) 30px
+    );
+  opacity: 0.7;
+}
+
+.app-shell .app-shell__content > * {
+  position: relative;
+  z-index: 1;
+}
+
+.app-shell .app-topbar {
+  padding: 0.78rem 0.92rem;
+  border: 1px solid rgba(255, 255, 255, 0.46);
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.38), transparent 72%),
+    color-mix(in srgb, var(--app-panel) 96%, var(--app-paper-muted));
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(85, 66, 38, 0.04);
+}
+
+.app-shell .app-topbar__title,
+.app-shell .section-header__title {
+  color: var(--app-ink);
+  font-weight: 520;
+}
+
+.app-shell .app-topbar__title {
+  font-size: clamp(1.7rem, 1.9vw, 2.2rem);
+}
+
+.app-shell .app-topbar__actions {
+  gap: 0.45rem;
+  align-items: flex-start;
+}
+
+.app-shell .app-topbar__status {
+  gap: 0.32rem;
+  margin-top: 0.55rem;
+}
+
+.app-shell .app-main {
+  padding-top: 0.95rem;
+}
+
+.app-shell .view-stack,
+.app-shell .workspace-overview,
+.app-shell .memory-overview,
+.app-shell .documents-preview,
+.app-shell .collections-panel,
+.app-shell .chat-stack,
+.app-shell .workspace-overview__signals,
+.app-shell .workspace-overview__rail,
+.app-shell .memory-overview__rail,
+.app-shell .retrieval-run__main,
+.app-shell .retrieval-run__rail,
+.app-shell .companion-board__main,
+.app-shell .companion-board__rail,
+.app-shell .advice-board__main,
+.app-shell .advice-board__rail,
+.app-shell .memory-sidegrid,
+.app-shell .insight-stack,
+.app-shell .growth-stack {
+  gap: 0.72rem;
+}
+
+.app-shell .metric-grid,
+.app-shell .dashboard-grid,
+.app-shell .retrieve-layout,
+.app-shell .timeline-layout,
+.app-shell .documents-layout,
+.app-shell .collections-layout,
+.app-shell .knowledge-grid,
+.app-shell .sources-grid,
+.app-shell .retrieval-run,
+.app-shell .companion-board,
+.app-shell .advice-board,
+.app-shell .workspace-overview__hero,
+.app-shell .memory-overview__hero {
+  gap: 0.72rem;
+}
+
+.app-shell .metric-grid--dense {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.app-shell .section-header {
+  gap: 0.35rem;
+  padding-left: 0.2rem;
+  border-left: 2px solid color-mix(in srgb, var(--app-accent) 28%, transparent);
+}
+
+.app-shell .section-header__description,
+.app-shell .metric-card__label,
+.app-shell .metric-card__change,
+.app-shell .knowledge-card p,
+.app-shell .activity-feed__item p,
+.app-shell .surface-panel__body p,
+.app-shell .context-card__meta dt,
+.app-shell .source-card p,
+.app-shell .source-card small,
+.app-shell .chat-bubble p,
+.app-shell .theme-card p,
+.app-shell .growth-card p {
+  color: var(--app-ink-soft);
+}
+
+.app-shell .context-card p,
+.app-shell .theme-card p,
+.app-shell .source-card p,
+.app-shell .chat-bubble p,
+.app-shell .timeline-entry p,
+.app-shell .review-item p,
+.app-shell .document-note-row p,
+.app-shell .workspace-note-row p,
+.app-shell .reading-note-row p,
+.app-shell .collection-row p,
+.app-shell .library-status-row p,
+.app-shell .memory-summary-row p,
+.app-shell .note-row p,
+.app-shell .section-header__description {
+  font-family: 'Newsreader', 'Fraunces', serif;
+  letter-spacing: -0.01em;
+}
+
+.app-shell .context-card strong,
+.app-shell .theme-card strong,
+.app-shell .source-card strong,
+.app-shell .chat-bubble strong,
+.app-shell .timeline-entry strong,
+.app-shell .review-item strong,
+.app-shell .document-note-row strong,
+.app-shell .workspace-note-row strong,
+.app-shell .reading-note-row strong,
+.app-shell .collection-row strong,
+.app-shell .library-status-row strong,
+.app-shell .memory-summary-row strong,
+.app-shell .note-row strong,
+.app-shell .activity-feed__content h3 {
+  line-height: 1.15;
+}
+
+.app-shell .section-header__title {
+  font-size: clamp(1.9rem, 2.2vw, 2.45rem);
+  line-height: 1.03;
+}
+
+.app-shell .section-header__description {
+  max-width: 64ch;
+  font-size: 1rem;
+  line-height: 1.62;
+}
+
+.app-shell .surface-panel,
+.app-shell .metric-card,
+.app-shell .knowledge-card,
+.app-shell .hero-card,
+.app-shell .upload-zone,
+.app-shell .context-card,
+.app-shell .chat-bubble,
+.app-shell .source-card,
+.app-shell .theme-card,
+.app-shell .insight-card,
+.app-shell .growth-card {
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 12px rgba(85, 66, 38, 0.03);
+}
+
+.app-shell .surface-panel,
+.app-shell .knowledge-card,
+.app-shell .hero-card,
+.app-shell .upload-zone {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.42), transparent 72%),
+    color-mix(in srgb, var(--app-panel) 88%, transparent);
+}
+
+.app-shell .surface-panel {
+  padding: 0.92rem 0.98rem;
+  border-radius: 14px;
+  border-color: color-mix(in srgb, var(--app-line) 78%, rgba(255, 255, 255, 0.34));
+  box-shadow: none;
+}
+
+.app-shell .surface-panel::after,
+.app-shell .metric-card::after {
+  content: '';
+  position: absolute;
+  right: 1.1rem;
+  left: 1.1rem;
+  bottom: 0.95rem;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--app-line), transparent);
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.app-shell .surface-panel::after {
+  display: none;
+}
+
+.app-shell .surface-panel__header {
+  margin-bottom: 0.6rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--app-line) 72%, transparent);
+}
+
+.app-shell .surface-panel__title {
+  font-size: 1.16rem;
+  color: var(--app-ink);
+}
+
+.app-shell .metric-card {
+  min-height: 112px;
+  padding: 0.8rem 0.88rem;
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.5), transparent 70%),
+    var(--app-panel);
+  box-shadow: none;
+}
+
+.app-shell .metric-card[data-tone='teal'] {
+  background:
+    linear-gradient(135deg, rgba(108, 123, 99, 0.16), transparent 58%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.58), transparent 70%),
+    var(--app-panel);
+}
+
+.app-shell .metric-card[data-tone='amber'] {
+  background:
+    linear-gradient(135deg, rgba(166, 139, 91, 0.18), transparent 58%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.58), transparent 70%),
+    var(--app-panel);
+}
+
+.app-shell .metric-card[data-tone='indigo'] {
+  background:
+    linear-gradient(135deg, rgba(106, 125, 146, 0.18), transparent 58%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.58), transparent 70%),
+    var(--app-panel);
+}
+
+.app-shell .metric-card[data-tone='coral'] {
+  background:
+    linear-gradient(135deg, rgba(157, 102, 79, 0.16), transparent 58%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.58), transparent 70%),
+    var(--app-panel);
+}
+
+.app-shell .metric-card__label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.app-shell .metric-card__value {
+  font-size: clamp(1.5rem, 1.9vw, 2rem);
+  font-weight: 520;
+  color: var(--app-ink);
+}
+
+.app-shell .context-card,
+.app-shell .chat-bubble,
+.app-shell .source-card,
+.app-shell .theme-card,
+.app-shell .insight-card,
+.app-shell .growth-card {
+  padding: 0.72rem 0.78rem;
+  border-radius: 10px;
+  border-color: color-mix(in srgb, var(--app-line) 72%, rgba(255, 255, 255, 0.28));
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 62%),
+    color-mix(in srgb, var(--app-panel-muted) 52%, transparent);
+  box-shadow: none;
+}
+
+.app-shell .knowledge-card {
+  padding: 0.86rem 0.92rem;
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.app-shell .workspace-note-list,
+.app-shell .reading-note-list,
+.app-shell .review-list,
+.app-shell .memory-note-list {
+  display: grid;
+  gap: 0;
+}
+
+.app-shell .workspace-note-row,
+.app-shell .reading-note-row,
+.app-shell .review-item,
+.app-shell .memory-summary-row,
+.app-shell .theme-card--compact {
+  border-radius: 0;
+  border-right: 0;
+  border-left: 0;
+  background: transparent;
+}
+
+.app-shell .workspace-note-row,
+.app-shell .reading-note-row,
+.app-shell .review-item,
+.app-shell .memory-summary-row {
+  padding: 0.62rem 0;
+}
+
+.app-shell .workspace-note-row + .workspace-note-row,
+.app-shell .reading-note-row + .reading-note-row,
+.app-shell .review-item + .review-item,
+.app-shell .memory-summary-row + .memory-summary-row,
+.app-shell .theme-card--compact + .theme-card--compact {
+  border-top: 1px solid color-mix(in srgb, var(--app-line) 82%, transparent);
+}
+
+.app-shell .reading-note-row--feature,
+.app-shell .review-item--summary {
+  padding-top: 0;
+}
+
+.app-shell .workspace-note-row header,
+.app-shell .reading-note-row header,
+.app-shell .review-item header,
+.app-shell .memory-summary-row header,
+.app-shell .theme-card--compact header {
+  margin-bottom: 0.28rem;
+}
+
+.app-shell .workspace-note-row p,
+.app-shell .reading-note-row p,
+.app-shell .review-item p,
+.app-shell .memory-summary-row p,
+.app-shell .theme-card--compact p,
+.app-shell .activity-feed__content p {
+  font-size: 0.94rem;
+  line-height: 1.5;
+}
+
+.app-shell .review-toolbar {
+  gap: 0.55rem;
+}
+
+.app-shell .review-toolbar .section-header__description {
+  margin-left: auto;
+  font-size: 0.9rem;
+}
+
+.app-shell .collections-panel--dense,
+.app-shell .library-status-list,
+.app-shell .documents-preview--dense {
+  display: grid;
+  gap: 0;
+}
+
+.app-shell .collection-row,
+.app-shell .library-status-row,
+.app-shell .document-note-row,
+.app-shell .note-row {
+  border-radius: 0;
+  border-right: 0;
+  border-left: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.app-shell .collection-row,
+.app-shell .library-status-row,
+.app-shell .document-note-row,
+.app-shell .note-row {
+  padding: 0.62rem 0;
+}
+
+.app-shell .collection-row + .collection-row,
+.app-shell .library-status-row + .library-status-row,
+.app-shell .document-note-row + .document-note-row,
+.app-shell .note-row + .note-row {
+  border-top: 1px solid color-mix(in srgb, var(--app-line) 80%, transparent);
+}
+
+.app-shell .collection-row--summary,
+.app-shell .document-note-row--summary,
+.app-shell .note-row--summary {
+  padding-top: 0;
+}
+
+.app-shell .knowledge-grid--list {
+  grid-template-columns: 1fr;
+  gap: 0;
+  border: 1px solid color-mix(in srgb, var(--app-line) 78%, transparent);
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.app-shell .knowledge-card--list {
+  border: 0;
+  border-radius: 0;
+  padding: 0.74rem 0.82rem;
+  background: transparent;
+  box-shadow: none;
+}
+
+.app-shell .knowledge-card--list + .knowledge-card--list {
+  border-top: 1px solid color-mix(in srgb, var(--app-line) 82%, transparent);
+}
+
+.app-shell .knowledge-card--list[data-active='true'] {
+  border-color: transparent;
+  background: rgba(124, 96, 71, 0.06);
+  transform: none;
+}
+
+.app-shell .knowledge-card--list:hover {
+  background: rgba(124, 96, 71, 0.04);
+}
+
+.app-shell .knowledge-card--list .knowledge-card__meta {
+  margin-top: 0.72rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid color-mix(in srgb, var(--app-line) 72%, transparent);
+}
+
+.app-shell .activity-feed__item {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.62rem;
+  padding: 0.46rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--app-line) 78%, transparent);
+}
+
+.app-shell .activity-feed__item:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.app-shell .activity-feed__content h3 {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 600;
+}
+
+.app-shell .activity-feed__time,
+.app-shell .timeline-list__time {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+.app-shell .activity-feed__dot {
+  width: 9px;
+  height: 9px;
+  margin-top: 0.38rem;
+}
+
+.app-shell .growth-card__trend,
+.app-shell .status-pill,
+.app-shell .inline-badge,
+.app-shell .memory-chip {
+  border: 1px solid transparent;
+  box-shadow: none;
+  min-height: 22px;
+  padding: 0.1rem 0.44rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.66rem;
+  font-weight: 650;
+}
+
+.app-shell .growth-card__trend[data-trend='up'],
+.app-shell .status-pill[data-status='ready'],
+.app-shell .status-pill[data-status='indexed'],
+.app-shell .status-pill[data-status='completed'],
+.app-shell .inline-badge {
+  background: rgba(108, 123, 99, 0.12);
+  color: var(--app-sage);
+  border-color: rgba(108, 123, 99, 0.18);
+}
+
+.app-shell .growth-card__trend[data-trend='steady'],
+.app-shell .status-pill[data-status='indexing'],
+.app-shell .status-pill[data-status='queued'],
+.app-shell .status-pill[data-status='parsing'],
+.app-shell .status-pill[data-status='chunking'],
+.app-shell .status-pill[data-status='embedding'],
+.app-shell .status-pill[data-status='vector_upserting'],
+.app-shell .status-pill[data-status='uploaded'],
+.app-shell .status-pill[data-status='draft'] {
+  background: rgba(166, 139, 91, 0.12);
+  color: var(--app-gold);
+  border-color: rgba(166, 139, 91, 0.18);
+}
+
+.app-shell .status-pill[data-status='failed'],
+.app-shell .status-pill[data-status='cancelled'],
+.app-shell .status-pill[data-status='canceled'],
+.app-shell .ghost-button--danger {
+  background: rgba(157, 102, 79, 0.12);
+  color: var(--app-rust);
+  border-color: rgba(157, 102, 79, 0.18);
+}
+
+.app-shell .memory-chip {
+  background: rgba(255, 255, 255, 0.44);
+  color: var(--app-ink-soft);
+  border-color: var(--app-line);
+}
+
+.app-shell .chip-wrap {
+  gap: 0.45rem;
+}
+
+.app-shell .activity-feed__dot {
+  background: var(--app-accent);
+}
+
+.app-shell .activity-feed__item[data-tone='amber'] .activity-feed__dot {
+  background: var(--app-gold);
+}
+
+.app-shell .activity-feed__item[data-tone='indigo'] .activity-feed__dot {
+  background: var(--app-slate);
+}
+
+.app-shell .activity-feed__item[data-tone='coral'] .activity-feed__dot {
+  background: var(--app-rust);
+}
+
+.app-shell .upload-zone,
+.app-shell .chat-composer,
+.app-shell .inline-form {
+  padding: 0.82rem;
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.3), transparent 65%),
+    color-mix(in srgb, var(--app-panel) 86%, transparent);
+  box-shadow: none;
+}
+
+.app-shell .inline-form--dense {
+  gap: 0.72rem;
+}
+
+.app-shell .chat-composer--dense {
+  padding-bottom: 0.72rem;
+}
+
+.app-shell .upload-zone input[type='file'] {
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  border: 1px dashed var(--app-line-strong);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.42);
+  color: var(--app-ink-soft);
+}
+
+.app-shell .upload-zone input[type='file']::file-selector-button {
+  margin-right: 0.85rem;
+  padding: 0.45rem 0.68rem;
+  border: 1px solid var(--app-line);
+  border-radius: 10px;
+  background: var(--app-panel);
+  color: var(--app-ink);
+  font-weight: 700;
+}
+
+.app-shell .upload-zone__icon,
+.app-shell .empty-state__icon {
+  border: 1px solid var(--app-line);
+  background:
+    linear-gradient(135deg, rgba(166, 139, 91, 0.14), rgba(106, 125, 146, 0.14)),
+    var(--app-panel-muted);
+}
+
+.app-shell .kb-switcher select,
+.app-shell .chat-composer textarea,
+.app-shell .chat-composer input,
+.app-shell .inline-form input {
+  border: 1px solid var(--app-line);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.62);
+  color: var(--app-ink);
+}
+
+.app-shell .kb-switcher select:focus,
+.app-shell .chat-composer textarea:focus,
+.app-shell .chat-composer input:focus,
+.app-shell .inline-form input:focus {
+  border-color: var(--app-line-strong);
+  outline: 0;
+  box-shadow: 0 0 0 4px rgba(124, 96, 71, 0.08);
+}
+
+.app-shell .chat-composer label,
+.app-shell .inline-form label,
+.app-shell .kb-switcher {
+  gap: 0.28rem;
+}
+
+.app-shell .chat-composer label > span,
+.app-shell .inline-form label > span,
+.app-shell .kb-switcher > span {
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--app-ink-muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.app-shell .chat-composer textarea,
+.app-shell .chat-composer input[type='text'],
+.app-shell .inline-form input[type='text'] {
+  font-family: 'Newsreader', 'Fraunces', serif;
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.app-shell .primary-button,
+.app-shell .ghost-button {
+  min-height: 34px;
+  padding: 0.48rem 0.72rem;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.app-shell .primary-button {
+  border-color: color-mix(in srgb, var(--app-accent) 22%, transparent);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 55%),
+    linear-gradient(135deg, color-mix(in srgb, var(--app-accent) 90%, white), var(--app-accent-strong));
+  color: #fffaf1;
+  box-shadow: none;
+}
+
+.app-shell .ghost-button {
+  border-color: var(--app-line);
+  background: rgba(255, 255, 255, 0.28);
+  color: var(--app-ink);
+}
+
+.app-shell .primary-button:hover,
+.app-shell .ghost-button:hover,
+.app-shell .knowledge-card:hover {
+  transform: translateY(-1px);
+}
+
+.app-shell .primary-button:hover {
+  box-shadow: 0 4px 10px rgba(92, 68, 50, 0.08);
+}
+
+.app-shell .ghost-button:hover,
+.app-shell .knowledge-card:hover {
+  border-color: var(--app-line-strong);
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.app-shell .chat-bubble--question {
+  border-left: 4px solid var(--app-gold);
+}
+
+.app-shell .chat-bubble--answer {
+  border-left: 4px solid var(--app-accent);
+}
+
+.app-shell .source-card header span,
+.app-shell .timeline-list time,
+.app-shell .memory-group h3 {
+  color: var(--app-ink-muted);
+}
+
+.app-shell .timeline-entry {
+  border-color: rgba(255, 255, 255, 0.48);
+  border-radius: 14px;
+  padding: 0.68rem 0.75rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 68%),
+    color-mix(in srgb, var(--app-panel-muted) 52%, transparent);
+  box-shadow: none;
+}
+
+.app-shell .timeline-entry--compact {
+  padding: 0.54rem 0.62rem;
+}
+
+.app-shell .timeline-list__item {
+  align-items: start;
+}
+
+.app-shell .memory-group--compact {
+  gap: 0.55rem;
+  padding: 0.52rem 0;
+  border-top: 1px solid color-mix(in srgb, var(--app-line) 80%, transparent);
+}
+
+.app-shell .memory-sidegrid > .memory-group--compact:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.app-shell .memory-group h3 {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.76rem;
+  letter-spacing: 0.14em;
+}
+
+.app-shell .table-shell {
+  border: 1px solid color-mix(in srgb, var(--app-line) 76%, transparent);
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.36), transparent 68%),
+    rgba(255, 255, 255, 0.16);
+  overflow: hidden;
+}
+
+.app-shell .data-table {
+  min-width: 720px;
+  border-collapse: collapse;
+}
+
+.app-shell .data-table th {
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--app-ink-muted);
+  font-size: 0.64rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 700;
+  background: rgba(248, 243, 233, 0.72);
+}
+
+.app-shell .data-table th,
+.app-shell .data-table td {
+  padding: 0.54rem 0.72rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--app-line) 82%, transparent);
+  vertical-align: middle;
+}
+
+.app-shell .data-table__row:hover {
+  background: rgba(124, 96, 71, 0.03);
+}
+
+.app-shell .data-table__row[data-active='true'] {
+  background:
+    linear-gradient(90deg, rgba(124, 96, 71, 0.08), transparent 24%),
+    rgba(124, 96, 71, 0.045);
+}
+
+.app-shell .data-table td span {
+  color: var(--app-ink-soft);
+}
+
+.app-shell .document-cell__main,
+.app-shell .task-cell__main {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.app-shell .document-cell strong {
+  color: var(--app-ink);
+  font-family: 'Newsreader', 'Fraunces', serif;
+  font-size: 1.02rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.app-shell .document-cell span,
+.app-shell .task-cell__detail,
+.app-shell .document-date time {
+  color: var(--app-ink-muted);
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.app-shell .task-cell {
+  min-width: 170px;
+}
+
+.app-shell .task-cell .inline-badge,
+.app-shell .data-table .status-pill {
+  justify-self: start;
+}
+
+.app-shell .document-date {
+  white-space: nowrap;
+}
+
+.app-shell .document-actions {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.app-shell .table-actions {
+  justify-content: flex-end;
+  gap: 0.3rem;
+}
+
+.app-shell .table-actions .ghost-button {
+  min-height: 28px;
+  padding: 0.28rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.74rem;
+  font-weight: 650;
+}
+
+.app-shell .timeline-list li {
+  padding-bottom: 0.72rem;
+  border-bottom: 1px dashed var(--app-line);
+}
+
+.app-shell .timeline-list li:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.app-shell .empty-state {
+  border: 1px dashed var(--app-line);
+  border-radius: 12px;
+  padding: 1.2rem 0.85rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.44), transparent 65%),
+    var(--app-panel);
+}
+
+.app-shell .empty-state h2,
+.app-shell .empty-state h3 {
+  color: var(--app-ink);
+}
+
+.app-shell .empty-state p {
+  color: var(--app-ink-soft);
+}
+
+.app-shell .companion-board--dense,
+.app-shell .retrieval-run--dense {
+  gap: 0.6rem;
+}
+
+.app-shell .companion-board--dense .companion-board__rail,
+.app-shell .retrieval-run--dense .retrieval-run__rail {
+  gap: 0;
+}
+
+.app-shell .companion-board--dense .source-card--compact + .source-card--compact,
+.app-shell .retrieval-run--dense .source-card--compact + .source-card--compact,
+.app-shell .companion-board--dense .note-row + .note-row {
+  border-top: 1px solid color-mix(in srgb, var(--app-line) 80%, transparent);
+}
+
+.app-shell .source-card--compact {
+  padding: 0.56rem 0;
+  border-right: 0;
+  border-left: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.app-shell .source-card--compact:first-child {
+  padding-top: 0;
+}
+
+.app-shell .source-card--compact header {
+  margin-bottom: 0.22rem;
+}
+
+@media (max-width: 840px) {
+  .app-shell .app-sidebar {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.42), transparent 9rem),
+      linear-gradient(180deg, var(--app-sidebar), var(--app-sidebar-strong));
+  }
+
+  .app-shell .app-shell__content {
+    padding: 1rem;
+  }
+
+  .app-shell .app-topbar {
+    border-radius: 14px;
+  }
+
+  .app-shell .review-toolbar .section-header__description {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-shell .metric-grid--dense {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .app-shell .surface-panel,
+  .app-shell .metric-card,
+  .app-shell .upload-zone,
+  .app-shell .chat-composer,
+  .app-shell .inline-form {
+    border-radius: 14px;
+  }
+
+  .app-shell .data-table {
+    min-width: 640px;
   }
 }

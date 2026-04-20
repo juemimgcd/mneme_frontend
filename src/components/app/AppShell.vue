@@ -14,18 +14,18 @@ const workspace = useWorkspaceStore();
 const { theme, toggleTheme } = useTheme();
 
 const navigation = [
-  { name: 'dashboard', label: 'Overview', icon: 'vault' as const },
+  { name: 'dashboard', label: 'Desk', icon: 'vault' as const },
   { name: 'knowledge-bases', label: 'Collections', icon: 'spark' as const },
-  { name: 'documents', label: 'Ingest', icon: 'upload' as const },
-  { name: 'chat', label: 'Retrieve', icon: 'chat' as const },
-  { name: 'graph', label: 'Graph', icon: 'graph' as const },
+  { name: 'documents', label: 'Library', icon: 'upload' as const },
+  { name: 'chat', label: 'Notes', icon: 'chat' as const },
+  { name: 'graph', label: 'Canvas', icon: 'graph' as const },
   { name: 'memory', label: 'Memory', icon: 'memory' as const },
-  { name: 'insights', label: 'Signals', icon: 'insight' as const },
+  { name: 'insights', label: 'Review', icon: 'insight' as const },
 ];
 
 const routeTitle = computed(() => {
   const current = navigation.find((item) => item.name === route.name);
-  return current?.label ?? 'Workspace';
+  return current?.label ?? 'Notebook';
 });
 
 const indexedCount = computed(
@@ -133,12 +133,12 @@ function logout() {
         <span class="brandmark__glyph">M</span>
         <span>
           <strong>Mneme</strong>
-          <small>RAG Workspace</small>
+          <small>Notebook</small>
         </span>
       </RouterLink>
 
       <div class="app-sidebar__note">
-        <p class="app-sidebar__caption">RAG memory workspace.</p>
+        <p class="app-sidebar__caption">Collections, notes, and reading in one quiet workspace.</p>
       </div>
 
       <nav class="app-nav">
@@ -155,11 +155,11 @@ function logout() {
 
       <div class="app-sidebar__footer">
         <p class="app-sidebar__caption">
-          Active KB:
+          Open shelf:
           <strong>{{ workspace.currentKnowledgeBase?.name ?? 'None selected' }}</strong>
         </p>
         <p class="app-sidebar__caption">
-          Indexed:
+          Ready:
           <strong>{{ indexedCount }}</strong>
           / {{ workspace.filteredDocuments.length }} docs
         </p>
@@ -169,23 +169,23 @@ function logout() {
     <div class="app-shell__content">
       <header class="app-topbar">
         <div>
-          <p class="app-topbar__eyebrow">RAG Memory Workspace</p>
+          <p class="app-topbar__eyebrow">Knowledge Notebook</p>
           <h1 class="app-topbar__title">{{ routeTitle }}</h1>
           <div class="app-topbar__status">
             <span v-if="workspace.currentKnowledgeBase" class="status-pill" :data-status="workspace.currentKnowledgeBase.status">
               {{ workspace.currentKnowledgeBase.status }}
             </span>
-            <span class="memory-chip">Indexed {{ indexedCount }}/{{ workspace.filteredDocuments.length }}</span>
-            <span class="memory-chip">Memory {{ memoryCount }}</span>
-            <span v-if="pendingCount" class="memory-chip">Queue {{ pendingCount }}</span>
-            <span v-if="latestTask" class="memory-chip">Task {{ latestTask.status }}</span>
+            <span class="memory-chip">Ready {{ indexedCount }}/{{ workspace.filteredDocuments.length }}</span>
+            <span class="memory-chip">Notes {{ memoryCount }}</span>
+            <span v-if="pendingCount" class="memory-chip">Pending {{ pendingCount }}</span>
+            <span v-if="latestTask" class="memory-chip">Latest {{ latestTask.status }}</span>
             <span v-for="item in focusItems" :key="item" class="memory-chip">{{ item }}</span>
           </div>
         </div>
 
         <div class="app-topbar__actions">
           <label class="kb-switcher">
-            <span>Knowledge Context</span>
+            <span>Shelf</span>
             <select
               :value="workspace.activeKnowledgeBaseId"
               aria-label="Switch knowledge base"

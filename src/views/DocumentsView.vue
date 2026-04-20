@@ -141,9 +141,9 @@ watch(
 <template>
   <div class="view-stack">
     <SectionHeader
-      eyebrow="Ingest"
-      title="Run documents through the pipeline."
-      description="Upload, index, inspect task state, and preview extracted memory per document."
+      eyebrow="Library"
+      title="Bring new material into the notebook."
+      description="Upload files, process them, and preview the notes extracted from each document."
     />
 
     <section class="dashboard-grid">
@@ -151,21 +151,21 @@ watch(
         <UploadZone @upload="onUpload" />
       </SurfacePanel>
 
-      <SurfacePanel eyebrow="Status" title="Pipeline snapshot">
-        <div class="growth-stack">
-          <article class="growth-card">
+      <SurfacePanel eyebrow="Status" title="Processing snapshot">
+        <div class="growth-stack library-status-list">
+          <article class="growth-card library-status-row">
             <header>
-              <strong>Retrievable</strong>
+              <strong>Ready to use</strong>
               <span class="growth-card__trend" data-trend="up">
                 {{ indexedCount }} docs
               </span>
             </header>
-            <p>Indexed files can already participate in retrieval and citation output.</p>
+            <p>Processed files are already available in search, notes, and citations.</p>
           </article>
 
-          <article class="growth-card">
+          <article class="growth-card library-status-row">
             <header>
-              <strong>Total in context</strong>
+              <strong>On this shelf</strong>
               <span class="growth-card__trend" data-trend="steady">
                 {{ workspace.filteredDocuments.length }} docs
               </span>
@@ -173,28 +173,28 @@ watch(
             <p>Everything currently attached to the selected collection.</p>
           </article>
 
-          <article class="growth-card">
+          <article class="growth-card library-status-row">
             <header>
-              <strong>Pipeline queue</strong>
+              <strong>Processing queue</strong>
               <span class="growth-card__trend" :data-trend="pendingCount ? 'steady' : 'up'">
                 {{ pendingCount }} pending
               </span>
             </header>
-            <p>Use refresh for latest memory/profile/growth, or rebuild memory for a full extraction rerun.</p>
+            <p>Refresh to update notes and summaries, or rebuild memory for a full pass.</p>
           </article>
         </div>
       </SurfacePanel>
     </section>
 
-    <SurfacePanel eyebrow="Knowledge Outputs" title="Memory and signals">
-      <div class="chat-composer__footer">
+    <SurfacePanel eyebrow="Notebook Outputs" title="Notes and review">
+      <div class="chat-composer__footer review-toolbar">
         <button
           class="ghost-button"
           type="button"
           :disabled="workspace.knowledgeRefreshLoading"
           @click="refreshSignals"
         >
-          {{ workspace.knowledgeRefreshLoading ? 'Refreshing...' : 'Refresh Outputs' }}
+          {{ workspace.knowledgeRefreshLoading ? 'Refreshing...' : 'Refresh Notes' }}
         </button>
 
         <button
@@ -203,7 +203,7 @@ watch(
           :disabled="workspace.memoryRebuildLoading"
           @click="rebuildMemory"
         >
-          {{ workspace.memoryRebuildLoading ? 'Rebuilding...' : 'Rebuild Memory' }}
+          {{ workspace.memoryRebuildLoading ? 'Rebuilding...' : 'Rebuild Notes' }}
         </button>
 
         <p v-if="workspace.lastMemoryRebuild" class="section-header__description">
@@ -215,7 +215,7 @@ watch(
     </SurfacePanel>
 
     <section class="documents-layout">
-      <SurfacePanel eyebrow="Queue" title="Index queue">
+      <SurfacePanel eyebrow="Queue" title="Document list">
         <DocumentsTable
           :items="workspace.filteredDocuments"
           :selected-id="workspace.selectedDocumentId"
@@ -228,9 +228,9 @@ watch(
         />
       </SurfacePanel>
 
-      <SurfacePanel eyebrow="Preview" title="Document memory">
-        <div v-if="workspace.selectedDocument" class="documents-preview">
-          <article class="context-card">
+      <SurfacePanel eyebrow="Preview" title="Document notes">
+        <div v-if="workspace.selectedDocument" class="documents-preview documents-preview--dense">
+          <article class="context-card document-note-row document-note-row--summary">
             <header class="knowledge-card__header">
               <strong>{{ workspace.selectedDocument.name }}</strong>
               <span class="status-pill" :data-status="workspace.selectedDocument.status">
@@ -244,18 +244,18 @@ watch(
                 type="button"
                 @click="openGraphForDocument(workspace.selectedDocument.id)"
               >
-                View in Graph
+                View on Canvas
               </button>
             </div>
           </article>
 
-          <article v-if="workspace.documentMemoryLoading" class="context-card">
+          <article v-if="workspace.documentMemoryLoading" class="context-card document-note-row">
             <strong>Loading</strong>
-            <p>Fetching memory preview...</p>
+            <p>Fetching note preview...</p>
           </article>
 
           <template v-else-if="workspace.documentMemoryPreview">
-            <article class="context-card">
+            <article class="context-card document-note-row">
               <strong>Entries</strong>
               <p>{{ workspace.documentMemoryPreview.timeline.length }} extracted items</p>
             </article>
@@ -263,7 +263,7 @@ watch(
             <article
               v-for="entry in workspace.documentMemoryPreview.timeline.slice(0, 4)"
               :key="entry.entry_id"
-              class="theme-card"
+              class="theme-card document-note-row"
             >
               <header class="knowledge-card__header">
                 <strong>{{ entry.entry_name }}</strong>
@@ -272,7 +272,7 @@ watch(
               <p>{{ entry.summary }}</p>
             </article>
 
-            <article v-if="workspace.documentMemoryPreview.by_theme.length" class="context-card">
+            <article v-if="workspace.documentMemoryPreview.by_theme.length" class="context-card document-note-row">
               <strong>Themes</strong>
               <div class="chip-wrap">
                 <span
@@ -288,15 +288,15 @@ watch(
 
           <EmptyState
             v-else
-            title="No document memory yet"
-            description="Select a document after indexing to inspect its extracted memory."
+            title="No notes yet"
+            description="Select a document after processing to inspect the notes extracted from it."
           />
         </div>
 
         <EmptyState
           v-else
           title="No document selected"
-          description="Choose a document from the queue to inspect task state and memory output."
+          description="Choose a document from the list to inspect its status and extracted notes."
         />
       </SurfacePanel>
     </section>

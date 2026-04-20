@@ -73,13 +73,13 @@ watch(
 <template>
   <div class="view-stack">
     <SectionHeader
-      eyebrow="Retrieve"
-      title="Retrieve and converse."
-      description="Direct RAG on the left. Higher-level companion output on the right."
+      eyebrow="Notes"
+      title="Search, read, and draft from your library."
+      description="Ask grounded questions on the left, then turn them into a cleaner working note on the right."
     />
 
     <div class="retrieve-layout">
-      <SurfacePanel eyebrow="RAG" title="Grounded retrieval">
+      <SurfacePanel eyebrow="Search" title="Cited answer">
         <ChatComposer
           v-model:question="question"
           v-model:top-k="topK"
@@ -87,16 +87,16 @@ watch(
         />
       </SurfacePanel>
 
-      <SurfacePanel eyebrow="Companion" title="Synthesis reply">
-        <form class="chat-composer" @submit.prevent="submitCompanion">
+      <SurfacePanel eyebrow="Draft" title="Notebook reply">
+        <form class="chat-composer chat-composer--dense" @submit.prevent="submitCompanion">
           <label>
-            <span>Question</span>
-            <textarea
-              v-model="companionQuestion"
-              rows="4"
-              placeholder="What should I focus on next based on my current memory and growth?"
-            />
-          </label>
+              <span>Question</span>
+              <textarea
+                v-model="companionQuestion"
+                rows="4"
+                placeholder="What should I focus on next based on the notes I already have?"
+              />
+            </label>
 
           <div class="chat-composer__footer">
             <label>
@@ -104,21 +104,21 @@ watch(
               <input v-model.number="companionTopK" min="1" max="10" type="number" />
             </label>
             <button class="primary-button" type="submit" :disabled="workspace.companionLoading">
-              {{ workspace.companionLoading ? 'Thinking...' : 'Ask Companion' }}
+              {{ workspace.companionLoading ? 'Thinking...' : 'Draft Reply' }}
             </button>
           </div>
         </form>
 
-        <div v-if="workspace.companion" class="companion-board">
+        <div v-if="workspace.companion" class="companion-board companion-board--dense">
           <div class="companion-board__main">
-            <article class="chat-bubble chat-bubble--answer chat-bubble--feature">
+            <article class="chat-bubble chat-bubble--answer chat-bubble--feature note-row note-row--summary">
               <strong>Answer</strong>
               <p>{{ workspace.companion.direct_answer }}</p>
             </article>
 
-            <article class="context-card">
+            <article class="context-card note-row">
               <header class="knowledge-card__header">
-                <strong>Companion</strong>
+                <strong>Notebook draft</strong>
                 <span class="inline-badge">Synthesized</span>
               </header>
               <p>{{ workspace.companion.companion_message }}</p>
@@ -126,22 +126,22 @@ watch(
           </div>
 
           <aside class="companion-board__rail">
-            <article v-if="workspace.companion.next_step_hint" class="context-card">
+            <article v-if="workspace.companion.next_step_hint" class="context-card note-row">
               <strong>Next</strong>
               <p>{{ workspace.companion.next_step_hint }}</p>
             </article>
 
-            <article class="context-card">
+            <article class="context-card note-row">
               <strong>Profile</strong>
               <p>{{ workspace.companion.profile_snapshot }}</p>
             </article>
 
-            <article class="context-card">
+            <article class="context-card note-row">
               <strong>Growth</strong>
               <p>{{ workspace.companion.growth_snapshot }}</p>
             </article>
 
-            <article v-if="workspace.companion.follow_up_questions.length" class="context-card">
+            <article v-if="workspace.companion.follow_up_questions.length" class="context-card note-row">
               <strong>Follow-ups</strong>
               <div class="chip-wrap">
                 <span
@@ -175,17 +175,17 @@ watch(
       <SurfacePanel
         v-for="exchange in workspace.chats"
         :key="exchange.id"
-        eyebrow="Retrieval Run"
-        title="Grounded answer"
+        eyebrow="Conversation"
+        title="Saved answer"
       >
-        <div class="retrieval-run">
+        <div class="retrieval-run retrieval-run--dense">
           <div class="retrieval-run__main">
             <div class="chat-answer">
-              <div class="chat-bubble chat-bubble--question">
+              <div class="chat-bubble chat-bubble--question note-row">
                 <strong>Q</strong>
                 <p>{{ exchange.question }}</p>
               </div>
-              <div class="chat-bubble chat-bubble--answer">
+              <div class="chat-bubble chat-bubble--answer note-row">
                 <strong>A</strong>
                 <p>{{ exchange.answer }}</p>
               </div>
@@ -205,8 +205,8 @@ watch(
 
     <EmptyState
       v-else
-      title="No retrieval history yet"
-      description="Run a query and the workspace will keep both the answer and its supporting chunks."
+      title="No conversations yet"
+      description="Ask a question and the notebook will keep both the answer and the passages behind it."
     />
   </div>
 </template>

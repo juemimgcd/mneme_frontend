@@ -47,16 +47,16 @@ function submit() {
       <textarea
         v-model="question"
         rows="4"
-        placeholder="Summarize my main themes from the last month and cite the most relevant source chunks."
+        placeholder="Summarize the main themes from my recent notes and cite the most relevant passages."
       />
     </label>
 
     <div class="chat-composer__footer">
       <label>
-        <span>Top-K</span>
+        <span>Passages</span>
         <input v-model.number="topK" min="1" max="8" type="number" />
       </label>
-      <button class="primary-button" type="submit">Run Retrieval</button>
+      <button class="primary-button" type="submit">Search Notes</button>
     </div>
   </form>
 </template>
