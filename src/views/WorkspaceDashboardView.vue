@@ -59,17 +59,17 @@ const dashboardMetrics = computed<DashboardMetric[]>(() => [
     value: String(
       workspace.filteredDocuments.filter((item) => item.status === 'indexed').length,
     ),
-    change: `${memoryCount.value} memory entries`,
+    change: `${memoryCount.value} notes extracted`,
     tone: 'indigo',
   },
   {
-    label: 'Retrieval Runs',
+    label: 'Conversations',
     value: String(workspace.chats.length),
-    change: lastExchange.value ? formatTimestamp(lastExchange.value.created_at) : 'No queries yet',
+    change: lastExchange.value ? formatTimestamp(lastExchange.value.created_at) : 'No conversations yet',
     tone: 'amber',
   },
   {
-    label: 'Task State',
+    label: 'In Progress',
     value: String(pendingCount.value),
     change: failedTasks.value
       ? `${failedTasks.value} need review`
@@ -98,7 +98,7 @@ const activityItems = computed<ActivityItem[]>(() => {
   if (workspace.lastMemoryRebuild) {
     items.push({
       id: `memory_${workspace.lastMemoryRebuild.knowledge_base_id}_${workspace.lastMemoryRebuild.entry_count}`,
-      title: 'Memory rebuilt',
+      title: 'Notes refreshed',
       detail: `${workspace.lastMemoryRebuild.entry_count} entries across ${workspace.lastMemoryRebuild.processed_document_count} docs.`,
       timestamp: 'Just now',
       tone: 'indigo',
@@ -122,7 +122,7 @@ const activityItems = computed<ActivityItem[]>(() => {
   if (lastExchange.value) {
     items.push({
       id: `chat_${lastExchange.value.id}`,
-      title: 'Latest retrieval',
+      title: 'Latest conversation',
       detail: lastExchange.value.question,
       timestamp: formatTimestamp(lastExchange.value.created_at),
       tone: 'indigo',
@@ -132,7 +132,7 @@ const activityItems = computed<ActivityItem[]>(() => {
   if (workspace.profile) {
     items.push({
       id: `profile_${workspace.profile.knowledge_base_id}`,
-      title: 'Profile signal',
+      title: 'Reading profile',
       detail: workspace.profile.profile_summary,
       timestamp: workspace.growth?.analysis_window || 'Live',
       tone: 'teal',
@@ -146,12 +146,12 @@ const activityItems = computed<ActivityItem[]>(() => {
 <template>
   <div class="view-stack">
     <SectionHeader
-      eyebrow="RAG Workspace"
-      title="Track the active loop."
-      description="One view for collection state, retrieval state, and signal state."
+      eyebrow="Notebook Desk"
+      title="A quiet view of the current workspace."
+      description="Keep the active collection, recent conversations, and current reading in one place."
     />
 
-    <section class="metric-grid">
+    <section class="metric-grid metric-grid--dense">
       <MetricCard
         v-for="metric in dashboardMetrics"
         :key="metric.label"
@@ -163,7 +163,7 @@ const activityItems = computed<ActivityItem[]>(() => {
     </section>
 
     <section class="workspace-overview">
-      <SurfacePanel eyebrow="Current Context" title="Active collection">
+      <SurfacePanel eyebrow="Current Context" title="Open collection">
         <div v-if="workspace.currentKnowledgeBase" class="workspace-overview__hero">
           <article class="context-card workspace-overview__feature">
             <header class="knowledge-card__header">
@@ -185,58 +185,58 @@ const activityItems = computed<ActivityItem[]>(() => {
             </dl>
           </article>
 
-          <div class="workspace-overview__rail">
-            <article class="growth-card">
+          <div class="workspace-note-list">
+            <article class="growth-card workspace-note-row">
               <header>
                 <strong>Queue</strong>
                 <span class="growth-card__trend" :data-trend="pendingCount ? 'steady' : 'up'">
                   {{ pendingCount }}
                 </span>
               </header>
-              <p>{{ pendingCount ? 'Ingest is still processing pending files.' : 'Ingest lane is clear.' }}</p>
+              <p>{{ pendingCount ? 'New material is still being processed.' : 'Everything is up to date.' }}</p>
             </article>
 
-            <article class="growth-card">
+            <article class="growth-card workspace-note-row">
               <header>
-                <strong>Latest Run</strong>
+                <strong>Latest conversation</strong>
                 <span class="growth-card__trend" data-trend="up">
                   {{ lastExchange?.sources.length ?? 0 }}
                 </span>
               </header>
-              <p>{{ lastExchange?.question ?? 'No retrieval run yet.' }}</p>
+              <p>{{ lastExchange?.question ?? 'No conversation yet.' }}</p>
             </article>
 
-            <article class="growth-card">
+            <article class="growth-card workspace-note-row">
               <header>
                 <strong>Theme</strong>
                 <span class="growth-card__trend" data-trend="up">
                   {{ latestTheme ? 'Live' : '--' }}
                 </span>
               </header>
-              <p>{{ latestTheme?.theme_name ?? 'No stable theme yet.' }}</p>
+              <p>{{ latestTheme?.theme_name ?? 'No clear theme yet.' }}</p>
             </article>
           </div>
         </div>
       </SurfacePanel>
 
-      <SurfacePanel eyebrow="Signal State" title="Current read">
-        <div class="workspace-overview__signals">
-          <article class="growth-card growth-card--feature">
+      <SurfacePanel eyebrow="Current Read" title="Reading notes">
+        <div class="reading-note-list">
+          <article class="growth-card growth-card--feature reading-note-row reading-note-row--feature">
             <header>
               <strong>Stage</strong>
               <span class="growth-card__trend" data-trend="up">
                 {{ workspace.growth?.analysis_window ?? 'Pending' }}
               </span>
             </header>
-            <p>{{ latestStage || 'No growth summary yet.' }}</p>
+            <p>{{ latestStage || 'No summary has been generated yet.' }}</p>
           </article>
 
-          <article v-if="workspace.profile" class="context-card">
+          <article v-if="workspace.profile" class="context-card reading-note-row">
             <strong>Profile</strong>
             <p>{{ workspace.profile.profile_summary }}</p>
           </article>
 
-          <article v-if="workspace.profile?.growth_focus.length" class="context-card">
+          <article v-if="workspace.profile?.growth_focus.length" class="context-card reading-note-row">
             <strong>Focus</strong>
             <div class="chip-wrap">
               <span
