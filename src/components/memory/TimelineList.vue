@@ -10,9 +10,9 @@ defineProps<{
   <div class="timeline-layout">
     <div class="timeline-layout__main">
       <ol class="timeline-list">
-        <li v-for="entry in library.timeline" :key="entry.entry_id">
-          <time>{{ new Date(entry.created_at).toLocaleDateString('en-US') }}</time>
-          <div class="timeline-entry">
+        <li v-for="entry in library.timeline" :key="entry.entry_id" class="timeline-list__item">
+          <time class="timeline-list__time">{{ new Date(entry.created_at).toLocaleDateString('en-US') }}</time>
+          <div class="timeline-entry timeline-entry--compact">
             <header class="knowledge-card__header">
               <strong>{{ entry.entry_name }}</strong>
               <span class="inline-badge">{{ entry.entry_type }}</span>
@@ -24,7 +24,7 @@ defineProps<{
     </div>
 
     <aside class="memory-sidegrid">
-      <section class="memory-group">
+      <section class="memory-group memory-group--compact">
         <h3>By Type</h3>
         <div class="chip-wrap">
           <span v-for="(entries, type) in library.by_type" :key="type" class="memory-chip">
@@ -33,9 +33,9 @@ defineProps<{
         </div>
       </section>
 
-      <section class="memory-group">
+      <section class="memory-group memory-group--compact">
         <h3>Themes</h3>
-        <article v-for="theme in library.by_theme" :key="theme.theme_name" class="theme-card">
+        <article v-for="theme in library.by_theme" :key="theme.theme_name" class="theme-card theme-card--compact">
           <header class="knowledge-card__header">
             <strong>{{ theme.theme_name }}</strong>
             <span class="inline-badge">{{ theme.count }}</span>
