@@ -26,8 +26,8 @@ onMounted(() => {
         duration: 0.56,
       })
       .from(
-        introElement.value.querySelector('.intro-page__hint'),
-        { y: 12, opacity: 0, duration: 0.52 },
+        introElement.value.querySelector('.intro-page__panel'),
+        { y: 14, opacity: 0, filter: 'blur(10px)', duration: 0.58 },
         '-=0.26',
       )
       .from(
@@ -68,16 +68,22 @@ onBeforeUnmount(() => {
     </header>
 
     <section class="intro-page__content">
-      <p class="intro-page__hint">Memory Workspace</p>
+      <div class="intro-page__panel">
+        <p class="intro-page__hint">Memory Workspace</p>
+        <h1 class="intro-page__headline">Think in calm, connected memories.</h1>
+        <p class="intro-page__lead">
+          A focused notebook for long-term knowledge — distilled into a clear, quiet workspace.
+        </p>
 
-      <button
-        class="intro-page__enter"
-        :class="{ 'is-visible': isReady }"
-        type="button"
-        @click="enterExperience"
-      >
-        Enter
-      </button>
+        <button
+          class="intro-page__enter"
+          :class="{ 'is-visible': isReady }"
+          type="button"
+          @click="enterExperience"
+        >
+          Enter
+        </button>
+      </div>
     </section>
 
     <footer class="intro-page__meta">
