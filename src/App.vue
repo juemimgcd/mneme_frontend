@@ -16,11 +16,5 @@ onMounted(() => {
 
 <template>
   <a class="skip-link" href="#app-main">跳到主要内容</a>
-  <div class="app-frame">
-    <RouterView v-slot="{ Component, route }">
-      <Transition name="app-fade" mode="out-in">
-        <component :is="Component" :key="route.fullPath" />
-      </Transition>
-    </RouterView>
-  </div>
+  <RouterView />
 </template>
