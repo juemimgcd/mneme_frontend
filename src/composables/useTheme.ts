@@ -1,6 +1,6 @@
 import { ref, watchEffect } from 'vue';
 
-const STORAGE_KEY = 'mneme-theme-v2';
+const STORAGE_KEY = 'mneme-theme-v8';
 const theme = ref<'light' | 'dark'>(
   (localStorage.getItem(STORAGE_KEY) as 'light' | 'dark' | null) ?? 'dark',
 );

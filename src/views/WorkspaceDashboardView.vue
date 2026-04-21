@@ -49,13 +49,13 @@ function formatTimestamp(value?: string) {
 
 const dashboardMetrics = computed<DashboardMetric[]>(() => [
   {
-    label: 'Collections',
+    label: 'Open Shelf',
     value: String(workspace.knowledgeBases.length),
     change: workspace.currentKnowledgeBase?.name ?? 'No active collection',
     tone: 'teal',
   },
   {
-    label: 'Indexed Docs',
+    label: 'Indexed',
     value: String(
       workspace.filteredDocuments.filter((item) => item.status === 'indexed').length,
     ),
@@ -63,17 +63,15 @@ const dashboardMetrics = computed<DashboardMetric[]>(() => [
     tone: 'indigo',
   },
   {
-    label: 'Conversations',
-    value: String(workspace.chats.length),
-    change: lastExchange.value ? formatTimestamp(lastExchange.value.created_at) : 'No conversations yet',
-    tone: 'indigo',
-  },
-  {
-    label: 'In Progress',
-    value: String(pendingCount.value),
-    change: failedTasks.value
-      ? `${failedTasks.value} need review`
-      : `${completedTasks.value} completed`,
+    label: 'Activity',
+    value: pendingCount.value ? String(pendingCount.value) : String(completedTasks.value),
+    change: pendingCount.value
+      ? 'Documents are still processing'
+      : failedTasks.value
+        ? `${failedTasks.value} need review`
+        : lastExchange.value
+          ? `Latest conversation ${formatTimestamp(lastExchange.value.created_at)}`
+          : 'Quiet workspace',
     tone: pendingCount.value || failedTasks.value ? 'coral' : 'teal',
   },
 ]);
@@ -146,12 +144,12 @@ const activityItems = computed<ActivityItem[]>(() => {
 <template>
   <div class="view-stack">
     <SectionHeader
-      eyebrow="Notebook Desk"
-      title="A quiet view of the current workspace."
-      description="Keep the active collection, recent conversations, and current reading in one place."
+      eyebrow="Workspace Ledger"
+      title="A calmer desk for the collection you are working in."
+      description="The workspace now surfaces only the current shelf, the main reading signal, and the most recent movement."
     />
 
-    <section class="metric-grid metric-grid--dense">
+    <section class="metric-grid workspace-metric-grid">
       <MetricCard
         v-for="metric in dashboardMetrics"
         :key="metric.label"
@@ -162,10 +160,10 @@ const activityItems = computed<ActivityItem[]>(() => {
       />
     </section>
 
-    <section class="workspace-overview">
-      <SurfacePanel eyebrow="Current Context" title="Open collection">
-        <div v-if="workspace.currentKnowledgeBase" class="workspace-overview__hero">
-          <article class="context-card workspace-overview__feature">
+    <section class="workspace-editorial">
+      <SurfacePanel eyebrow="Open Shelf" title="Current collection">
+        <div v-if="workspace.currentKnowledgeBase" class="workspace-editorial__split">
+          <article class="context-card workspace-editorial__lead">
             <header class="knowledge-card__header">
               <strong>{{ workspace.currentKnowledgeBase.name }}</strong>
               <span class="status-pill" :data-status="workspace.currentKnowledgeBase.status">
@@ -185,10 +183,10 @@ const activityItems = computed<ActivityItem[]>(() => {
             </dl>
           </article>
 
-          <div class="workspace-note-list">
-            <article class="growth-card workspace-note-row">
+          <div class="workspace-ledger">
+            <article class="growth-card workspace-ledger__row">
               <header>
-                <strong>Queue</strong>
+                <strong>Processing queue</strong>
                 <span class="growth-card__trend" :data-trend="pendingCount ? 'steady' : 'up'">
                   {{ pendingCount }}
                 </span>
@@ -196,7 +194,7 @@ const activityItems = computed<ActivityItem[]>(() => {
               <p>{{ pendingCount ? 'New material is still being processed.' : 'Everything is up to date.' }}</p>
             </article>
 
-            <article class="growth-card workspace-note-row">
+            <article class="growth-card workspace-ledger__row">
               <header>
                 <strong>Latest conversation</strong>
                 <span class="growth-card__trend" data-trend="up">
@@ -206,9 +204,9 @@ const activityItems = computed<ActivityItem[]>(() => {
               <p>{{ lastExchange?.question ?? 'No conversation yet.' }}</p>
             </article>
 
-            <article class="growth-card workspace-note-row">
+            <article class="growth-card workspace-ledger__row">
               <header>
-                <strong>Theme</strong>
+                <strong>Dominant theme</strong>
                 <span class="growth-card__trend" data-trend="up">
                   {{ latestTheme ? 'Live' : '--' }}
                 </span>
@@ -219,61 +217,91 @@ const activityItems = computed<ActivityItem[]>(() => {
         </div>
       </SurfacePanel>
 
-      <SurfacePanel eyebrow="Current Read" title="Reading notes">
-        <div class="reading-note-list">
-          <article class="growth-card growth-card--feature reading-note-row reading-note-row--feature">
-            <header>
-              <strong>Stage</strong>
-              <span class="growth-card__trend" data-trend="up">
-                {{ workspace.growth?.analysis_window ?? 'Pending' }}
-              </span>
-            </header>
-            <p>{{ latestStage || 'No summary has been generated yet.' }}</p>
-          </article>
-
-          <article v-if="workspace.profile" class="context-card reading-note-row">
-            <strong>Profile</strong>
-            <p>{{ workspace.profile.profile_summary }}</p>
-          </article>
-
-          <article v-if="workspace.profile?.growth_focus.length" class="context-card reading-note-row">
-            <strong>Focus</strong>
-            <div class="chip-wrap">
-              <span
-                v-for="item in workspace.profile.growth_focus"
-                :key="item"
-                class="memory-chip"
-              >
-                {{ item }}
-              </span>
-            </div>
-          </article>
-        </div>
+      <SurfacePanel eyebrow="Change Log" title="Recent movement">
+        <ActivityFeed :items="activityItems" />
       </SurfacePanel>
     </section>
 
-    <SurfacePanel eyebrow="Recent Activity" title="What changed">
-      <ActivityFeed :items="activityItems" />
+    <SurfacePanel eyebrow="Reading Line" title="What the notes are pointing to">
+      <div class="reading-note-list workspace-reading-grid">
+        <article class="growth-card growth-card--feature reading-note-row workspace-reading-grid__lead">
+          <header>
+            <strong>Stage</strong>
+            <span class="growth-card__trend" data-trend="up">
+              {{ workspace.growth?.analysis_window ?? 'Pending' }}
+            </span>
+          </header>
+          <p>{{ latestStage || 'No summary has been generated yet.' }}</p>
+        </article>
+
+        <article v-if="workspace.profile" class="context-card reading-note-row">
+          <strong>Profile</strong>
+          <p>{{ workspace.profile.profile_summary }}</p>
+        </article>
+
+        <article v-if="workspace.profile?.growth_focus.length" class="context-card reading-note-row">
+          <strong>Focus</strong>
+          <div class="chip-wrap">
+            <span
+              v-for="item in workspace.profile.growth_focus"
+              :key="item"
+              class="memory-chip"
+            >
+              {{ item }}
+            </span>
+          </div>
+        </article>
+      </div>
     </SurfacePanel>
   </div>
 </template>
 
 <style scoped>
-.workspace-overview {
+.workspace-editorial {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(20rem, 0.95fr);
   gap: var(--space-4);
 }
 
-.workspace-note-list,
-.reading-note-list {
+.workspace-metric-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.workspace-editorial__split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(18rem, 0.9fr);
+  gap: var(--space-4);
+}
+
+.workspace-editorial__lead strong {
+  font-size: var(--text-lg);
+}
+
+.workspace-ledger,
+.workspace-reading-grid {
+  display: grid;
   gap: var(--space-3);
 }
 
-.workspace-note-row p,
+.workspace-ledger__row p,
 .reading-note-row p {
   line-height: var(--lh-relaxed);
 }
 
-.workspace-overview__feature strong {
-  font-size: var(--text-lg);
+.workspace-reading-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.workspace-reading-grid__lead {
+  min-height: 100%;
+}
+
+@media (max-width: 1100px) {
+  .workspace-editorial,
+  .workspace-editorial__split,
+  .workspace-reading-grid,
+  .workspace-metric-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
