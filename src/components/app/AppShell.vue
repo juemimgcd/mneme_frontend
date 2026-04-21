@@ -92,6 +92,18 @@ function runPageReveal() {
     '-=0.24',
   );
   shellReveal.from(
+    shell.querySelectorAll('.app-main .surface-panel, .app-main .metric-card, .app-main .context-card, .app-main .growth-card'),
+    {
+      y: 16,
+      opacity: 0,
+      filter: 'blur(6px)',
+      stagger: 0.04,
+      duration: 0.34,
+      clearProps: 'transform,opacity,filter',
+    },
+    '-=0.2',
+  );
+  shellReveal.from(
     shell.querySelectorAll('.app-nav__link'),
     {
       x: -10,
