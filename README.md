@@ -42,10 +42,36 @@ npm run dev
 默认会读取 `.env` 或 `.env.example` 中的以下配置：
 
 ```env
-VITE_API_BASE_URL=http://127.0.0.1:8000
+VITE_API_BASE_URL=/api
 VITE_API_PREFIX=
 VITE_USE_MOCKS=true
 ```
+
+本地开发时 Vite 会把 `/api` 代理到 `http://127.0.0.1:8000`，因此不需要额外处理浏览器 CORS。
+
+## 域名部署说明
+
+生产环境推荐让浏览器只访问前端域名，再由 Nginx 把 `/api` 反向代理到后端，例如：
+
+```nginx
+location /api/ {
+  rewrite ^/api/?(.*)$ /$1 break;
+  proxy_pass http://124.223.14.145:8000;
+  proxy_http_version 1.1;
+  proxy_set_header Host $proxy_host;
+  proxy_set_header X-Real-IP $remote_addr;
+  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  proxy_set_header X-Forwarded-Proto $scheme;
+}
+```
+
+如果你继续让前端直连后端公网 IP，例如 `VITE_API_BASE_URL=http://124.223.14.145:8000`，那么后端 `.env` 必须把前端页面的实际来源都加入 `CORS_ALLOWED_ORIGINS`：
+
+```env
+CORS_ALLOWED_ORIGINS=["http://你的域名","https://你的域名","http://前端服务器IP"]
+```
+
+用 IP 访问能登录、用域名访问登录时报后端 `400 Bad Request`，通常就是域名来源没有进入后端 CORS 白名单，浏览器发起的 `OPTIONS` 预检被 FastAPI CORS 中间件拒绝。
 
 ## 后端接入说明
 
