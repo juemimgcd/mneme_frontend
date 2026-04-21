@@ -1466,7 +1466,7 @@ textarea:focus-visible {
 .intro-page__headline {
   margin: 0;
   color: #fff;
-  font-size: clamp(2rem, 5vw, 4.1rem);
+  font-size: clamp(2rem, 5vw, 4rem);
   line-height: 1.08;
   letter-spacing: -0.03em;
 }
@@ -3767,7 +3767,7 @@ textarea:focus-visible {
 
 .app-shell {
   --app-font-body: 'Inter', sans-serif;
-  --app-font-display: 'Inter', sans-serif;
+  --app-font-display: 'Spline Sans', sans-serif;
   --app-font-mono: 'IBM Plex Mono', monospace;
 
   --app-paper: #07090d;
