@@ -3766,8 +3766,8 @@ textarea:focus-visible {
 }
 
 .app-shell {
-  --app-font-body: 'Inter', sans-serif;
-  --app-font-display: 'Spline Sans', sans-serif;
+  --app-font-body: 'Spline Sans', sans-serif;
+  --app-font-display: 'Inter', sans-serif;
   --app-font-mono: 'IBM Plex Mono', monospace;
 
   --app-paper: #07090d;
