@@ -475,8 +475,8 @@ function relationshipStrength(value: number | null) {
 function relationCardStyle(score: number | null) {
   const strength = relationshipStrength(score);
   return {
-    '--relation-border': `rgba(109, 141, 255, ${0.18 + strength * 0.2})`,
-    '--relation-bg': `linear-gradient(135deg, rgba(109, 141, 255, ${0.05 + strength * 0.08}), rgba(95, 208, 177, ${0.03 + strength * 0.06}) 82%), var(--ua-elevated)`,
+    '--relation-border': `rgba(214, 219, 228, ${0.14 + strength * 0.18})`,
+    '--relation-bg': `linear-gradient(135deg, rgba(255, 255, 255, ${0.025 + strength * 0.055}), rgba(174, 182, 196, ${0.02 + strength * 0.04}) 82%), var(--ua-elevated)`,
   };
 }
 
@@ -657,10 +657,10 @@ function nodeRadius(node: GraphNode, degree: number) {
 
 function nodeColor(nodeType: GraphNode['node_type']) {
   const palette = {
-    user: '#8fb2ff',
-    knowledge_base: '#6d8dff',
-    document: '#64d2ff',
-    memory_entry: '#5fd0b1',
+    user: '#f2f4f8',
+    knowledge_base: '#d6dbe4',
+    document: '#aeb6c4',
+    memory_entry: '#7f8794',
   } satisfies Record<GraphNode['node_type'], string>;
 
   return palette[nodeType];
@@ -2268,23 +2268,23 @@ watch(
 
 <style scoped>
 .graph-explorer {
-  --ua-root: #f3ecdf;
-  --ua-surface: #f8f3ea;
-  --ua-elevated: #fffdf8;
-  --ua-panel: #efe5d6;
-  --ua-accent: #7c6047;
-  --ua-accent-dim: #977657;
-  --ua-accent-bright: #5c4432;
-  --ua-text: #2f271f;
-  --ua-text-secondary: #655a4e;
-  --ua-text-muted: #8c7d6b;
-  --ua-border: rgba(49, 66, 88, 0.5);
-  --ua-border-strong: rgba(72, 94, 122, 0.72);
-  --ua-glass: rgba(255, 252, 246, 0.88);
-  --ua-edge: rgba(109, 141, 255, 0.28);
-  --ua-edge-dim: rgba(109, 141, 255, 0.08);
-  --ua-dot: rgba(109, 141, 255, 0.11);
-  --ua-shadow: 0 24px 48px rgba(76, 57, 33, 0.08);
+  --ua-root: #0f0f14;
+  --ua-surface: #15141b;
+  --ua-elevated: #1b1923;
+  --ua-panel: #211f2b;
+  --ua-accent: #8b6df6;
+  --ua-accent-dim: #7c5cff;
+  --ua-accent-bright: #c4b5fd;
+  --ua-text: #f5f2ff;
+  --ua-text-secondary: #c9c2d8;
+  --ua-text-muted: #8f879f;
+  --ua-border: rgba(180, 160, 255, 0.14);
+  --ua-border-strong: rgba(180, 160, 255, 0.3);
+  --ua-glass: rgba(20, 19, 26, 0.9);
+  --ua-edge: rgba(167, 139, 250, 0.3);
+  --ua-edge-dim: rgba(167, 139, 250, 0.09);
+  --ua-dot: rgba(245, 242, 255, 0.045);
+  --ua-shadow: 0 30px 64px rgba(0, 0, 0, 0.34);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -2293,9 +2293,9 @@ watch(
   border: 1px solid var(--ua-border);
   border-radius: 26px;
   background:
-    radial-gradient(circle at 18% 0%, rgba(109, 141, 255, 0.14), transparent 24rem),
-    radial-gradient(circle at 84% 22%, rgba(95, 208, 177, 0.08), transparent 28rem),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 14rem),
+    radial-gradient(circle at 18% 0%, rgba(139, 109, 246, 0.16), transparent 24rem),
+    radial-gradient(circle at 84% 22%, rgba(196, 181, 253, 0.08), transparent 28rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 14rem),
     var(--ua-root);
   color: var(--ua-text);
   box-shadow: var(--ua-shadow);
@@ -2311,27 +2311,28 @@ watch(
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
 }
 
+:global(:root[data-theme='light'] .graph-explorer),
 :global(:root[data-theme='dark'] .graph-explorer) {
-  --ua-root: #0b1118;
-  --ua-surface: #121923;
-  --ua-elevated: #17202c;
-  --ua-panel: #1d2836;
-  --ua-accent: #6d8dff;
-  --ua-accent-dim: #84a6ff;
-  --ua-accent-bright: #b3cbff;
-  --ua-text: #eff5ff;
-  --ua-text-secondary: #b3bfd0;
-  --ua-text-muted: #76859b;
-  --ua-border: rgba(49, 66, 88, 0.5);
-  --ua-border-strong: rgba(72, 94, 122, 0.72);
-  --ua-glass: rgba(16, 23, 33, 0.84);
-  --ua-edge: rgba(109, 141, 255, 0.3);
-  --ua-edge-dim: rgba(109, 141, 255, 0.1);
-  --ua-dot: rgba(239, 245, 255, 0.05);
+  --ua-root: #0f0f14;
+  --ua-surface: #15141b;
+  --ua-elevated: #1b1923;
+  --ua-panel: #211f2b;
+  --ua-accent: #8b6df6;
+  --ua-accent-dim: #7c5cff;
+  --ua-accent-bright: #c4b5fd;
+  --ua-text: #f5f2ff;
+  --ua-text-secondary: #c9c2d8;
+  --ua-text-muted: #8f879f;
+  --ua-border: rgba(180, 160, 255, 0.14);
+  --ua-border-strong: rgba(180, 160, 255, 0.3);
+  --ua-glass: rgba(20, 19, 26, 0.9);
+  --ua-edge: rgba(167, 139, 250, 0.3);
+  --ua-edge-dim: rgba(167, 139, 250, 0.09);
+  --ua-dot: rgba(245, 242, 255, 0.045);
   --ua-shadow: 0 30px 64px rgba(0, 0, 0, 0.34);
   background:
-    radial-gradient(circle at 18% 0%, rgba(109, 141, 255, 0.14), transparent 24rem),
-    radial-gradient(circle at 84% 22%, rgba(95, 208, 177, 0.08), transparent 28rem),
+    radial-gradient(circle at 18% 0%, rgba(139, 109, 246, 0.16), transparent 24rem),
+    radial-gradient(circle at 84% 22%, rgba(196, 181, 253, 0.08), transparent 28rem),
     linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 10rem),
     var(--ua-root);
 }
@@ -2372,7 +2373,7 @@ watch(
   border-radius: 10px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 70%),
-    linear-gradient(135deg, rgba(109, 141, 255, 0.14), transparent),
+    linear-gradient(135deg, rgba(139, 109, 246, 0.16), transparent),
     var(--ua-elevated);
   color: var(--ua-accent-bright);
   font-family: Georgia, 'Times New Roman', serif;
@@ -2487,7 +2488,7 @@ watch(
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 62%),
     linear-gradient(135deg, var(--ua-accent), var(--ua-accent-dim));
-  color: #fffaf3;
+  color: #fbf9ff;
 }
 
 .graph-search-rail {
@@ -2800,7 +2801,7 @@ watch(
   border-radius: 0;
   background:
     radial-gradient(circle at 32% 22%, color-mix(in srgb, var(--ua-accent) 6%, transparent), transparent 20rem),
-    radial-gradient(circle at 68% 68%, rgba(95, 208, 177, 0.05), transparent 20rem),
+    radial-gradient(circle at 68% 68%, rgba(196, 181, 253, 0.05), transparent 20rem),
     linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 14rem),
     var(--graph-bg);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
@@ -2815,7 +2816,7 @@ watch(
   inset: 0;
   background-image:
     radial-gradient(circle, var(--graph-grid) 1px, transparent 1.5px),
-    linear-gradient(180deg, transparent 0, transparent 31px, rgba(109, 141, 255, 0.024) 31px, rgba(109, 141, 255, 0.024) 32px);
+    linear-gradient(180deg, transparent 0, transparent 31px, rgba(167, 139, 250, 0.024) 31px, rgba(167, 139, 250, 0.024) 32px);
   background-position: 0 0;
   background-size: 20px 20px, 100% 32px;
   mask-image: radial-gradient(circle at 50% 50%, #000 0%, transparent 88%);
@@ -2844,7 +2845,7 @@ watch(
 
 .graph-band rect {
   fill: rgba(255, 255, 255, 0.03);
-  stroke: rgba(109, 141, 255, 0.12);
+  stroke: rgba(167, 139, 250, 0.12);
   stroke-width: 1;
   stroke-dasharray: 5 9;
 }
@@ -2861,12 +2862,12 @@ watch(
 
 .graph-band[data-type='knowledge_base'] rect,
 .graph-group[data-type='knowledge_base'] rect {
-  stroke: rgba(109, 141, 255, 0.24);
+  stroke: rgba(139, 109, 246, 0.26);
 }
 
 .graph-band[data-type='document'] rect,
 .graph-group[data-type='document'] rect {
-  stroke: rgba(95, 208, 177, 0.18);
+  stroke: rgba(196, 181, 253, 0.18);
 }
 
 .graph-group rect {
@@ -2888,11 +2889,11 @@ watch(
 }
 
 .graph-edge[data-type='extracts'] {
-  stroke: rgba(95, 208, 177, 0.42);
+  stroke: rgba(196, 181, 253, 0.36);
 }
 
 .graph-edge--related {
-  stroke: rgba(109, 141, 255, 0.28);
+  stroke: rgba(139, 109, 246, 0.28);
   stroke-dasharray: 3 8;
 }
 
@@ -3270,15 +3271,15 @@ watch(
 }
 
 .graph-node-card[data-type='knowledge_base'] {
-  --node-card-color: #6d8dff;
+  --node-card-color: #8b6df6;
 }
 
 .graph-node-card[data-type='document'] {
-  --node-card-color: #64d2ff;
+  --node-card-color: #a78bfa;
 }
 
 .graph-node-card[data-type='user'] {
-  --node-card-color: #8fb2ff;
+  --node-card-color: #c4b5fd;
 }
 
 .graph-node-card span {
@@ -3356,6 +3357,84 @@ watch(
 
 :deep(.empty-state p) {
   color: var(--ua-text-secondary);
+}
+
+/* Obsidian graphite override: black/gray first, no purple cast. */
+.graph-explorer,
+:global(:root[data-theme='light'] .graph-explorer),
+:global(:root[data-theme='dark'] .graph-explorer) {
+  --ua-root: #0b0d11;
+  --ua-surface: #101218;
+  --ua-elevated: #171a22;
+  --ua-panel: #1d212a;
+  --ua-accent: #d6dbe4;
+  --ua-accent-dim: #aeb6c4;
+  --ua-accent-bright: #f6f7fa;
+  --ua-text: #f2f4f8;
+  --ua-text-secondary: #b9c0cc;
+  --ua-text-muted: #7f8794;
+  --ua-border: rgba(255, 255, 255, 0.08);
+  --ua-border-strong: rgba(255, 255, 255, 0.16);
+  --ua-glass: rgba(16, 18, 24, 0.92);
+  --ua-edge: rgba(214, 219, 228, 0.2);
+  --ua-edge-dim: rgba(214, 219, 228, 0.06);
+  --ua-dot: rgba(255, 255, 255, 0.04);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.055), transparent 24rem),
+    radial-gradient(circle at 84% 22%, rgba(255, 255, 255, 0.03), transparent 28rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 10rem),
+    var(--ua-root);
+}
+
+.graph-brand__mark,
+.graph-explorer .primary-button {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.04)),
+    var(--ua-elevated);
+  color: var(--ua-accent-bright);
+}
+
+.graph-explorer .primary-button {
+  border-color: var(--ua-border-strong);
+}
+
+.graph-stage {
+  background:
+    radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.028), transparent 20rem),
+    radial-gradient(circle at 68% 68%, rgba(255, 255, 255, 0.02), transparent 20rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.024), transparent 14rem),
+    var(--graph-bg);
+}
+
+.graph-stage::before {
+  background-image:
+    radial-gradient(circle, var(--graph-grid) 1px, transparent 1.5px),
+    linear-gradient(180deg, transparent 0, transparent 31px, rgba(255, 255, 255, 0.018) 31px, rgba(255, 255, 255, 0.018) 32px);
+}
+
+.graph-band rect,
+.graph-band[data-type='knowledge_base'] rect,
+.graph-band[data-type='document'] rect,
+.graph-group[data-type='knowledge_base'] rect,
+.graph-group[data-type='document'] rect {
+  stroke: rgba(214, 219, 228, 0.14);
+}
+
+.graph-edge[data-type='extracts'],
+.graph-edge--related {
+  stroke: rgba(214, 219, 228, 0.22);
+}
+
+.graph-node-card[data-type='knowledge_base'] {
+  --node-card-color: #d6dbe4;
+}
+
+.graph-node-card[data-type='document'] {
+  --node-card-color: #aeb6c4;
+}
+
+.graph-node-card[data-type='user'] {
+  --node-card-color: #f2f4f8;
 }
 
 @keyframes graph-spin {

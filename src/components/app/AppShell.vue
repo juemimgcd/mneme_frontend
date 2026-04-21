@@ -49,18 +49,13 @@ const latestTask = computed(() => {
     .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())[0] ?? null;
 });
 const memoryCount = computed(() => workspace.memoryLibrary?.timeline.length ?? 0);
-const focusItems = computed(() =>
-  workspace.profile?.growth_focus.slice(0, 2) ??
-  workspace.growth?.recent_focus.slice(0, 2) ??
-  [],
-);
 const appQuery = computed(() =>
   workspace.activeKnowledgeBaseId ? { kb: workspace.activeKnowledgeBaseId } : {},
 );
 let shellReveal: gsap.core.Timeline | null = null;
 const shellElement = ref<HTMLElement | null>(null);
 
-function runPageReveal() {
+function runPageReveal({ includeSidebar = false }: { includeSidebar?: boolean } = {}) {
   if (document.documentElement.classList.contains('reduced-motion')) {
     return;
   }
@@ -72,47 +67,51 @@ function runPageReveal() {
 
   shellReveal?.kill();
   shellReveal = gsap.timeline({
-    defaults: { duration: 0.48, ease: 'power3.out' },
+    defaults: { duration: 0.28, ease: 'power2.out' },
   });
-  shellReveal.from(shell.querySelector('.app-sidebar'), {
-    x: -24,
-    opacity: 0,
-    filter: 'blur(10px)',
-    clearProps: 'transform,opacity,filter',
-  });
+
+  if (includeSidebar) {
+    shellReveal.from(shell.querySelector('.app-sidebar'), {
+      x: -14,
+      opacity: 0,
+      filter: 'blur(4px)',
+      clearProps: 'transform,opacity,filter',
+    });
+    shellReveal.from(
+      shell.querySelectorAll('.app-nav__link'),
+      {
+        x: -8,
+        opacity: 0,
+        stagger: 0.03,
+        duration: 0.22,
+        clearProps: 'transform,opacity',
+      },
+      '-=0.16',
+    );
+  }
+
   shellReveal.from(
     shell.querySelectorAll('.app-topbar, .app-main .view-stack'),
     {
-      y: 22,
+      y: 12,
       opacity: 0,
-      filter: 'blur(8px)',
-      stagger: 0.1,
+      filter: 'blur(4px)',
+      stagger: 0.05,
       clearProps: 'transform,opacity,filter',
     },
-    '-=0.24',
+    includeSidebar ? '-=0.08' : 0,
   );
   shellReveal.from(
     shell.querySelectorAll('.app-main .surface-panel, .app-main .metric-card, .app-main .context-card, .app-main .growth-card'),
     {
-      y: 16,
+      y: 10,
       opacity: 0,
-      filter: 'blur(6px)',
-      stagger: 0.04,
-      duration: 0.34,
+      filter: 'blur(3px)',
+      stagger: 0.025,
+      duration: 0.22,
       clearProps: 'transform,opacity,filter',
     },
-    '-=0.2',
-  );
-  shellReveal.from(
-    shell.querySelectorAll('.app-nav__link'),
-    {
-      x: -10,
-      opacity: 0,
-      stagger: 0.05,
-      duration: 0.35,
-      clearProps: 'transform,opacity',
-    },
-    '-=0.45',
+    '-=0.12',
   );
 }
 
@@ -132,7 +131,7 @@ onMounted(async () => {
   }
 
   await nextTick();
-  runPageReveal();
+  runPageReveal({ includeSidebar: true });
 });
 
 watch(
@@ -165,14 +164,6 @@ watch(
       path: route.path,
       query: mergeQuery(route.query, { kb: knowledgeBaseId }),
     });
-  },
-);
-
-watch(
-  () => route.path,
-  async () => {
-    await nextTick();
-    runPageReveal();
   },
 );
 
@@ -249,16 +240,15 @@ function logout() {
             <span v-if="workspace.currentKnowledgeBase" class="status-pill" :data-status="workspace.currentKnowledgeBase.status">
               {{ workspace.currentKnowledgeBase.status }}
             </span>
-            <span class="memory-chip">Ready {{ indexedCount }}/{{ workspace.filteredDocuments.length }}</span>
+            <span class="memory-chip">{{ indexedCount }} indexed of {{ workspace.filteredDocuments.length }}</span>
             <span class="memory-chip">Notes {{ memoryCount }}</span>
-            <span v-if="pendingCount" class="memory-chip">Pending {{ pendingCount }}</span>
-            <span v-if="latestTask" class="memory-chip">Latest {{ latestTask.status }}</span>
-            <span v-for="item in focusItems" :key="item" class="memory-chip">{{ item }}</span>
+            <span v-if="pendingCount" class="memory-chip">{{ pendingCount }} processing</span>
+            <span v-else-if="latestTask" class="memory-chip">Latest {{ latestTask.status }}</span>
           </div>
         </div>
 
         <div class="app-topbar__actions">
-          <label class="kb-switcher">
+          <label class="kb-switcher app-topbar__switcher">
             <span>Shelf</span>
             <select
               :value="workspace.activeKnowledgeBaseId"
@@ -275,24 +265,37 @@ function logout() {
             </select>
           </label>
 
-          <button class="ghost-button" type="button" @click="toggleTheme">
-            <AppIcon :name="theme === 'dark' ? 'sun' : 'moon'" />
-            <span>{{ theme === 'dark' ? 'Light' : 'Dark' }}</span>
-          </button>
+          <details class="app-utility-menu">
+            <summary class="ghost-button app-utility-menu__trigger">
+              <span>{{ session.user?.username ?? 'Workspace' }}</span>
+              <AppIcon name="arrow" />
+            </summary>
 
-          <button
-            class="ghost-button"
-            type="button"
-            :disabled="workspace.knowledgeRefreshLoading"
-            @click="refreshKnowledgeOutputs"
-          >
-            <AppIcon name="refresh" />
-            <span>{{ workspace.knowledgeRefreshLoading ? 'Refreshing' : 'Refresh' }}</span>
-          </button>
+            <div class="app-utility-menu__content">
+              <button class="app-utility-menu__action" type="button" @click="toggleTheme">
+                <AppIcon :name="theme === 'dark' ? 'sun' : 'moon'" />
+                <span>Switch to {{ theme === 'dark' ? 'light' : 'dark' }}</span>
+              </button>
 
-          <button class="ghost-button" type="button" @click="logout">
-            <span>{{ session.user?.username ?? 'Sign out' }}</span>
-          </button>
+              <button
+                class="app-utility-menu__action"
+                type="button"
+                :disabled="workspace.knowledgeRefreshLoading"
+                @click="refreshKnowledgeOutputs"
+              >
+                <AppIcon name="refresh" />
+                <span>{{ workspace.knowledgeRefreshLoading ? 'Refreshing workspace' : 'Refresh workspace' }}</span>
+              </button>
+
+              <button
+                class="app-utility-menu__action app-utility-menu__action--danger"
+                type="button"
+                @click="logout"
+              >
+                <span>Sign out</span>
+              </button>
+            </div>
+          </details>
         </div>
       </header>
 
