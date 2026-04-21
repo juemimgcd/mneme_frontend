@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router';
 import { gsap } from 'gsap';
 import AppIcon from '@/components/common/AppIcon.vue';
@@ -58,27 +58,50 @@ const appQuery = computed(() =>
   workspace.activeKnowledgeBaseId ? { kb: workspace.activeKnowledgeBaseId } : {},
 );
 let shellReveal: gsap.core.Timeline | null = null;
+const shellElement = ref<HTMLElement | null>(null);
 
 function runPageReveal() {
   if (document.documentElement.classList.contains('reduced-motion')) {
     return;
   }
 
-  const shell = document.querySelector('.app-shell');
+  const shell = shellElement.value;
   if (!shell) {
     return;
   }
 
   shellReveal?.kill();
   shellReveal = gsap.timeline({
-    defaults: { duration: 0.42, ease: 'power2.out' },
+    defaults: { duration: 0.48, ease: 'power3.out' },
   });
-  shellReveal.from(shell.querySelectorAll('.app-topbar, .app-main .view-stack'), {
-    y: 18,
+  shellReveal.from(shell.querySelector('.app-sidebar'), {
+    x: -24,
     opacity: 0,
-    stagger: 0.08,
-    clearProps: 'transform,opacity',
+    filter: 'blur(10px)',
+    clearProps: 'transform,opacity,filter',
   });
+  shellReveal.from(
+    shell.querySelectorAll('.app-topbar, .app-main .view-stack'),
+    {
+      y: 22,
+      opacity: 0,
+      filter: 'blur(8px)',
+      stagger: 0.1,
+      clearProps: 'transform,opacity,filter',
+    },
+    '-=0.24',
+  );
+  shellReveal.from(
+    shell.querySelectorAll('.app-nav__link'),
+    {
+      x: -10,
+      opacity: 0,
+      stagger: 0.05,
+      duration: 0.35,
+      clearProps: 'transform,opacity',
+    },
+    '-=0.45',
+  );
 }
 
 onMounted(async () => {
@@ -166,7 +189,7 @@ function logout() {
 </script>
 
 <template>
-  <div class="app-shell">
+  <div ref="shellElement" class="app-shell">
     <aside class="app-sidebar" aria-label="Primary navigation">
       <RouterLink class="brandmark" :to="{ name: 'dashboard' }">
         <span class="brandmark__glyph">M</span>
@@ -262,7 +285,11 @@ function logout() {
       </header>
 
       <main id="app-main" class="app-main">
-        <RouterView />
+        <RouterView v-slot="{ Component, route: nestedRoute }">
+          <Transition name="shell-view" mode="out-in">
+            <component :is="Component" :key="nestedRoute.fullPath" />
+          </Transition>
+        </RouterView>
       </main>
     </div>
   </div>
