@@ -53,11 +53,11 @@ const emit = defineEmits<{
 }>();
 
 const stageWidth = 1280;
-const stageHeight = 840;
+const stageHeight = 820;
 const minScale = 0.64;
 const maxScale = 2.5;
 const rootNodeId = 'memory-root';
-const palette = ['#6d8dff', '#5fd0b1', '#64d2ff', '#a78bfa', '#f59e0b', '#fb7185'];
+const palette = ['#d6dbe4', '#b9c0cc', '#aeb6c4', '#f2f4f8', '#8f98a6', '#c4cad4'];
 
 const stageRef = ref<HTMLDivElement | null>(null);
 const selectedNodeId = ref('');
@@ -153,17 +153,17 @@ function buildGraphModel() {
   const nodes: GraphNode[] = [
     {
       id: rootNodeId,
-      label: 'AI Knowledge Base',
+      label: 'Mneme Vault',
       kind: 'root',
-      radius: 14,
+      radius: 18,
       targetX: stageWidth / 2,
-      targetY: 104,
+      targetY: stageHeight / 2,
       summary: `${orderedEntryNames.length} extracted notes are mapped in the current workspace.`,
       count: orderedEntryNames.length,
       entryNames: orderedEntryNames,
-      strokeColor: '#8fb2ff',
-      coreColor: '#8fb2ff',
-      textColor: '#eff5ff',
+      strokeColor: '#d6dbe4',
+      coreColor: '#f2f4f8',
+      textColor: '#f2f4f8',
     },
   ];
   const links: GraphLink[] = [];
@@ -180,15 +180,14 @@ function buildGraphModel() {
       id: `kb:${item.id}`,
       label: item.name,
       kind: 'knowledge_base',
-      radius: 8,
-      targetX: distributedX(index, sortedKnowledgeBases.length, stageWidth, 180),
-      targetY: 238,
+      radius: 10,
+      ...radialPoint(index, sortedKnowledgeBases.length, stageWidth / 2, stageHeight / 2, 150, -Math.PI / 2),
       summary: `${item.document_count} docs and ${item.memory_count} notes in ${item.name}.`,
       count: item.memory_count,
       entryNames: item.id === activeKnowledgeBaseId ? orderedEntryNames : [],
       strokeColor: color,
       coreColor: color,
-      textColor: '#eff5ff',
+      textColor: '#f2f4f8',
     });
 
     links.push({
@@ -207,24 +206,20 @@ function buildGraphModel() {
   const typeNames = Object.keys(props.library.by_type).sort((left, right) => left.localeCompare(right));
   const themeNames = props.library.by_theme.map((item) => item.theme_name);
   const clusters = [
-    ...typeNames.map((typeName, index) => ({
+    ...typeNames.map((typeName) => ({
       id: `type:${typeName}`,
       label: typeName,
       kind: 'type' as const,
-      targetX: distributedX(index, Math.max(typeNames.length, 1), stageWidth, 160),
-      targetY: 392,
       summary: `${uniqueNames(props.library.by_type[typeName] ?? []).length} notes currently grouped as ${typeName}.`,
       count: uniqueNames(props.library.by_type[typeName] ?? []).length,
       entryNames: uniqueNames(props.library.by_type[typeName] ?? []),
     })),
-    ...themeNames.map((themeName, index) => {
+    ...themeNames.map((themeName) => {
       const theme = themeByName.get(themeName) as MemoryThemeGroup;
       return {
         id: `theme:${themeName}`,
         label: themeName,
         kind: 'theme' as const,
-        targetX: distributedX(index, Math.max(themeNames.length, 1), stageWidth, 160),
-        targetY: 516,
         summary: `${theme.count} notes reinforce the theme ${themeName}.`,
         count: theme.count,
         entryNames: uniqueNames(theme.entries),
@@ -232,13 +227,14 @@ function buildGraphModel() {
     }),
   ];
 
-  clusters.forEach((cluster) => {
+  clusters.forEach((cluster, index) => {
     nodes.push({
       ...cluster,
-      radius: 5,
+      ...radialPoint(index, Math.max(clusters.length, 1), stageWidth / 2, stageHeight / 2, 275, -Math.PI / 2),
+      radius: cluster.kind === 'theme' ? 7 : 6,
       strokeColor: activeColor,
       coreColor: activeColor,
-      textColor: '#eff5ff',
+      textColor: '#f2f4f8',
     });
 
     links.push({
@@ -257,7 +253,11 @@ function buildGraphModel() {
       clusters.find((item) => item.entryNames.includes(entryName)) ??
       clusters[index % Math.max(clusters.length, 1)];
 
-    const columnX = preferredCluster?.targetX ?? stageWidth / 2;
+    const clusterIndex = Math.max(clusters.findIndex((item) => item.id === preferredCluster?.id), 0);
+    const basePoint = preferredCluster
+      ? radialPoint(clusterIndex, Math.max(clusters.length, 1), stageWidth / 2, stageHeight / 2, 275, -Math.PI / 2)
+      : { targetX: stageWidth / 2, targetY: stageHeight / 2 };
+    const angle = -Math.PI / 2 + (Math.PI * 2 * clusterIndex) / Math.max(clusters.length, 1);
     const columnEntries = orderedEntryNames.filter((item) => {
       const itemType = resolveEntryType(item, props.library.by_type, timelineByName.get(item)?.entry_type);
       return (
@@ -266,14 +266,16 @@ function buildGraphModel() {
       );
     });
     const localIndex = Math.max(columnEntries.indexOf(entryName), 0);
+    const fan = (localIndex - Math.floor(columnEntries.length / 2)) * 0.12;
+    const distance = 82 + (localIndex % 4) * 34 + Math.floor(localIndex / 4) * 22;
 
     nodes.push({
       id: `entry:${entryName}`,
       label: entryName,
       kind: 'entry',
-      radius: 4,
-      targetX: columnX + ((localIndex % 2 === 0 ? -1 : 1) * Math.min(18 + (localIndex % 3) * 10, 44)),
-      targetY: 664 + localIndex * 40,
+      radius: 4.5,
+      targetX: basePoint.targetX + Math.cos(angle + fan) * distance,
+      targetY: basePoint.targetY + Math.sin(angle + fan) * distance,
       summary:
         timelineEntry?.summary ??
         `Referenced in the ${entryType} layer, but the full timeline summary is not available yet.`,
@@ -281,7 +283,7 @@ function buildGraphModel() {
       entryNames: [entryName],
       strokeColor: activeColor,
       coreColor: activeColor,
-      textColor: '#eff5ff',
+      textColor: '#f2f4f8',
     });
 
     if (entryType && typeNames.includes(entryType)) {
@@ -328,12 +330,26 @@ function collectEntryNames() {
   return Array.from(names);
 }
 
-function distributedX(index: number, total: number, width: number, padding: number) {
+function radialPoint(
+  index: number,
+  total: number,
+  centerX: number,
+  centerY: number,
+  radius: number,
+  offset = 0,
+) {
   if (total <= 1) {
-    return width / 2;
+    return {
+      targetX: centerX,
+      targetY: centerY - radius,
+    };
   }
-  const usable = width - padding * 2;
-  return padding + (usable * index) / (total - 1);
+
+  const angle = offset + (Math.PI * 2 * index) / total;
+  return {
+    targetX: centerX + Math.cos(angle) * radius,
+    targetY: centerY + Math.sin(angle) * radius,
+  };
 }
 
 function uniqueNames(values: string[]) {
@@ -671,22 +687,6 @@ function formatKind(kind: GraphNodeKind) {
 
       <svg class="memory-stage__svg" :viewBox="`0 0 ${stageWidth} ${stageHeight}`" role="img" aria-label="Memory graph">
         <g :transform="stageTransform">
-          <g class="memory-stage__guides">
-            <line x1="90" :x2="stageWidth - 90" y1="104" y2="104" />
-            <line x1="120" :x2="stageWidth - 120" y1="238" y2="238" />
-            <line x1="120" :x2="stageWidth - 120" y1="392" y2="392" />
-            <line x1="120" :x2="stageWidth - 120" y1="516" y2="516" />
-            <line x1="120" :x2="stageWidth - 120" y1="664" y2="664" />
-          </g>
-
-          <g class="memory-stage__lane-labels">
-            <text :x="stageWidth / 2" y="72">Root</text>
-            <text :x="stageWidth / 2" y="206">Knowledge Bases</text>
-            <text :x="stageWidth / 2" y="360">Type Groups</text>
-            <text :x="stageWidth / 2" y="484">Theme Groups</text>
-            <text :x="stageWidth / 2" y="632">Entries</text>
-          </g>
-
           <g class="memory-stage__links">
             <line
               v-for="link in layoutLinks"
@@ -759,12 +759,16 @@ function formatKind(kind: GraphNodeKind) {
   position: relative;
   overflow: hidden;
   min-height: 100%;
-  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
   background:
-    radial-gradient(circle at 18% 12%, rgba(109, 141, 255, 0.14), transparent 20rem),
-    radial-gradient(circle at 82% 18%, rgba(95, 208, 177, 0.08), transparent 18rem),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 12rem),
-    #0f1620;
+    radial-gradient(circle at 50% 48%, rgba(255, 255, 255, 0.055), transparent 18rem),
+    radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.028), transparent 20rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.022), transparent 12rem),
+    #101218;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 18px 46px rgba(0, 0, 0, 0.22);
   cursor: grab;
   touch-action: none;
 }
@@ -783,8 +787,9 @@ function formatKind(kind: GraphNodeKind) {
 .memory-stage__title {
   top: 20px;
   left: 20px;
-  color: #eff5ff;
-  font-size: 16px;
+  color: #f2f4f8;
+  font-size: 15px;
+  font-weight: 650;
   opacity: 0.85;
   pointer-events: none;
 }
@@ -792,7 +797,7 @@ function formatKind(kind: GraphNodeKind) {
 .memory-stage__tip {
   bottom: 20px;
   left: 20px;
-  color: #76859b;
+  color: #7f8794;
   font-size: 11px;
   opacity: 0.7;
   pointer-events: none;
@@ -805,12 +810,13 @@ function formatKind(kind: GraphNodeKind) {
   align-items: center;
   gap: 10px;
   padding: 6px 10px;
-  border: 1px solid rgba(49, 66, 88, 0.72);
-  border-radius: 999px;
-  background: rgba(19, 27, 38, 0.84);
-  color: #76859b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(18, 20, 27, 0.9);
+  color: #8f98a6;
   font-family: 'IBM Plex Mono', monospace;
   font-size: 11px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
 }
 
 .memory-stage__button {
@@ -820,7 +826,7 @@ function formatKind(kind: GraphNodeKind) {
   padding: 0;
   border: 0;
   background: transparent;
-  color: #eff5ff;
+  color: #d6dbe4;
   cursor: pointer;
   font: inherit;
 }
@@ -832,23 +838,9 @@ function formatKind(kind: GraphNodeKind) {
   user-select: none;
 }
 
-.memory-stage__guides line {
-  stroke: rgba(118, 133, 155, 0.14);
-  stroke-dasharray: 4 10;
-}
-
-.memory-stage__lane-labels text {
-  fill: rgba(118, 133, 155, 0.72);
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-anchor: middle;
-  text-transform: uppercase;
-}
-
 .memory-stage__links line {
   stroke-linecap: round;
-  stroke-opacity: 0.45;
+  stroke-opacity: 0.28;
   stroke-width: 0.9;
   transition: opacity 180ms ease, stroke-width 180ms ease;
 }
@@ -858,7 +850,8 @@ function formatKind(kind: GraphNodeKind) {
 }
 
 .memory-stage__links line[data-active='true'] {
-  stroke-width: 1.05;
+  stroke-opacity: 0.58;
+  stroke-width: 1.1;
 }
 
 .memory-node {
@@ -867,7 +860,7 @@ function formatKind(kind: GraphNodeKind) {
 }
 
 .memory-node[data-muted='true'] {
-  opacity: 0.18;
+  opacity: 0.22;
 }
 
 .memory-node:focus-visible {
@@ -876,24 +869,39 @@ function formatKind(kind: GraphNodeKind) {
 
 .memory-node__ring {
   fill: transparent;
-  stroke-width: 1;
+  stroke-width: 1.2;
 }
 
 .memory-node__shell {
-  fill: rgba(15, 22, 32, 0.96);
+  fill: rgba(23, 26, 34, 0.96);
+  stroke: rgba(255, 255, 255, 0.04);
+  stroke-width: 0.5;
+}
+
+.memory-node__core {
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.16));
 }
 
 .memory-node__label {
-  font-size: 11px;
-  font-weight: 400;
-  opacity: 0.9;
+  font-size: 10.5px;
+  font-weight: 500;
+  opacity: 0;
   pointer-events: none;
   user-select: none;
+  paint-order: stroke;
+  stroke: rgba(11, 13, 17, 0.92);
+  stroke-width: 3px;
+}
+
+.memory-node[data-kind='root'] .memory-node__label,
+.memory-node[data-kind='knowledge_base'] .memory-node__label,
+.memory-node[data-kind='theme'] .memory-node__label {
+  opacity: 0.86;
 }
 
 .memory-node[data-selected='true'] .memory-node__ring,
 .memory-node:hover .memory-node__ring {
-  stroke-width: 1.2;
+  stroke-width: 1.6;
 }
 
 .memory-node[data-selected='true'] .memory-node__label,
@@ -905,16 +913,16 @@ function formatKind(kind: GraphNodeKind) {
   display: grid;
   gap: 0.5rem;
   padding: 1rem 1.1rem;
-  border: 1px solid rgba(49, 66, 88, 0.72);
-  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 74%),
-    rgba(19, 27, 38, 0.9);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 74%),
+    rgba(18, 20, 27, 0.94);
 }
 
 .memory-focus-card span {
   margin: 0;
-  color: #76859b;
+  color: #8f98a6;
   font-family: 'IBM Plex Mono', monospace;
   font-size: 0.72rem;
   letter-spacing: 0.12em;
@@ -923,7 +931,7 @@ function formatKind(kind: GraphNodeKind) {
 
 .memory-focus-card strong {
   margin: 0.25rem 0 0;
-  color: #eff5ff;
+  color: #f2f4f8;
   font-family: 'Fraunces', serif;
   font-size: 1.2rem;
   font-weight: 500;
@@ -931,7 +939,7 @@ function formatKind(kind: GraphNodeKind) {
 
 .memory-focus-card p {
   margin: 0;
-  color: #b3bfd0;
+  color: #b9c0cc;
   line-height: 1.65;
 }
 

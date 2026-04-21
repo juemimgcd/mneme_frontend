@@ -35,7 +35,7 @@ const focusTitle = computed(() => selectedFocus.value?.label ?? 'Atlas overview'
 const focusSummary = computed(
   () =>
     selectedFocus.value?.summary ??
-    'Open the rail only when needed. The main screen stays dedicated to the memory tree.',
+    'Select a node in the graph to inspect related notes, themes, and entry context.',
 );
 const focusCount = computed(() => selectedFocus.value?.count ?? totalEntries.value);
 
@@ -63,14 +63,14 @@ function closeDrawer() {
   <div class="view-stack memory-page">
     <div class="memory-page__header">
       <SectionHeader
-        eyebrow="Memory"
-        title="Memory atlas."
-        description="A top-down memory tree with a hidden right-side rail for controls, context, and notebook detail."
+        eyebrow="Graph View"
+        title="Memory graph."
+        description="An Obsidian-inspired graph for browsing extracted notes, themes, and knowledge base connections."
       />
 
       <div class="memory-page__actions">
         <button class="ghost-button memory-page__utility" type="button" @click="openDrawer">
-          Open Rail
+          Open Sidebar
         </button>
         <button
           class="primary-button memory-page__utility"
@@ -78,12 +78,12 @@ function closeDrawer() {
           :disabled="workspace.memoryRebuildLoading"
           @click="rebuildMemory"
         >
-          {{ workspace.memoryRebuildLoading ? 'Rebuilding...' : 'Rebuild Notes' }}
+          {{ workspace.memoryRebuildLoading ? 'Rebuilding...' : 'Rebuild Graph' }}
         </button>
       </div>
     </div>
 
-    <SurfacePanel eyebrow="Atlas" title="Top-down memory tree">
+    <SurfacePanel eyebrow="Linked Notes" title="Graph canvas">
       <div class="memory-stage-shell">
         <MemoryConstellation
           v-if="workspace.memoryLibrary"
@@ -96,7 +96,7 @@ function closeDrawer() {
         <EmptyState
           v-else
           title="No extracted notes yet"
-          description="Once processing finishes, this stage will fill with the memory tree."
+          description="Once processing finishes, this stage will fill with the memory graph."
         />
       </div>
     </SurfacePanel>
@@ -106,8 +106,8 @@ function closeDrawer() {
       <div class="memory-drawer__panel">
         <div class="memory-drawer__header">
           <div>
-            <p class="memory-drawer__eyebrow">Memory rail</p>
-            <h2>Context and notebook</h2>
+            <p class="memory-drawer__eyebrow">Right Sidebar</p>
+            <h2>Linked context</h2>
           </div>
           <button class="ghost-button memory-page__utility" type="button" @click="closeDrawer">Close</button>
         </div>
@@ -162,7 +162,7 @@ function closeDrawer() {
           <EmptyState
             v-else
             title="No extracted notes yet"
-            description="The rail will show notebook detail after note extraction finishes."
+            description="The sidebar will show notebook detail after note extraction finishes."
           />
         </div>
       </div>
@@ -194,15 +194,15 @@ function closeDrawer() {
 }
 
 .memory-stage-shell {
-  min-height: min(80vh, 980px);
+  min-height: min(78vh, 900px);
 }
 
 .memory-drawer__backdrop {
   position: fixed;
   inset: 0;
   z-index: 35;
-  background: rgba(4, 6, 10, 0.5);
-  backdrop-filter: blur(2px);
+  background: rgba(10, 9, 13, 0.56);
+  backdrop-filter: blur(3px);
 }
 
 .memory-drawer {
@@ -226,9 +226,9 @@ function closeDrawer() {
   padding: 1.15rem;
   border-left: 1px solid var(--app-line);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 20%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 20%),
     color-mix(in srgb, var(--app-paper-strong) 96%, transparent);
-  box-shadow: -16px 0 40px rgba(0, 0, 0, 0.32);
+  box-shadow: -16px 0 42px rgba(0, 0, 0, 0.38);
   transform: translateX(104%);
   transition: transform 240ms ease;
   pointer-events: auto;
@@ -259,7 +259,7 @@ function closeDrawer() {
 .memory-drawer__header h2 {
   margin: 0.2rem 0 0;
   color: var(--app-ink);
-  font-family: 'Fraunces', serif;
+  font-family: var(--app-font-display);
   font-size: 1.3rem;
   font-weight: 500;
 }
@@ -275,7 +275,7 @@ function closeDrawer() {
 .memory-drawer__summary {
   border-radius: 18px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 74%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 74%),
     color-mix(in srgb, var(--app-panel) 92%, transparent);
 }
 
@@ -294,7 +294,7 @@ function closeDrawer() {
 
 .memory-drawer__stat strong {
   color: var(--app-ink);
-  font-family: 'Fraunces', serif;
+  font-family: var(--app-font-display);
   font-size: 1.25rem;
   font-weight: 500;
 }
