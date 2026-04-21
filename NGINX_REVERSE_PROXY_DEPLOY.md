@@ -44,9 +44,12 @@ sudo ENABLE_HTTPS=true CERTBOT_EMAIL=你的邮箱 bash deploy/setup_nginx_www_mn
 
 ```text
 DOMAIN=www.mneme.com.cn
+APEX_DOMAIN=mneme.com.cn
 SITE_ROOT=/var/www/mneme-frontend
 BACKEND_UPSTREAM=http://124.223.14.145:8000
 ```
+
+脚本会额外把 `mneme.com.cn` 301 跳转到 `www.mneme.com.cn`，并对 `index.html` 禁用缓存，避免手机继续加载旧的 JS 包。
 
 在前端服务器上创建或修改：
 
@@ -137,3 +140,9 @@ POST http://124.223.14.145:8000/auth/login
 ```
 
 如果还是请求后端 IP，说明服务器上的前端没有用最新 `.env` 重新构建。
+
+可以在前端服务器上直接检查当前发布目录里是否还残留后端 IP：
+
+```bash
+grep -R "124.223.14.145:8000" /var/www/mneme-frontend -n || echo "OK: no backend IP in frontend bundle"
+```

@@ -2,6 +2,7 @@
 set -euo pipefail
 
 DOMAIN="${DOMAIN:-www.mneme.com.cn}"
+APEX_DOMAIN="${APEX_DOMAIN:-mneme.com.cn}"
 SITE_CONF_NAME="${SITE_CONF_NAME:-mneme.conf}"
 SITE_ROOT="${SITE_ROOT:-/var/www/mneme-frontend}"
 BACKEND_UPSTREAM="${BACKEND_UPSTREAM:-http://124.223.14.145:8000}"
@@ -28,6 +29,13 @@ cat > "${SITE_CONF_PATH}" <<EOF
 server {
     listen 80;
     listen [::]:80;
+    server_name ${APEX_DOMAIN};
+    return 301 \$scheme://${DOMAIN}\$request_uri;
+}
+
+server {
+    listen 80;
+    listen [::]:80;
     server_name ${DOMAIN};
 
     root ${SITE_ROOT};
@@ -45,7 +53,18 @@ server {
         proxy_set_header X-Forwarded-Proto \$scheme;
     }
 
+    location = /index.html {
+        add_header Cache-Control "no-store, no-cache, must-revalidate";
+        try_files /index.html =404;
+    }
+
+    location /assets/ {
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        try_files \$uri =404;
+    }
+
     location / {
+        add_header Cache-Control "no-store, no-cache, must-revalidate";
         try_files \$uri \$uri/ /index.html;
     }
 }
@@ -62,6 +81,7 @@ systemctl reload nginx
 
 echo "Nginx site installed:"
 echo "  domain: ${DOMAIN}"
+echo "  apex redirect: ${APEX_DOMAIN} -> ${DOMAIN}"
 echo "  site root: ${SITE_ROOT}"
 echo "  backend upstream: ${BACKEND_UPSTREAM}"
 echo "  conf: ${SITE_CONF_PATH}"
