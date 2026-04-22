@@ -133,9 +133,9 @@ function handleKeydown(event: KeyboardEvent) {
   border: 1px solid var(--app-line);
   border-radius: var(--radius-xl);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 62%),
-    color-mix(in srgb, var(--app-panel) 90%, transparent);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.82), transparent 62%),
+    rgba(255, 252, 246, 0.94);
+  box-shadow: 0 16px 34px rgba(72, 59, 43, 0.12);
 }
 
 .chat-dock__body {
@@ -157,7 +157,7 @@ function handleKeydown(event: KeyboardEvent) {
   padding: 0.25rem 0.7rem;
   border: 1px solid var(--app-line);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(47, 73, 104, 0.06);
   color: var(--app-ink-soft);
   font-family: var(--app-font-mono);
   font-size: 0.72rem;
@@ -204,14 +204,16 @@ function handleKeydown(event: KeyboardEvent) {
 
 .chat-dock__tool {
   border: 1px solid var(--app-line);
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 252, 246, 0.68);
   color: var(--app-ink);
 }
 
 .chat-dock__send {
-  border: 1px solid color-mix(in srgb, var(--app-accent) 30%, transparent);
-  background: linear-gradient(135deg, var(--app-accent), var(--app-accent-strong));
-  color: #081019;
+  border: 1px solid rgba(23, 44, 69, 0.82);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14), transparent),
+    var(--app-accent-strong);
+  color: #fffaf3;
 }
 
 .chat-dock__send:disabled {
@@ -234,7 +236,7 @@ function handleKeydown(event: KeyboardEvent) {
   padding: 0.35rem 0.7rem;
   border: 1px solid var(--app-line);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 252, 246, 0.7);
   color: var(--app-ink);
 }
 

@@ -28,6 +28,19 @@ const routeTitle = computed(() => {
   const current = navigation.find((item) => item.name === route.name);
   return current?.label ?? 'Notebook';
 });
+const routeSubtitle = computed(() => {
+  const subtitles: Record<string, string> = {
+    dashboard: 'A composed overview of your active collection and its latest signals.',
+    'knowledge-bases': 'Curate, switch, and create collections without leaving the workspace.',
+    documents: 'Upload, index, inspect, and maintain the source library for this shelf.',
+    chat: 'Ask focused questions and keep the answers grounded in your documents.',
+    graph: 'Explore the structural relationships emerging from the current collection.',
+    memory: 'Review extracted memory as cards, chronology, and reusable knowledge fragments.',
+    insights: 'Read profile, growth, and advice outputs as a calm analysis report.',
+  };
+
+  return subtitles[String(route.name)] ?? 'A quiet place for reading, memory, and inquiry.';
+});
 
 const indexedCount = computed(
   () => workspace.filteredDocuments.filter((item) => item.status === 'indexed').length,
@@ -198,12 +211,13 @@ function logout() {
         <span class="brandmark__glyph">M</span>
         <span>
           <strong>Mneme</strong>
-          <small>Notebook</small>
+          <small>Knowledge Atelier</small>
         </span>
       </RouterLink>
 
       <div class="app-sidebar__note">
-        <p class="app-sidebar__caption">Collections, notes, and reading in one quiet workspace.</p>
+        <p class="app-sidebar__caption">A composed desk for collections, documents, memory, and inquiry.</p>
+        <span class="app-sidebar__art" aria-hidden="true" />
       </div>
 
       <nav class="app-nav">
@@ -220,11 +234,11 @@ function logout() {
 
       <div class="app-sidebar__footer">
         <p class="app-sidebar__caption">
-          Open shelf:
+          Current collection:
           <strong>{{ workspace.currentKnowledgeBase?.name ?? 'None selected' }}</strong>
         </p>
         <p class="app-sidebar__caption">
-          Ready:
+          Indexed material:
           <strong>{{ indexedCount }}</strong>
           / {{ workspace.filteredDocuments.length }} docs
         </p>
@@ -234,8 +248,9 @@ function logout() {
     <div class="app-shell__content">
       <header class="app-topbar">
         <div>
-          <p class="app-topbar__eyebrow">Knowledge Notebook</p>
+          <p class="app-topbar__eyebrow">Mneme Knowledge Workbench</p>
           <h1 class="app-topbar__title">{{ routeTitle }}</h1>
+          <p class="app-topbar__description">{{ routeSubtitle }}</p>
           <div class="app-topbar__status">
             <span v-if="workspace.currentKnowledgeBase" class="status-pill" :data-status="workspace.currentKnowledgeBase.status">
               {{ workspace.currentKnowledgeBase.status }}
@@ -249,7 +264,7 @@ function logout() {
 
         <div class="app-topbar__actions">
           <label class="kb-switcher app-topbar__switcher">
-            <span>Shelf</span>
+            <span>Collection</span>
             <select
               :value="workspace.activeKnowledgeBaseId"
               aria-label="Switch knowledge base"

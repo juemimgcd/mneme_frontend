@@ -155,14 +155,14 @@ watch(
 </script>
 
 <template>
-  <div class="view-stack">
+  <div class="view-stack documents-page">
     <SectionHeader
       eyebrow="Library"
       title="Bring new material into the notebook."
       description="Upload files, process them, and preview the notes extracted from each document."
     />
 
-    <section class="library-ingest-grid">
+    <section class="library-ingest-grid documents-page__ingest">
       <SurfacePanel eyebrow="Upload" title="Add files">
         <UploadZone
           :knowledge-bases="workspace.knowledgeBases"
@@ -248,7 +248,7 @@ watch(
       </div>
     </SurfacePanel>
 
-    <section class="documents-layout">
+    <section class="documents-layout documents-page__review">
       <SurfacePanel eyebrow="Queue" title="Document list">
         <DocumentsTable
           :items="workspace.filteredDocuments"
@@ -340,15 +340,51 @@ watch(
 <style scoped>
 .library-ingest-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.8fr);
-  gap: 1rem;
+  grid-template-columns: minmax(0, 1.38fr) minmax(21rem, 0.82fr);
+  gap: var(--space-5);
+  align-items: stretch;
 }
 
 .library-status-row--hero {
+  min-height: 12rem;
   background:
-    radial-gradient(circle at top right, rgba(122, 162, 255, 0.14), transparent 28%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 76%),
-    color-mix(in srgb, var(--app-panel) 92%, transparent);
+    radial-gradient(circle at top right, rgba(47, 73, 104, 0.1), transparent 32%),
+    linear-gradient(145deg, rgba(255, 252, 246, 0.92), rgba(240, 245, 247, 0.58)),
+    var(--app-panel-solid);
+}
+
+.library-status-list,
+.documents-preview--dense {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.library-status-row,
+.document-note-row {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+}
+
+.library-status-row header,
+.document-note-row header {
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--app-line);
+}
+
+.document-note-row--summary strong {
+  font-family: var(--app-font-display);
+  font-size: clamp(1.2rem, 1.4vw, 1.65rem);
+  letter-spacing: -0.03em;
+}
+
+.review-toolbar {
+  justify-content: flex-start;
+}
+
+.review-toolbar .section-header__description {
+  flex: 1 1 24rem;
+  margin: 0;
 }
 
 @media (max-width: 1040px) {

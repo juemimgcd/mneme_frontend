@@ -416,14 +416,16 @@ async function uploadFromChat() {
 
 <style scoped>
 .chat-page {
-  gap: var(--space-3);
+  gap: var(--space-5);
 }
 
 .chat-page__header {
   display: flex;
   justify-content: space-between;
-  gap: var(--space-3);
-  align-items: start;
+  gap: var(--space-5);
+  align-items: end;
+  padding-bottom: var(--space-5);
+  border-bottom: 1px solid var(--app-line);
 }
 
 .chat-page__heading {
@@ -451,9 +453,10 @@ async function uploadFromChat() {
   margin: 0;
   color: var(--app-ink);
   font-family: var(--app-font-display);
-  font-size: clamp(1.55rem, 2vw, 2.1rem);
+  font-size: clamp(2.05rem, 4vw, 4.2rem);
   font-weight: 500;
-  line-height: var(--lh-base);
+  line-height: 0.98;
+  letter-spacing: -0.045em;
 }
 
 .chat-page__description {
@@ -468,7 +471,7 @@ async function uploadFromChat() {
 }
 
 .chat-page__surface {
-  min-height: min(84vh, 1040px);
+  min-height: min(82vh, 1040px);
 }
 
 .chat-room {
@@ -489,8 +492,8 @@ async function uploadFromChat() {
   padding-top: 1rem;
   background: linear-gradient(
     180deg,
-    rgba(7, 9, 13, 0),
-    color-mix(in srgb, var(--app-paper) 94%, transparent) 24%
+    rgba(243, 239, 231, 0),
+    rgba(243, 239, 231, 0.92) 24%
   );
 }
 
@@ -517,8 +520,8 @@ async function uploadFromChat() {
 .chat-turn__question {
   justify-self: end;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 72%),
-    color-mix(in srgb, var(--app-panel-muted) 94%, transparent);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.76), transparent 72%),
+    var(--app-panel-muted);
   border: 1px solid color-mix(in srgb, var(--app-line) 80%, transparent);
 }
 
@@ -529,8 +532,8 @@ async function uploadFromChat() {
 
 .chat-turn__answer-main {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 74%),
-    color-mix(in srgb, var(--app-panel) 96%, transparent);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.7), transparent 74%),
+    var(--app-panel);
   border: 1px solid color-mix(in srgb, var(--app-line) 84%, transparent);
 }
 
@@ -604,7 +607,7 @@ async function uploadFromChat() {
   padding: var(--space-2) var(--space-4);
   border: 1px solid var(--app-line);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 252, 246, 0.7);
   color: var(--app-ink);
   cursor: pointer;
   transition: transform var(--motion-fast), border-color var(--motion-fast), background-color var(--motion-fast);
@@ -613,14 +616,14 @@ async function uploadFromChat() {
 .chat-empty__chip:hover {
   transform: translateY(-1px);
   border-color: var(--app-line-strong);
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 252, 246, 0.94);
 }
 
 .chat-tools__backdrop {
   position: fixed;
   inset: 0;
   z-index: 35;
-  background: rgba(4, 6, 10, 0.5);
+  background: rgba(38, 32, 25, 0.24);
   backdrop-filter: blur(2px);
 }
 
@@ -645,9 +648,9 @@ async function uploadFromChat() {
   padding: 1.15rem;
   border-left: 1px solid var(--app-line);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 20%),
-    color-mix(in srgb, var(--app-paper-strong) 96%, transparent);
-  box-shadow: -16px 0 40px rgba(0, 0, 0, 0.32);
+    linear-gradient(180deg, rgba(255, 252, 246, 0.94), transparent 20%),
+    var(--app-paper-strong);
+  box-shadow: -18px 0 42px rgba(72, 59, 43, 0.14);
   transform: translateX(104%);
   transition: transform var(--motion-mid);
   pointer-events: auto;
@@ -685,8 +688,8 @@ async function uploadFromChat() {
 .chat-tools__card {
   border-radius: 18px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 74%),
-    color-mix(in srgb, var(--app-panel) 92%, transparent);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), transparent 74%),
+    var(--app-panel);
 }
 
 .chat-tools__card p {
@@ -713,7 +716,7 @@ async function uploadFromChat() {
   padding: 0.8rem 0.9rem;
   border: 1px solid var(--app-line);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 252, 246, 0.76);
   color: var(--app-ink);
 }
 
