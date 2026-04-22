@@ -13,6 +13,8 @@ const router = useRouter();
 const session = useSessionStore();
 const workspace = useWorkspaceStore();
 const { theme, toggleTheme } = useTheme();
+const MAX_DISPLAYED_TAGS = 4;
+const MAX_RECENT_FILES = 8;
 
 const navigation = [
   { name: 'dashboard', label: 'Desk', icon: 'vault' as const },
@@ -55,8 +57,8 @@ const appQuery = computed(() =>
 );
 const displayedTags = computed(() =>
   Array.isArray(workspace.profile?.growth_focus)
-    ? workspace.profile.growth_focus.slice(0, 4)
-    : navigation.slice(1, 5).map((item) => item.label),
+    ? workspace.profile.growth_focus.slice(0, MAX_DISPLAYED_TAGS)
+    : navigation.slice(0, MAX_DISPLAYED_TAGS).map((item) => item.label),
 );
 const searchKeyword = ref('');
 const normalizedSearchKeyword = computed(() => searchKeyword.value.trim().toLowerCase());
@@ -76,7 +78,7 @@ const filteredDocuments = computed(() =>
       }
       return `${item.name} ${item.status}`.toLowerCase().includes(normalizedSearchKeyword.value);
     })
-    .slice(0, 8),
+    .slice(0, MAX_RECENT_FILES),
 );
 
 let shellReveal: gsap.core.Timeline | null = null;
@@ -271,7 +273,7 @@ function logout() {
             id="workspace-search"
             v-model="searchKeyword"
             type="search"
-            aria-label="Search collections or files"
+            aria-label="Filter collections and files by name"
             placeholder="Search collections or files"
           />
         </label>
@@ -324,7 +326,7 @@ function logout() {
           <article class="surface-panel app-list-panel">
             <header class="surface-panel__header app-list-panel__header">
               <h2 class="surface-panel__title">Recent files</h2>
-              <button class="ghost-button" type="button" aria-label="Open documents view" @click="openDocumentsView">View all</button>
+              <button class="ghost-button" type="button" @click="openDocumentsView">View all files</button>
             </header>
             <ul class="app-mini-list">
               <li v-for="item in filteredDocuments" :key="item.id">
