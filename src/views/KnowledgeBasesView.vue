@@ -52,16 +52,16 @@ async function selectKnowledgeBase(id: string) {
 </script>
 
 <template>
-  <div class="view-stack">
+  <div class="view-stack collections-page">
     <SectionHeader
       eyebrow="Collections"
       title="Shape the library."
       description="Create collections, switch between them, and keep the active shelf in view."
     />
 
-    <section class="collections-layout">
+    <section class="collections-layout collections-page__grid">
       <SurfacePanel eyebrow="Create" title="Add a collection">
-        <form class="inline-form inline-form--dense" @submit.prevent="createKnowledgeBase">
+        <form class="inline-form inline-form--dense collections-page__form" @submit.prevent="createKnowledgeBase">
           <label>
             <span>Name</span>
             <input v-model="form.name" maxlength="24" required />
@@ -75,7 +75,7 @@ async function selectKnowledgeBase(id: string) {
       </SurfacePanel>
 
       <SurfacePanel eyebrow="Active" title="Open collection">
-        <div v-if="workspace.currentKnowledgeBase" class="collections-panel collections-panel--dense">
+        <div v-if="workspace.currentKnowledgeBase" class="collections-panel collections-panel--dense collections-page__active">
           <article class="context-card collection-row collection-row--summary">
             <header class="knowledge-card__header">
               <strong>{{ workspace.currentKnowledgeBase.name }}</strong>
@@ -138,3 +138,51 @@ async function selectKnowledgeBase(id: string) {
     </SurfacePanel>
   </div>
 </template>
+
+<style scoped>
+.collections-page__grid {
+  grid-template-columns: minmax(18rem, 0.72fr) minmax(0, 1.28fr);
+  gap: var(--space-5);
+  align-items: stretch;
+}
+
+.collections-page__form {
+  min-height: 100%;
+  align-content: start;
+}
+
+.collections-page__active {
+  grid-template-columns: minmax(0, 1.1fr) minmax(16rem, 0.9fr);
+  gap: var(--space-4);
+}
+
+.collection-row--summary {
+  grid-row: span 2;
+  min-height: 18rem;
+}
+
+.collection-row--summary strong {
+  font-family: var(--app-font-display);
+  font-size: clamp(1.45rem, 2vw, 2.4rem);
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.collection-row {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+}
+
+.collection-row header {
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--app-line);
+}
+
+@media (max-width: 1100px) {
+  .collections-page__grid,
+  .collections-page__active {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

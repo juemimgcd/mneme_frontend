@@ -475,8 +475,8 @@ function relationshipStrength(value: number | null) {
 function relationCardStyle(score: number | null) {
   const strength = relationshipStrength(score);
   return {
-    '--relation-border': `rgba(214, 219, 228, ${0.14 + strength * 0.18})`,
-    '--relation-bg': `linear-gradient(135deg, rgba(255, 255, 255, ${0.025 + strength * 0.055}), rgba(174, 182, 196, ${0.02 + strength * 0.04}) 82%), var(--ua-elevated)`,
+    '--relation-border': `rgba(47, 73, 104, ${0.12 + strength * 0.16})`,
+    '--relation-bg': `linear-gradient(135deg, rgba(255, 252, 246, ${0.55 + strength * 0.18}), rgba(109, 135, 155, ${0.04 + strength * 0.06}) 82%), var(--ua-elevated)`,
   };
 }
 
@@ -657,10 +657,10 @@ function nodeRadius(node: GraphNode, degree: number) {
 
 function nodeColor(nodeType: GraphNode['node_type']) {
   const palette = {
-    user: '#f2f4f8',
-    knowledge_base: '#d6dbe4',
-    document: '#aeb6c4',
-    memory_entry: '#7f8794',
+    user: '#83798d',
+    knowledge_base: '#2f4968',
+    document: '#6d879b',
+    memory_entry: '#687d72',
   } satisfies Record<GraphNode['node_type'], string>;
 
   return palette[nodeType];
@@ -2272,19 +2272,19 @@ watch(
   --ua-surface: #15141b;
   --ua-elevated: #1b1923;
   --ua-panel: #211f2b;
-  --ua-accent: #8b6df6;
-  --ua-accent-dim: #7c5cff;
-  --ua-accent-bright: #c4b5fd;
+  --ua-accent: #2f4968;
+  --ua-accent-dim: #6d879b;
+  --ua-accent-bright: #172c45;
   --ua-text: #f5f2ff;
   --ua-text-secondary: #c9c2d8;
   --ua-text-muted: #8f879f;
-  --ua-border: rgba(180, 160, 255, 0.14);
-  --ua-border-strong: rgba(180, 160, 255, 0.3);
+  --ua-border: rgba(54, 58, 64, 0.12);
+  --ua-border-strong: rgba(54, 58, 64, 0.22);
   --ua-glass: rgba(20, 19, 26, 0.9);
-  --ua-edge: rgba(167, 139, 250, 0.3);
-  --ua-edge-dim: rgba(167, 139, 250, 0.09);
+  --ua-edge: rgba(47, 73, 104, 0.24);
+  --ua-edge-dim: rgba(47, 73, 104, 0.08);
   --ua-dot: rgba(245, 242, 255, 0.045);
-  --ua-shadow: 0 30px 64px rgba(0, 0, 0, 0.34);
+  --ua-shadow: 0 18px 44px rgba(72, 59, 43, 0.08);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -2293,8 +2293,8 @@ watch(
   border: 1px solid var(--ua-border);
   border-radius: 26px;
   background:
-    radial-gradient(circle at 18% 0%, rgba(139, 109, 246, 0.16), transparent 24rem),
-    radial-gradient(circle at 84% 22%, rgba(196, 181, 253, 0.08), transparent 28rem),
+    radial-gradient(circle at 18% 0%, rgba(109, 135, 155, 0.14), transparent 24rem),
+    radial-gradient(circle at 84% 22%, rgba(131, 121, 141, 0.08), transparent 28rem),
     linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 14rem),
     var(--ua-root);
   color: var(--ua-text);
@@ -2317,22 +2317,22 @@ watch(
   --ua-surface: #15141b;
   --ua-elevated: #1b1923;
   --ua-panel: #211f2b;
-  --ua-accent: #8b6df6;
-  --ua-accent-dim: #7c5cff;
-  --ua-accent-bright: #c4b5fd;
+  --ua-accent: #2f4968;
+  --ua-accent-dim: #6d879b;
+  --ua-accent-bright: #172c45;
   --ua-text: #f5f2ff;
   --ua-text-secondary: #c9c2d8;
   --ua-text-muted: #8f879f;
-  --ua-border: rgba(180, 160, 255, 0.14);
-  --ua-border-strong: rgba(180, 160, 255, 0.3);
+  --ua-border: rgba(54, 58, 64, 0.12);
+  --ua-border-strong: rgba(54, 58, 64, 0.22);
   --ua-glass: rgba(20, 19, 26, 0.9);
-  --ua-edge: rgba(167, 139, 250, 0.3);
-  --ua-edge-dim: rgba(167, 139, 250, 0.09);
+  --ua-edge: rgba(47, 73, 104, 0.24);
+  --ua-edge-dim: rgba(47, 73, 104, 0.08);
   --ua-dot: rgba(245, 242, 255, 0.045);
-  --ua-shadow: 0 30px 64px rgba(0, 0, 0, 0.34);
+  --ua-shadow: 0 18px 44px rgba(72, 59, 43, 0.08);
   background:
-    radial-gradient(circle at 18% 0%, rgba(139, 109, 246, 0.16), transparent 24rem),
-    radial-gradient(circle at 84% 22%, rgba(196, 181, 253, 0.08), transparent 28rem),
+    radial-gradient(circle at 18% 0%, rgba(109, 135, 155, 0.14), transparent 24rem),
+    radial-gradient(circle at 84% 22%, rgba(131, 121, 141, 0.08), transparent 28rem),
     linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 10rem),
     var(--ua-root);
 }
@@ -2373,13 +2373,13 @@ watch(
   border-radius: 10px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 70%),
-    linear-gradient(135deg, rgba(139, 109, 246, 0.16), transparent),
+    linear-gradient(135deg, rgba(47, 73, 104, 0.12), transparent),
     var(--ua-elevated);
   color: var(--ua-accent-bright);
   font-family: Georgia, 'Times New Roman', serif;
   font-size: 1.35rem;
   line-height: 1;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 10px 24px rgba(72, 59, 43, 0.1);
 }
 
 .graph-brand p,
@@ -2584,7 +2584,7 @@ watch(
     linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 72%),
     linear-gradient(135deg, color-mix(in srgb, var(--ua-accent) 8%, transparent), transparent 72%),
     var(--ua-elevated);
-  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 16px 32px rgba(72, 59, 43, 0.12);
   backdrop-filter: blur(10px);
 }
 
@@ -2723,7 +2723,7 @@ watch(
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 75%),
     var(--ua-glass);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+  box-shadow: 0 10px 24px rgba(72, 59, 43, 0.12);
   backdrop-filter: blur(8px);
 }
 
@@ -2801,7 +2801,7 @@ watch(
   border-radius: 0;
   background:
     radial-gradient(circle at 32% 22%, color-mix(in srgb, var(--ua-accent) 6%, transparent), transparent 20rem),
-    radial-gradient(circle at 68% 68%, rgba(196, 181, 253, 0.05), transparent 20rem),
+    radial-gradient(circle at 68% 68%, rgba(131, 121, 141, 0.045), transparent 20rem),
     linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 14rem),
     var(--graph-bg);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
@@ -2816,7 +2816,7 @@ watch(
   inset: 0;
   background-image:
     radial-gradient(circle, var(--graph-grid) 1px, transparent 1.5px),
-    linear-gradient(180deg, transparent 0, transparent 31px, rgba(167, 139, 250, 0.024) 31px, rgba(167, 139, 250, 0.024) 32px);
+    linear-gradient(180deg, transparent 0, transparent 31px, rgba(47, 73, 104, 0.028) 31px, rgba(47, 73, 104, 0.028) 32px);
   background-position: 0 0;
   background-size: 20px 20px, 100% 32px;
   mask-image: radial-gradient(circle at 50% 50%, #000 0%, transparent 88%);
@@ -2845,7 +2845,7 @@ watch(
 
 .graph-band rect {
   fill: rgba(255, 255, 255, 0.03);
-  stroke: rgba(167, 139, 250, 0.12);
+  stroke: rgba(47, 73, 104, 0.12);
   stroke-width: 1;
   stroke-dasharray: 5 9;
 }
@@ -2862,12 +2862,12 @@ watch(
 
 .graph-band[data-type='knowledge_base'] rect,
 .graph-group[data-type='knowledge_base'] rect {
-  stroke: rgba(139, 109, 246, 0.26);
+  stroke: rgba(47, 73, 104, 0.24);
 }
 
 .graph-band[data-type='document'] rect,
 .graph-group[data-type='document'] rect {
-  stroke: rgba(196, 181, 253, 0.18);
+  stroke: rgba(109, 135, 155, 0.2);
 }
 
 .graph-group rect {
@@ -2889,11 +2889,11 @@ watch(
 }
 
 .graph-edge[data-type='extracts'] {
-  stroke: rgba(196, 181, 253, 0.36);
+  stroke: rgba(109, 135, 155, 0.34);
 }
 
 .graph-edge--related {
-  stroke: rgba(139, 109, 246, 0.28);
+  stroke: rgba(47, 73, 104, 0.26);
   stroke-dasharray: 3 8;
 }
 
@@ -2910,14 +2910,14 @@ watch(
 
 .graph-node-card-svg {
   cursor: pointer;
-  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.18));
+  filter: drop-shadow(0 8px 18px rgba(72, 59, 43, 0.12));
   transition:
     opacity 180ms ease,
     filter 180ms ease;
 }
 
 .graph-node-card-svg__panel {
-  fill: color-mix(in srgb, var(--ua-elevated) 95%, #02050a);
+  fill: color-mix(in srgb, var(--ua-elevated) 94%, white);
   stroke: color-mix(in srgb, var(--node-color) 10%, var(--ua-border));
   stroke-width: 1px;
   transition:
@@ -2959,18 +2959,18 @@ watch(
 
 .graph-node-card-svg:hover,
 .graph-node-card-svg.is-selected {
-  filter: drop-shadow(0 12px 26px rgba(0, 0, 0, 0.24));
+  filter: drop-shadow(0 12px 24px rgba(72, 59, 43, 0.14));
 }
 
 .graph-node-card-svg:hover .graph-node-card-svg__panel,
 .graph-node-card-svg.is-selected .graph-node-card-svg__panel {
   stroke: var(--ua-accent);
   stroke-width: 1.45px;
-  fill: color-mix(in srgb, var(--node-color) 7%, rgba(19, 25, 35, 0.98));
+  fill: color-mix(in srgb, var(--node-color) 8%, var(--ua-elevated));
 }
 
 .graph-node-card-svg:focus-visible {
-  filter: drop-shadow(0 0 0 rgba(0, 0, 0, 0)) drop-shadow(0 0 0 5px rgba(122, 162, 255, 0.14));
+  filter: drop-shadow(0 0 0 rgba(72, 59, 43, 0)) drop-shadow(0 0 0 5px rgba(47, 73, 104, 0.14));
 }
 
 .graph-node-card-svg:focus-visible .graph-node-card-svg__panel {
@@ -3033,7 +3033,7 @@ watch(
     linear-gradient(135deg, color-mix(in srgb, var(--ua-accent) 9%, transparent), transparent 65%),
     var(--ua-elevated);
   color: var(--ua-text);
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.24);
+  box-shadow: 0 10px 22px rgba(72, 59, 43, 0.12);
   backdrop-filter: blur(8px);
   pointer-events: none;
 }
@@ -3271,15 +3271,15 @@ watch(
 }
 
 .graph-node-card[data-type='knowledge_base'] {
-  --node-card-color: #8b6df6;
+  --node-card-color: #2f4968;
 }
 
 .graph-node-card[data-type='document'] {
-  --node-card-color: #a78bfa;
+  --node-card-color: #6d879b;
 }
 
 .graph-node-card[data-type='user'] {
-  --node-card-color: #c4b5fd;
+  --node-card-color: #83798d;
 }
 
 .graph-node-card span {
@@ -3359,39 +3359,41 @@ watch(
   color: var(--ua-text-secondary);
 }
 
-/* Obsidian graphite override: black/gray first, no purple cast. */
+/* Editorial cartography override: warm paper, restrained ink, no neon cast. */
 .graph-explorer,
 :global(:root[data-theme='light'] .graph-explorer),
 :global(:root[data-theme='dark'] .graph-explorer) {
-  --ua-root: #0b0d11;
-  --ua-surface: #101218;
-  --ua-elevated: #171a22;
-  --ua-panel: #1d212a;
-  --ua-accent: #d6dbe4;
-  --ua-accent-dim: #aeb6c4;
-  --ua-accent-bright: #f6f7fa;
-  --ua-text: #f2f4f8;
-  --ua-text-secondary: #b9c0cc;
-  --ua-text-muted: #7f8794;
-  --ua-border: rgba(255, 255, 255, 0.08);
-  --ua-border-strong: rgba(255, 255, 255, 0.16);
-  --ua-glass: rgba(16, 18, 24, 0.92);
-  --ua-edge: rgba(214, 219, 228, 0.2);
-  --ua-edge-dim: rgba(214, 219, 228, 0.06);
-  --ua-dot: rgba(255, 255, 255, 0.04);
+  --ua-root: #f8f3eb;
+  --ua-surface: #f0e9de;
+  --ua-elevated: #fffaf3;
+  --ua-panel: #f5eee4;
+  --ua-accent: #2f4968;
+  --ua-accent-dim: #6d879b;
+  --ua-accent-bright: #172c45;
+  --ua-text: #25211d;
+  --ua-text-secondary: #62584d;
+  --ua-text-muted: #8a7f70;
+  --ua-border: rgba(54, 58, 64, 0.12);
+  --ua-border-strong: rgba(54, 58, 64, 0.22);
+  --ua-glass: rgba(255, 252, 246, 0.9);
+  --ua-edge: rgba(47, 73, 104, 0.24);
+  --ua-edge-dim: rgba(47, 73, 104, 0.08);
+  --ua-dot: rgba(47, 73, 104, 0.055);
+  --ua-shadow: 0 18px 44px rgba(72, 59, 43, 0.08);
   background:
-    radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.055), transparent 24rem),
-    radial-gradient(circle at 84% 22%, rgba(255, 255, 255, 0.03), transparent 28rem),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 10rem),
+    radial-gradient(circle at 18% 0%, rgba(109, 135, 155, 0.14), transparent 24rem),
+    radial-gradient(circle at 84% 22%, rgba(131, 121, 141, 0.08), transparent 28rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.68), transparent 10rem),
     var(--ua-root);
+  color-scheme: light;
 }
 
 .graph-brand__mark,
 .graph-explorer .primary-button {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.04)),
-    var(--ua-elevated);
-  color: var(--ua-accent-bright);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent),
+    var(--ua-accent-bright);
+  color: #fffaf3;
 }
 
 .graph-explorer .primary-button {
@@ -3400,16 +3402,16 @@ watch(
 
 .graph-stage {
   background:
-    radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.028), transparent 20rem),
-    radial-gradient(circle at 68% 68%, rgba(255, 255, 255, 0.02), transparent 20rem),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.024), transparent 14rem),
+    radial-gradient(circle at 32% 22%, rgba(47, 73, 104, 0.06), transparent 20rem),
+    radial-gradient(circle at 68% 68%, rgba(131, 121, 141, 0.045), transparent 20rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), transparent 14rem),
     var(--graph-bg);
 }
 
 .graph-stage::before {
   background-image:
     radial-gradient(circle, var(--graph-grid) 1px, transparent 1.5px),
-    linear-gradient(180deg, transparent 0, transparent 31px, rgba(255, 255, 255, 0.018) 31px, rgba(255, 255, 255, 0.018) 32px);
+    linear-gradient(180deg, transparent 0, transparent 31px, rgba(47, 73, 104, 0.028) 31px, rgba(47, 73, 104, 0.028) 32px);
 }
 
 .graph-band rect,
@@ -3422,19 +3424,19 @@ watch(
 
 .graph-edge[data-type='extracts'],
 .graph-edge--related {
-  stroke: rgba(214, 219, 228, 0.22);
+  stroke: rgba(47, 73, 104, 0.24);
 }
 
 .graph-node-card[data-type='knowledge_base'] {
-  --node-card-color: #d6dbe4;
+  --node-card-color: #2f4968;
 }
 
 .graph-node-card[data-type='document'] {
-  --node-card-color: #aeb6c4;
+  --node-card-color: #6d879b;
 }
 
 .graph-node-card[data-type='user'] {
-  --node-card-color: #f2f4f8;
+  --node-card-color: #83798d;
 }
 
 @keyframes graph-spin {

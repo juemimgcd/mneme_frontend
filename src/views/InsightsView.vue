@@ -64,7 +64,7 @@ watch(
 </script>
 
 <template>
-  <div class="view-stack">
+  <div class="view-stack insights-page">
     <SectionHeader
       eyebrow="Review"
       title="Read the current thread."
@@ -98,7 +98,7 @@ watch(
       </div>
     </SurfacePanel>
 
-    <div class="retrieve-layout">
+    <div class="retrieve-layout insights-page__layout">
       <SurfacePanel eyebrow="Review Deck" title="Current reading">
         <InsightColumn
           v-if="workspace.profile || workspace.growth"
@@ -196,3 +196,59 @@ watch(
     </div>
   </div>
 </template>
+
+<style scoped>
+.insights-page__layout {
+  grid-template-columns: minmax(0, 1.12fr) minmax(22rem, 0.88fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.review-toolbar {
+  justify-content: flex-start;
+}
+
+.review-toolbar .section-header__description {
+  flex: 1 1 24rem;
+  margin: 0;
+}
+
+.review-item {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+}
+
+.review-item--summary {
+  min-height: 12rem;
+}
+
+.review-item header {
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--app-line);
+}
+
+.review-item p {
+  margin: 0;
+}
+
+.advice-board--dense {
+  margin-top: var(--space-4);
+  grid-template-columns: minmax(0, 1.08fr) minmax(18rem, 0.92fr);
+  gap: var(--space-4);
+}
+
+.advice-board__main,
+.advice-board__rail {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+}
+
+@media (max-width: 1100px) {
+  .insights-page__layout,
+  .advice-board--dense {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
