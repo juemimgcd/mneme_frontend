@@ -333,8 +333,8 @@ function submit() {
   border: 1px solid var(--app-line);
   border-radius: 18px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 80%),
-    color-mix(in srgb, var(--app-panel) 92%, transparent);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.7), transparent 80%),
+    var(--app-panel-muted);
 }
 
 .upload-studio__stat strong {
@@ -362,7 +362,7 @@ function submit() {
   padding: 0.8rem 0.9rem;
   border: 1px solid var(--app-line);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 252, 246, 0.78);
   color: var(--app-ink);
 }
 
@@ -374,7 +374,7 @@ function submit() {
   padding: 0.75rem 0.95rem;
   border: 1px solid var(--app-line);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 252, 246, 0.7);
   color: var(--app-ink);
 }
 
@@ -393,9 +393,9 @@ function submit() {
   border: 1px dashed color-mix(in srgb, var(--app-accent) 28%, var(--app-line));
   border-radius: 24px;
   background:
-    radial-gradient(circle at top left, rgba(122, 162, 255, 0.12), transparent 32%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 86%),
-    color-mix(in srgb, var(--app-panel-muted) 90%, transparent);
+    radial-gradient(circle at top left, rgba(47, 73, 104, 0.1), transparent 32%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.76), transparent 86%),
+    var(--app-panel-muted);
   cursor: pointer;
   transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
 }
@@ -404,7 +404,7 @@ function submit() {
 .upload-studio__dropzone[data-dragging='true'] {
   transform: translateY(-1px);
   border-color: var(--app-line-strong);
-  box-shadow: 0 18px 30px rgba(0, 0, 0, 0.24);
+  box-shadow: 0 14px 28px rgba(72, 59, 43, 0.1);
 }
 
 .upload-studio__drop-icon {
@@ -414,7 +414,7 @@ function submit() {
   height: 56px;
   border: 1px solid var(--app-line);
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 252, 246, 0.76);
   color: var(--app-accent);
 }
 
@@ -480,8 +480,8 @@ function submit() {
   border: 1px solid var(--app-line);
   border-radius: 18px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 84%),
-    color-mix(in srgb, var(--app-panel) 92%, transparent);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.68), transparent 84%),
+    var(--app-panel);
 }
 
 .upload-file__icon {
@@ -490,7 +490,7 @@ function submit() {
   width: 44px;
   height: 44px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(47, 73, 104, 0.08);
   color: var(--app-accent);
 }
 
@@ -532,7 +532,7 @@ function submit() {
   height: 28px;
   border: 0;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(47, 73, 104, 0.08);
   color: var(--app-ink-soft);
   cursor: pointer;
 }
@@ -546,7 +546,7 @@ function submit() {
   border: 1px dashed var(--app-line);
   border-radius: 16px;
   color: var(--app-ink-soft);
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 252, 246, 0.54);
 }
 
 .upload-studio__footer {

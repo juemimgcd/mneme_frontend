@@ -172,14 +172,16 @@ function closeDrawer() {
 
 <style scoped>
 .memory-page {
-  gap: 1rem;
+  gap: var(--space-5);
 }
 
 .memory-page__header {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
-  align-items: start;
+  gap: var(--space-5);
+  align-items: end;
+  padding-bottom: var(--space-5);
+  border-bottom: 1px solid var(--app-line);
 }
 
 .memory-page__actions {
@@ -201,7 +203,7 @@ function closeDrawer() {
   position: fixed;
   inset: 0;
   z-index: 35;
-  background: rgba(10, 9, 13, 0.56);
+  background: rgba(38, 32, 25, 0.24);
   backdrop-filter: blur(3px);
 }
 
@@ -226,9 +228,9 @@ function closeDrawer() {
   padding: 1.15rem;
   border-left: 1px solid var(--app-line);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 20%),
-    color-mix(in srgb, var(--app-paper-strong) 96%, transparent);
-  box-shadow: -16px 0 42px rgba(0, 0, 0, 0.38);
+    linear-gradient(180deg, rgba(255, 252, 246, 0.94), transparent 20%),
+    var(--app-paper-strong);
+  box-shadow: -18px 0 42px rgba(72, 59, 43, 0.14);
   transform: translateX(104%);
   transition: transform 240ms ease;
   pointer-events: auto;
@@ -275,8 +277,8 @@ function closeDrawer() {
 .memory-drawer__summary {
   border-radius: 18px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 74%),
-    color-mix(in srgb, var(--app-panel) 92%, transparent);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), transparent 74%),
+    var(--app-panel);
 }
 
 .memory-drawer__stats {

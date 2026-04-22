@@ -155,16 +155,16 @@ function formatDate(value: string) {
   display: grid;
   gap: 0.55rem;
   padding: 1rem 1.05rem;
-  border: 1px solid rgba(49, 66, 88, 0.72);
+  border: 1px solid var(--app-line);
   border-radius: 18px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 72%),
-    rgba(19, 27, 38, 0.72);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), transparent 72%),
+    var(--app-panel);
 }
 
 .memory-focus span,
 .memory-panel__header span {
-  color: #76859b;
+  color: var(--app-ink-muted);
   font-family: 'IBM Plex Mono', monospace;
   font-size: 0.72rem;
   letter-spacing: 0.12em;
@@ -173,7 +173,7 @@ function formatDate(value: string) {
 
 .memory-focus strong,
 .memory-panel__header strong {
-  color: #eff5ff;
+  color: var(--app-ink);
   font-family: 'Fraunces', serif;
   font-size: 1.16rem;
   font-weight: 500;
@@ -182,7 +182,7 @@ function formatDate(value: string) {
 .memory-focus p,
 .memory-theme-card p {
   margin: 0;
-  color: #b3bfd0;
+  color: var(--app-ink-soft);
   line-height: 1.65;
 }
 
@@ -201,11 +201,11 @@ function formatDate(value: string) {
 
 .memory-timeline__entry {
   position: relative;
-  border: 1px solid rgba(49, 66, 88, 0.72);
+  border: 1px solid var(--app-line);
   border-radius: 18px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 74%),
-    rgba(23, 32, 44, 0.92);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.7), transparent 74%),
+    var(--app-panel-muted);
 }
 
 .memory-timeline__entry::before {
@@ -216,15 +216,15 @@ function formatDate(value: string) {
   left: 0;
   width: 2px;
   border-radius: 999px;
-  background: linear-gradient(180deg, #5fd0b1, #6d8dff);
+  background: linear-gradient(180deg, var(--app-sage), var(--app-blue));
 }
 
 .memory-theme-card {
-  border: 1px solid rgba(49, 66, 88, 0.6);
+  border: 1px solid var(--app-line);
   border-radius: 16px;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 74%),
-    rgba(20, 29, 41, 0.9);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.7), transparent 74%),
+    var(--app-panel-muted);
 }
 
 @media (max-width: 900px) {
