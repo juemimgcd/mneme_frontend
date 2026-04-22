@@ -53,12 +53,11 @@ const memoryCount = computed(() => workspace.memoryLibrary?.timeline.length ?? 0
 const appQuery = computed(() =>
   workspace.activeKnowledgeBaseId ? { kb: workspace.activeKnowledgeBaseId } : {},
 );
-const quickTags = computed(() => {
-  if (workspace.profile?.growth_focus.length) {
-    return workspace.profile.growth_focus.slice(0, 4);
-  }
-  return ['Collections', 'Documents', 'Memory', 'Insights'];
-});
+const displayedTags = computed(() =>
+  Array.isArray(workspace.profile?.growth_focus)
+    ? workspace.profile.growth_focus.slice(0, 4)
+    : navigation.slice(1, 5).map((item) => item.label),
+);
 const searchKeyword = ref('');
 const normalizedSearchKeyword = computed(() => searchKeyword.value.trim().toLowerCase());
 const filteredKnowledgeBases = computed(() =>
@@ -258,7 +257,7 @@ function logout() {
       <section class="app-sidebar__footer" aria-label="Tags">
         <p class="app-sidebar__caption">Tags</p>
         <div class="app-tag-list">
-          <span v-for="tag in quickTags" :key="tag" class="memory-chip">{{ tag }}</span>
+          <span v-for="tag in displayedTags" :key="tag" class="memory-chip">{{ tag }}</span>
         </div>
       </section>
     </aside>
@@ -267,27 +266,39 @@ function logout() {
       <header class="app-topbar app-topbar--clean">
         <h1 class="app-topbar__title">{{ routeTitle }}</h1>
 
-        <label class="app-topbar__search" aria-label="Search workspace">
-          <input v-model="searchKeyword" type="search" placeholder="Search collections or files" />
+        <label class="app-topbar__search" for="workspace-search">
+          <input
+            id="workspace-search"
+            v-model="searchKeyword"
+            type="search"
+            aria-label="Search collections or files"
+            placeholder="Search collections or files"
+          />
         </label>
 
         <div class="app-topbar__actions app-topbar__actions--compact">
-          <button class="ghost-button" type="button" @click="toggleTheme">
+          <button
+            class="ghost-button"
+            type="button"
+            :aria-label="`Switch theme to ${theme === 'dark' ? 'light' : 'dark'}`"
+            @click="toggleTheme"
+          >
             <AppIcon :name="theme === 'dark' ? 'sun' : 'moon'" />
           </button>
           <button
             class="ghost-button"
             type="button"
+            aria-label="Refresh workspace data"
             :disabled="workspace.knowledgeRefreshLoading"
             @click="refreshKnowledgeOutputs"
           >
             <AppIcon name="refresh" />
           </button>
-          <button class="ghost-button ghost-button--danger" type="button" @click="logout">Exit</button>
+          <button class="ghost-button ghost-button--danger" type="button" @click="logout">Sign out</button>
         </div>
       </header>
 
-      <div class="app-layout" aria-label="Workspace layout">
+      <div class="app-layout">
         <section class="app-list-column" aria-label="Collections and files">
           <article class="surface-panel app-list-panel">
             <header class="surface-panel__header app-list-panel__header">
@@ -300,6 +311,7 @@ function logout() {
                 :key="item.id"
                 class="app-list-card"
                 :data-active="workspace.activeKnowledgeBaseId === item.id"
+                :aria-label="`Select collection: ${item.name}${workspace.activeKnowledgeBaseId === item.id ? ' (currently active)' : ''}`"
                 type="button"
                 @click="selectKnowledgeBase(item.id)"
               >
@@ -312,7 +324,7 @@ function logout() {
           <article class="surface-panel app-list-panel">
             <header class="surface-panel__header app-list-panel__header">
               <h2 class="surface-panel__title">Recent files</h2>
-              <button class="ghost-button" type="button" @click="openDocumentsView">Open</button>
+              <button class="ghost-button" type="button" aria-label="Open documents view" @click="openDocumentsView">View all</button>
             </header>
             <ul class="app-mini-list">
               <li v-for="item in filteredDocuments" :key="item.id">
@@ -320,7 +332,9 @@ function logout() {
                 <span class="status-pill" :data-status="item.status">{{ item.status }}</span>
               </li>
             </ul>
-            <p v-if="!filteredDocuments.length" class="app-list-empty">No matching files</p>
+            <p v-if="!filteredDocuments.length" class="app-list-empty">
+              {{ normalizedSearchKeyword ? 'No matching files' : 'No files yet' }}
+            </p>
           </article>
 
           <article class="surface-panel app-list-panel app-list-panel--stats">
