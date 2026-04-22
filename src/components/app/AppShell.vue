@@ -13,6 +13,8 @@ const router = useRouter();
 const session = useSessionStore();
 const workspace = useWorkspaceStore();
 const { theme, toggleTheme } = useTheme();
+const MAX_DISPLAYED_TAGS = 4;
+const MAX_RECENT_FILES = 8;
 
 const navigation = [
   { name: 'dashboard', label: 'Desk', icon: 'vault' as const },
@@ -24,22 +26,20 @@ const navigation = [
   { name: 'insights', label: 'Review', icon: 'insight' as const },
 ];
 
+const navigationGroups = computed(() => [
+  {
+    title: 'Workspace',
+    items: navigation.slice(0, 4),
+  },
+  {
+    title: 'Analysis',
+    items: navigation.slice(4),
+  },
+]);
+
 const routeTitle = computed(() => {
   const current = navigation.find((item) => item.name === route.name);
   return current?.label ?? 'Notebook';
-});
-const routeSubtitle = computed(() => {
-  const subtitles: Record<string, string> = {
-    dashboard: 'A composed overview of your active collection and its latest signals.',
-    'knowledge-bases': 'Curate, switch, and create collections without leaving the workspace.',
-    documents: 'Upload, index, inspect, and maintain the source library for this shelf.',
-    chat: 'Ask focused questions and keep the answers grounded in your documents.',
-    graph: 'Explore the structural relationships emerging from the current collection.',
-    memory: 'Review extracted memory as cards, chronology, and reusable knowledge fragments.',
-    insights: 'Read profile, growth, and advice outputs as a calm analysis report.',
-  };
-
-  return subtitles[String(route.name)] ?? 'A quiet place for reading, memory, and inquiry.';
 });
 
 const indexedCount = computed(
@@ -51,20 +51,36 @@ const pendingCount = computed(
       ['queued', 'indexing', 'parsing', 'chunking', 'embedding', 'vector_upserting'].includes(item.status),
     ).length,
 );
-const latestTask = computed(() => {
-  const taskIds = workspace.filteredDocuments
-    .map((item) => item.task_id)
-    .filter((item): item is string => Boolean(item));
-
-  return taskIds
-    .map((id) => workspace.taskRecords[id])
-    .filter(Boolean)
-    .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())[0] ?? null;
-});
 const memoryCount = computed(() => workspace.memoryLibrary?.timeline.length ?? 0);
 const appQuery = computed(() =>
   workspace.activeKnowledgeBaseId ? { kb: workspace.activeKnowledgeBaseId } : {},
 );
+const displayedTags = computed(() =>
+  Array.isArray(workspace.profile?.growth_focus)
+    ? workspace.profile.growth_focus.slice(0, MAX_DISPLAYED_TAGS)
+    : navigation.slice(0, MAX_DISPLAYED_TAGS).map((item) => item.label),
+);
+const searchKeyword = ref('');
+const normalizedSearchKeyword = computed(() => searchKeyword.value.trim().toLowerCase());
+const filteredKnowledgeBases = computed(() =>
+  workspace.knowledgeBases.filter((item) => {
+    if (!normalizedSearchKeyword.value) {
+      return true;
+    }
+    return `${item.name} ${item.description}`.toLowerCase().includes(normalizedSearchKeyword.value);
+  }),
+);
+const filteredDocuments = computed(() =>
+  workspace.filteredDocuments
+    .filter((item) => {
+      if (!normalizedSearchKeyword.value) {
+        return true;
+      }
+      return `${item.name} ${item.status}`.toLowerCase().includes(normalizedSearchKeyword.value);
+    })
+    .slice(0, MAX_RECENT_FILES),
+);
+
 let shellReveal: gsap.core.Timeline | null = null;
 const shellElement = ref<HTMLElement | null>(null);
 
@@ -104,7 +120,7 @@ function runPageReveal({ includeSidebar = false }: { includeSidebar?: boolean } 
   }
 
   shellReveal.from(
-    shell.querySelectorAll('.app-topbar, .app-main .view-stack'),
+    shell.querySelectorAll('.app-topbar, .app-list-column, .app-main .view-stack'),
     {
       y: 12,
       opacity: 0,
@@ -184,11 +200,17 @@ onBeforeUnmount(() => {
   shellReveal?.kill();
 });
 
-async function handleKnowledgeBaseChange(event: Event) {
-  const nextId = (event.target as HTMLSelectElement).value;
+async function selectKnowledgeBase(id: string) {
   if (session.token) {
-    await workspace.selectKnowledgeBase(nextId, session.token);
+    await workspace.selectKnowledgeBase(id, session.token);
   }
+}
+
+function openDocumentsView() {
+  router.push({
+    name: 'documents',
+    query: appQuery.value,
+  });
 }
 
 async function refreshKnowledgeOutputs() {
@@ -211,116 +233,295 @@ function logout() {
         <span class="brandmark__glyph">M</span>
         <span>
           <strong>Mneme</strong>
-          <small>Knowledge Atelier</small>
+          <small>Workspace</small>
         </span>
       </RouterLink>
 
-      <div class="app-sidebar__note">
-        <p class="app-sidebar__caption">A composed desk for collections, documents, memory, and inquiry.</p>
-        <span class="app-sidebar__art" aria-hidden="true" />
-      </div>
-
-      <nav class="app-nav">
-        <RouterLink
-          v-for="item in navigation"
-          :key="item.name"
-          class="app-nav__link"
-          :to="{ name: item.name, query: appQuery }"
+      <nav class="app-nav" aria-label="Main sections">
+        <section
+          v-for="group in navigationGroups"
+          :key="group.title"
+          class="app-nav-group"
         >
-          <AppIcon :name="item.icon" />
-          <span>{{ item.label }}</span>
-        </RouterLink>
+          <p class="app-sidebar__caption">{{ group.title }}</p>
+          <RouterLink
+            v-for="item in group.items"
+            :key="item.name"
+            class="app-nav__link"
+            :to="{ name: item.name, query: appQuery }"
+          >
+            <AppIcon :name="item.icon" />
+            <span>{{ item.label }}</span>
+          </RouterLink>
+        </section>
       </nav>
 
-      <div class="app-sidebar__footer">
-        <p class="app-sidebar__caption">
-          Current collection:
-          <strong>{{ workspace.currentKnowledgeBase?.name ?? 'None selected' }}</strong>
-        </p>
-        <p class="app-sidebar__caption">
-          Indexed material:
-          <strong>{{ indexedCount }}</strong>
-          / {{ workspace.filteredDocuments.length }} docs
-        </p>
-      </div>
+      <section class="app-sidebar__footer" aria-label="Tags">
+        <p class="app-sidebar__caption">Tags</p>
+        <div class="app-tag-list">
+          <span v-for="tag in displayedTags" :key="tag" class="memory-chip">{{ tag }}</span>
+        </div>
+      </section>
     </aside>
 
     <div class="app-shell__content">
-      <header class="app-topbar">
-        <div>
-          <p class="app-topbar__eyebrow">Mneme Knowledge Workbench</p>
-          <h1 class="app-topbar__title">{{ routeTitle }}</h1>
-          <p class="app-topbar__description">{{ routeSubtitle }}</p>
-          <div class="app-topbar__status">
-            <span v-if="workspace.currentKnowledgeBase" class="status-pill" :data-status="workspace.currentKnowledgeBase.status">
-              {{ workspace.currentKnowledgeBase.status }}
-            </span>
-            <span class="memory-chip">{{ indexedCount }} indexed of {{ workspace.filteredDocuments.length }}</span>
-            <span class="memory-chip">Notes {{ memoryCount }}</span>
-            <span v-if="pendingCount" class="memory-chip">{{ pendingCount }} processing</span>
-            <span v-else-if="latestTask" class="memory-chip">Latest {{ latestTask.status }}</span>
-          </div>
-        </div>
+      <header class="app-topbar app-topbar--clean">
+        <h1 class="app-topbar__title">{{ routeTitle }}</h1>
 
-        <div class="app-topbar__actions">
-          <label class="kb-switcher app-topbar__switcher">
-            <span>Collection</span>
-            <select
-              :value="workspace.activeKnowledgeBaseId"
-              aria-label="Switch knowledge base"
-              @change="handleKnowledgeBaseChange"
-            >
-              <option
-                v-for="item in workspace.knowledgeBases"
-                :key="item.id"
-                :value="item.id"
-              >
-                {{ item.name }}
-              </option>
-            </select>
-          </label>
+        <label class="app-topbar__search" for="workspace-search">
+          <input
+            id="workspace-search"
+            v-model="searchKeyword"
+            type="search"
+            aria-label="Filter collections and files by name"
+            placeholder="Search collections or files"
+          />
+        </label>
 
-          <details class="app-utility-menu">
-            <summary class="ghost-button app-utility-menu__trigger">
-              <span>{{ session.user?.username ?? 'Workspace' }}</span>
-              <AppIcon name="arrow" />
-            </summary>
-
-            <div class="app-utility-menu__content">
-              <button class="app-utility-menu__action" type="button" @click="toggleTheme">
-                <AppIcon :name="theme === 'dark' ? 'sun' : 'moon'" />
-                <span>Switch to {{ theme === 'dark' ? 'light' : 'dark' }}</span>
-              </button>
-
-              <button
-                class="app-utility-menu__action"
-                type="button"
-                :disabled="workspace.knowledgeRefreshLoading"
-                @click="refreshKnowledgeOutputs"
-              >
-                <AppIcon name="refresh" />
-                <span>{{ workspace.knowledgeRefreshLoading ? 'Refreshing workspace' : 'Refresh workspace' }}</span>
-              </button>
-
-              <button
-                class="app-utility-menu__action app-utility-menu__action--danger"
-                type="button"
-                @click="logout"
-              >
-                <span>Sign out</span>
-              </button>
-            </div>
-          </details>
+        <div class="app-topbar__actions app-topbar__actions--compact">
+          <button
+            class="ghost-button"
+            type="button"
+            :aria-label="`Switch theme to ${theme === 'dark' ? 'light' : 'dark'}`"
+            @click="toggleTheme"
+          >
+            <AppIcon :name="theme === 'dark' ? 'sun' : 'moon'" />
+          </button>
+          <button
+            class="ghost-button"
+            type="button"
+            aria-label="Refresh workspace data"
+            :disabled="workspace.knowledgeRefreshLoading"
+            @click="refreshKnowledgeOutputs"
+          >
+            <AppIcon name="refresh" />
+          </button>
+          <button class="ghost-button ghost-button--danger" type="button" @click="logout">Sign out</button>
         </div>
       </header>
 
-      <main id="app-main" class="app-main">
-        <RouterView v-slot="{ Component, route: nestedRoute }">
-          <Transition name="shell-view" mode="out-in">
-            <component :is="Component" :key="nestedRoute.fullPath" />
-          </Transition>
-        </RouterView>
-      </main>
+      <div class="app-layout">
+        <section class="app-list-column" aria-label="Collections and files">
+          <article class="surface-panel app-list-panel">
+            <header class="surface-panel__header app-list-panel__header">
+              <h2 class="surface-panel__title">Collections</h2>
+              <span class="memory-chip">{{ filteredKnowledgeBases.length }}</span>
+            </header>
+            <div class="app-card-list">
+              <button
+                v-for="item in filteredKnowledgeBases"
+                :key="item.id"
+                class="app-list-card"
+                :data-active="workspace.activeKnowledgeBaseId === item.id"
+                :aria-label="`Select collection: ${item.name}${workspace.activeKnowledgeBaseId === item.id ? ' (currently active)' : ''}`"
+                type="button"
+                @click="selectKnowledgeBase(item.id)"
+              >
+                <strong>{{ item.name }}</strong>
+                <span class="app-list-card__meta">{{ item.document_count }} docs</span>
+              </button>
+            </div>
+          </article>
+
+          <article class="surface-panel app-list-panel">
+            <header class="surface-panel__header app-list-panel__header">
+              <h2 class="surface-panel__title">Recent files</h2>
+              <button class="ghost-button" type="button" @click="openDocumentsView">View all files</button>
+            </header>
+            <ul class="app-mini-list">
+              <li v-for="item in filteredDocuments" :key="item.id">
+                <strong>{{ item.name }}</strong>
+                <span class="status-pill" :data-status="item.status">{{ item.status }}</span>
+              </li>
+            </ul>
+            <p v-if="!filteredDocuments.length" class="app-list-empty">
+              {{ normalizedSearchKeyword ? 'No matching files' : 'No files yet' }}
+            </p>
+          </article>
+
+          <article class="surface-panel app-list-panel app-list-panel--stats">
+            <div class="app-stat-grid">
+              <div>
+                <span>Indexed</span>
+                <strong>{{ indexedCount }}</strong>
+              </div>
+              <div>
+                <span>Pending</span>
+                <strong>{{ pendingCount }}</strong>
+              </div>
+              <div>
+                <span>Memory</span>
+                <strong>{{ memoryCount }}</strong>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <main id="app-main" class="app-main app-main--editor">
+          <RouterView v-slot="{ Component, route: nestedRoute }">
+            <Transition name="shell-view" mode="out-in">
+              <component :is="Component" :key="nestedRoute.fullPath" />
+            </Transition>
+          </RouterView>
+        </main>
+      </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.app-sidebar {
+  gap: 1rem;
+}
+
+.app-nav-group {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.app-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.app-shell__content {
+  display: grid;
+  gap: 0.95rem;
+  align-content: start;
+}
+
+.app-topbar--clean {
+  display: grid;
+  grid-template-columns: auto minmax(16rem, 1fr) auto;
+  gap: 0.7rem;
+  align-items: center;
+}
+
+.app-topbar__title {
+  margin: 0;
+  font-size: clamp(1.35rem, 1.9vw, 1.95rem);
+}
+
+.app-topbar__search input {
+  width: 100%;
+  min-height: 40px;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--app-line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--app-panel) 88%, transparent);
+  color: var(--app-ink);
+}
+
+.app-topbar__actions--compact .ghost-button {
+  min-height: 40px;
+  min-width: 40px;
+  padding: 0.5rem 0.7rem;
+  border-radius: 10px;
+}
+
+.app-layout {
+  display: grid;
+  grid-template-columns: minmax(18rem, 24rem) minmax(0, 1fr);
+  gap: 0.95rem;
+  align-items: start;
+}
+
+.app-list-column {
+  display: grid;
+  gap: 0.95rem;
+  position: sticky;
+  top: 1.2rem;
+}
+
+.app-list-panel {
+  padding: 0.85rem;
+}
+
+.app-list-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.app-card-list {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.app-list-card {
+  text-align: left;
+  display: grid;
+  gap: 0.15rem;
+  width: 100%;
+  padding: 0.6rem 0.65rem;
+  border: 1px solid var(--app-line);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--app-panel) 86%, transparent);
+  color: var(--app-ink);
+}
+
+.app-list-card[data-active='true'] {
+  border-color: color-mix(in srgb, var(--app-accent) 40%, transparent);
+  background: color-mix(in srgb, var(--app-accent) 16%, var(--app-panel));
+}
+
+.app-list-card__meta,
+.app-list-empty {
+  color: var(--app-ink-soft);
+  font-size: 0.85rem;
+}
+
+.app-mini-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.app-mini-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.app-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.app-stat-grid span {
+  display: block;
+  color: var(--app-ink-soft);
+  font-size: 0.75rem;
+}
+
+.app-stat-grid strong {
+  font-size: 1.25rem;
+}
+
+.app-main--editor {
+  padding-top: 0;
+  min-width: 0;
+}
+
+@media (max-width: 1240px) {
+  .app-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .app-list-column {
+    position: static;
+  }
+}
+
+@media (max-width: 840px) {
+  .app-topbar--clean {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
