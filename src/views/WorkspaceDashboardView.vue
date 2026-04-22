@@ -145,8 +145,8 @@ const activityItems = computed<ActivityItem[]>(() => {
   <div class="view-stack">
     <SectionHeader
       eyebrow="Workspace Ledger"
-      title="A calmer desk for the collection you are working in."
-      description="The workspace now surfaces only the current shelf, the main reading signal, and the most recent movement."
+      title="Read the room before you begin."
+      description="A stable overview of the current collection: source readiness, extracted memory, recent movement, and the strongest reading signals."
     />
 
     <section class="metric-grid workspace-metric-grid">
@@ -160,10 +160,11 @@ const activityItems = computed<ActivityItem[]>(() => {
       />
     </section>
 
-    <section class="workspace-editorial">
+    <section class="workspace-editorial" aria-label="Current collection and recent activity">
       <SurfacePanel eyebrow="Open Shelf" title="Current collection">
         <div v-if="workspace.currentKnowledgeBase" class="workspace-editorial__split">
           <article class="context-card workspace-editorial__lead">
+            <span class="workspace-editorial__index">Active collection</span>
             <header class="knowledge-card__header">
               <strong>{{ workspace.currentKnowledgeBase.name }}</strong>
               <span class="status-pill" :data-status="workspace.currentKnowledgeBase.status">
@@ -183,7 +184,7 @@ const activityItems = computed<ActivityItem[]>(() => {
             </dl>
           </article>
 
-          <div class="workspace-ledger">
+          <aside class="workspace-ledger" aria-label="Collection signals">
             <article class="growth-card workspace-ledger__row">
               <header>
                 <strong>Processing queue</strong>
@@ -213,7 +214,11 @@ const activityItems = computed<ActivityItem[]>(() => {
               </header>
               <p>{{ latestTheme?.theme_name ?? 'No clear theme yet.' }}</p>
             </article>
-          </div>
+          </aside>
+        </div>
+        <div v-else class="workspace-empty-note">
+          <strong>No collection selected</strong>
+          <p>Create or select a collection to begin building the workspace view.</p>
         </div>
       </SurfacePanel>
 
@@ -259,8 +264,9 @@ const activityItems = computed<ActivityItem[]>(() => {
 <style scoped>
 .workspace-editorial {
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(20rem, 0.95fr);
-  gap: var(--space-4);
+  grid-template-columns: minmax(0, 1.32fr) minmax(21rem, 0.82fr);
+  gap: var(--space-5);
+  align-items: stretch;
 }
 
 .workspace-metric-grid {
@@ -269,18 +275,80 @@ const activityItems = computed<ActivityItem[]>(() => {
 
 .workspace-editorial__split {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(18rem, 0.9fr);
-  gap: var(--space-4);
+  grid-template-columns: minmax(0, 1.08fr) minmax(18rem, 0.92fr);
+  gap: var(--space-5);
+  align-items: stretch;
+}
+
+.workspace-editorial__lead {
+  position: relative;
+  min-height: 22rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.workspace-editorial__lead::after {
+  content: '';
+  position: absolute;
+  right: -3.5rem;
+  bottom: -4rem;
+  width: 14rem;
+  height: 14rem;
+  border: 1px solid rgba(47, 73, 104, 0.12);
+  border-radius: 999px;
+  background:
+    linear-gradient(135deg, transparent 0 47%, rgba(47, 73, 104, 0.1) 47% 49%, transparent 49%),
+    rgba(109, 135, 155, 0.06);
+}
+
+.workspace-editorial__lead > * {
+  position: relative;
+  z-index: 1;
+}
+
+.workspace-editorial__index {
+  width: fit-content;
+  margin-bottom: var(--space-5);
+  color: var(--app-ink-muted);
+  font-family: var(--app-font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .workspace-editorial__lead strong {
-  font-size: var(--text-lg);
+  font-family: var(--app-font-display);
+  font-size: clamp(1.75rem, 2.6vw, 3rem);
+  font-weight: 650;
+  letter-spacing: -0.04em;
+  line-height: 1;
 }
 
 .workspace-ledger,
 .workspace-reading-grid {
   display: grid;
+  gap: var(--space-4);
+}
+
+.workspace-ledger {
+  align-content: stretch;
+}
+
+.workspace-ledger__row {
+  display: grid;
   gap: var(--space-3);
+  min-height: 0;
+}
+
+.workspace-ledger__row header {
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--app-line);
+}
+
+.workspace-ledger__row strong {
+  font-size: 1rem;
 }
 
 .workspace-ledger__row p,
@@ -289,11 +357,44 @@ const activityItems = computed<ActivityItem[]>(() => {
 }
 
 .workspace-reading-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1.2fr) repeat(2, minmax(0, 0.9fr));
+  align-items: stretch;
 }
 
 .workspace-reading-grid__lead {
   min-height: 100%;
+}
+
+.workspace-reading-grid__lead p {
+  font-size: 1.02rem;
+}
+
+.reading-note-row {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+}
+
+.workspace-empty-note {
+  min-height: 15rem;
+  display: grid;
+  place-content: center;
+  gap: var(--space-2);
+  padding: var(--space-6);
+  border: 1px dashed var(--app-line-strong);
+  border-radius: var(--radius-lg);
+  color: var(--app-ink-soft);
+  text-align: center;
+}
+
+.workspace-empty-note strong {
+  color: var(--app-ink);
+  font-family: var(--app-font-display);
+  font-size: 1.35rem;
+}
+
+.workspace-empty-note p {
+  margin: 0;
 }
 
 @media (max-width: 1100px) {
