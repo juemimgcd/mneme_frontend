@@ -1,275 +1,383 @@
 <script setup lang="ts">
-const props = defineProps<{
+defineProps<{
   themeLabel: string;
   themeBg: string;
   themeElevated: string;
-  themeAccent: string;
+  themeSurface: string;
+  themeSurfaceHigh: string;
+  themeSurfaceHighest: string;
   themeText: string;
+  themeTextMuted: string;
   accentColor: string;
   dyslexicFont: boolean;
   fontSize: number;
   density: string;
 }>();
 
-const paddingMap: Record<string, string> = {
-  compact: '0.5rem',
-  normal: '0.75rem',
-  spacious: '1.1rem',
+const densityPadding: Record<string, string> = {
+  compact: '0.85rem',
+  comfortable: '1rem',
+  spacious: '1.2rem',
 };
-
-function pad(key: string): string {
-  return paddingMap[key] ?? '0.75rem';
-}
 </script>
 
 <template>
   <div class="preview-panel">
     <div class="preview-panel__header">
-      <span class="preview-panel__eyebrow">Live Preview</span>
+      <div class="preview-panel__traffic">
+        <span />
+        <span />
+        <span />
+      </div>
+      <span class="preview-panel__label">Live Preview</span>
+      <span class="preview-panel__spacer" />
     </div>
 
     <div
-      class="preview-viewport"
+      class="preview-panel__viewport"
       :style="{
-        background: props.themeBg,
-        fontSize: props.fontSize * 0.55 + 'px',
-        fontFamily: props.dyslexicFont ? '\'OpenDyslexic\', sans-serif' : 'inherit',
+        background: themeBg,
+        color: themeText,
+        fontSize: `${fontSize * 0.58}px`,
+        fontFamily: dyslexicFont ? '\'OpenDyslexic\', sans-serif' : '\'Inter\', sans-serif',
+        '--preview-panel': themeSurface,
+        '--preview-panel-high': themeSurfaceHigh,
+        '--preview-panel-highest': themeSurfaceHighest,
+        '--preview-muted': themeTextMuted,
+        '--preview-accent': accentColor,
+        '--preview-padding': densityPadding[density] ?? densityPadding.comfortable,
       }"
     >
-      <!-- Mock sidebar -->
-      <div class="mock-sidebar" :style="{ background: props.themeElevated }">
-        <div class="mock-brand">
-          <span class="mock-brand__dot" :style="{ background: props.accentColor }" />
-          <span class="mock-brand__wordmark" :style="{ background: props.themeText + '55' }" />
-        </div>
-        <div class="mock-nav">
-          <div
-            v-for="i in 5"
-            :key="i"
-            class="mock-nav-item"
-            :class="{ 'mock-nav-item--active': i === 3 }"
-            :style="{
-              padding: pad(props.density),
-              background: i === 3 ? props.accentColor + '18' : 'transparent',
-            }"
-          >
-            <span
-              class="mock-nav-icon"
-              :style="{ background: i === 3 ? props.accentColor : props.themeText + '3a' }"
-            />
-            <span
-              class="mock-nav-label"
-              :style="{ background: i === 3 ? props.themeText + '88' : props.themeText + '33' }"
-            />
+      <div class="preview-panel__glow" />
+
+      <div class="preview-topbar">
+        <div class="preview-topbar__brand">
+          <span class="preview-topbar__badge" />
+          <div>
+            <strong>Cognitive Architecture</strong>
+            <span>Draft</span>
           </div>
         </div>
       </div>
 
-      <!-- Mock main content -->
-      <div class="mock-content" :style="{ padding: pad(props.density) }">
-        <!-- Top bar -->
-        <div
-          class="mock-topbar"
-          :style="{
-            borderBottomColor: props.themeText + '14',
-            paddingBottom: pad(props.density),
-            marginBottom: pad(props.density),
-          }"
-        >
-          <div class="mock-page-title" :style="{ background: props.themeText + '70' }" />
-          <div class="mock-action" :style="{ background: props.accentColor }" />
-        </div>
-        <!-- Cards -->
-        <div class="mock-cards">
-          <div
-            v-for="i in 3"
-            :key="i"
-            class="mock-card"
-            :style="{
-              background: props.themeElevated,
-              borderColor: i === 1 ? props.accentColor + '45' : props.themeText + '12',
-              padding: pad(props.density),
-            }"
-          >
-            <div class="mock-card-title" :style="{ background: props.themeText + '65' }" />
-            <div class="mock-card-line" :style="{ background: props.themeText + '30' }" />
-            <div
-              class="mock-card-line"
-              :style="{ background: props.themeText + '1e', width: '70%' }"
-            />
-          </div>
+      <div class="preview-graph">
+        <div class="preview-graph__grid" />
+        <span class="preview-graph__node preview-graph__node--small preview-graph__node--top" />
+        <span class="preview-graph__node preview-graph__node--small preview-graph__node--bottom" />
+        <span class="preview-graph__line preview-graph__line--left" />
+        <span class="preview-graph__line preview-graph__line--right" />
+        <span class="preview-graph__node preview-graph__node--center" />
+      </div>
+
+      <div class="preview-copy">
+        <span class="preview-copy__line preview-copy__line--wide" />
+        <span class="preview-copy__line" />
+        <span class="preview-copy__line preview-copy__line--short" />
+
+        <div class="preview-copy__tags">
+          <span>#neuroscience</span>
+          <span>#design-system</span>
         </div>
       </div>
+
+      <button class="preview-fab" type="button" aria-label="Create new note" />
     </div>
 
     <div class="preview-panel__footer">
-      <span class="preview-meta">{{ props.themeLabel }}</span>
-      <span class="preview-sep" aria-hidden="true">·</span>
-      <span class="preview-meta">{{ props.fontSize }}px</span>
-      <span class="preview-sep" aria-hidden="true">·</span>
-      <span class="preview-meta preview-meta--capitalize">{{ props.density }}</span>
+      <span>{{ themeLabel }}</span>
+      <span>·</span>
+      <span>{{ fontSize }}px</span>
+      <span>·</span>
+      <span class="preview-panel__footer-capitalize">{{ density }}</span>
     </div>
   </div>
 </template>
 
 <style scoped>
 .preview-panel {
-  border: 1px solid var(--border);
-  border-radius: 12px;
   overflow: hidden;
-  background: var(--bg-elevated);
+  border: 1px solid var(--app-line);
+  border-radius: 1.3rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 100%),
+    rgba(11, 28, 48, 0.92);
+  box-shadow: var(--app-shadow-soft);
 }
 
-.preview-panel__header {
-  padding: 0.6rem 1rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.preview-panel__eyebrow {
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--fg-soft);
-}
-
-/* Viewport */
-.preview-viewport {
-  display: flex;
-  height: 290px;
-  overflow: hidden;
-}
-
-/* Mock sidebar */
-.mock-sidebar {
-  width: 68px;
-  flex-shrink: 0;
-  padding: 8px 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.mock-brand {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 0 2px 4px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.mock-brand__dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
-  flex-shrink: 0;
-}
-
-.mock-brand__wordmark {
-  height: 5px;
-  border-radius: 2px;
-  flex: 1;
-}
-
-.mock-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.mock-nav-item {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  border-radius: 4px;
-}
-
-.mock-nav-icon {
-  width: 6px;
-  height: 6px;
-  border-radius: 2px;
-  flex-shrink: 0;
-}
-
-.mock-nav-label {
-  height: 4px;
-  border-radius: 2px;
-  flex: 1;
-}
-
-/* Mock content */
-.mock-content {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.mock-topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid transparent;
-}
-
-.mock-page-title {
-  height: 10px;
-  width: 80px;
-  border-radius: 4px;
-}
-
-.mock-action {
-  width: 22px;
-  height: 10px;
-  border-radius: 4px;
-  opacity: 0.75;
-}
-
-.mock-cards {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex: 1;
-}
-
-.mock-card {
-  border: 1px solid transparent;
-  border-radius: 5px;
-}
-
-.mock-card-title {
-  height: 6px;
-  width: 80%;
-  border-radius: 3px;
-  margin-bottom: 5px;
-}
-
-.mock-card-line {
-  height: 4px;
-  border-radius: 2px;
-  margin-top: 3px;
-}
-
-/* Footer */
+.preview-panel__header,
 .preview-panel__footer {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-top: 1px solid var(--border);
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
 }
 
-.preview-meta {
+.preview-panel__header {
+  border-bottom: 1px solid var(--app-line);
+}
+
+.preview-panel__footer {
+  border-top: 1px solid var(--app-line);
+  color: var(--app-ink-soft);
+  font-size: 0.76rem;
+}
+
+.preview-panel__traffic {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.preview-panel__traffic span {
+  width: 0.52rem;
+  height: 0.52rem;
+  border-radius: 999px;
+}
+
+.preview-panel__traffic span:first-child {
+  background: rgba(248, 113, 113, 0.8);
+}
+
+.preview-panel__traffic span:nth-child(2) {
+  background: rgba(250, 204, 21, 0.8);
+}
+
+.preview-panel__traffic span:last-child {
+  background: rgba(74, 222, 128, 0.8);
+}
+
+.preview-panel__label {
+  color: var(--app-ink-soft);
   font-size: 0.7rem;
-  color: var(--fg-soft);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
-.preview-meta--capitalize {
+.preview-panel__spacer {
+  width: 2.3rem;
+}
+
+.preview-panel__viewport {
+  position: relative;
+  min-height: 35rem;
+  padding: var(--preview-padding);
+  overflow: hidden;
+}
+
+.preview-panel__glow {
+  position: absolute;
+  top: -4rem;
+  right: -2rem;
+  width: 14rem;
+  height: 14rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--preview-accent) 18%, transparent);
+  filter: blur(52px);
+  pointer-events: none;
+}
+
+.preview-topbar {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: var(--preview-padding);
+  border-bottom: 1px solid color-mix(in srgb, var(--preview-muted) 20%, transparent);
+}
+
+.preview-topbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.preview-topbar__badge {
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 1px solid color-mix(in srgb, var(--preview-muted) 20%, transparent);
+  border-radius: 0.8rem;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.16), transparent 34%),
+    color-mix(in srgb, var(--preview-accent) 22%, var(--preview-panel-high));
+}
+
+.preview-topbar strong,
+.preview-topbar span {
+  display: block;
+}
+
+.preview-topbar strong {
+  margin-bottom: 0.18rem;
+}
+
+.preview-topbar span {
+  color: var(--preview-accent);
+}
+
+.preview-graph,
+.preview-copy {
+  position: relative;
+  z-index: 1;
+  border: 1px solid color-mix(in srgb, var(--preview-muted) 18%, transparent);
+  border-radius: 1rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 100%),
+    var(--preview-panel);
+}
+
+.preview-graph {
+  height: 13rem;
+  margin-top: var(--preview-padding);
+  overflow: hidden;
+}
+
+.preview-graph__grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.12;
+  background-image:
+    linear-gradient(to right, currentColor 1px, transparent 1px),
+    linear-gradient(to bottom, currentColor 1px, transparent 1px);
+  background-size: 1rem 1rem;
+}
+
+.preview-graph__node,
+.preview-graph__line {
+  position: absolute;
+  display: block;
+}
+
+.preview-graph__node {
+  border-radius: 999px;
+}
+
+.preview-graph__node--center {
+  top: 50%;
+  left: 50%;
+  width: 3.2rem;
+  height: 3.2rem;
+  background: color-mix(in srgb, var(--preview-accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--preview-accent) 55%, transparent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--preview-accent) 18%, transparent);
+  transform: translate(-50%, -50%);
+}
+
+.preview-graph__node--small {
+  width: 2.1rem;
+  height: 2.1rem;
+  border: 1px solid color-mix(in srgb, var(--preview-muted) 22%, transparent);
+  background: var(--preview-panel-high);
+}
+
+.preview-graph__node--top {
+  top: 1.6rem;
+  left: 2.4rem;
+}
+
+.preview-graph__node--bottom {
+  right: 2.4rem;
+  bottom: 1.8rem;
+  border-color: color-mix(in srgb, var(--preview-accent) 40%, transparent);
+}
+
+.preview-graph__line {
+  height: 1px;
+  transform-origin: left center;
+}
+
+.preview-graph__line--left {
+  top: 3rem;
+  left: 3.8rem;
+  width: 8rem;
+  background: color-mix(in srgb, var(--preview-muted) 26%, transparent);
+  transform: rotate(26deg);
+}
+
+.preview-graph__line--right {
+  right: 4rem;
+  bottom: 3.2rem;
+  width: 8rem;
+  background: color-mix(in srgb, var(--preview-accent) 42%, transparent);
+  transform: rotate(-28deg);
+}
+
+.preview-copy {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: var(--preview-padding);
+  padding: var(--preview-padding);
+}
+
+.preview-copy__line {
+  display: block;
+  height: 0.58rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--preview-muted) 34%, transparent);
+}
+
+.preview-copy__line--wide {
+  width: 88%;
+}
+
+.preview-copy__line--short {
+  width: 66%;
+}
+
+.preview-copy__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-top: 0.3rem;
+}
+
+.preview-copy__tags span {
+  padding: 0.32rem 0.52rem;
+  border: 1px solid color-mix(in srgb, var(--preview-accent) 18%, transparent);
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--preview-accent) 10%, transparent);
+  color: var(--preview-accent);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.preview-fab {
+  position: absolute;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  width: 3rem;
+  height: 3rem;
+  border: 0;
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent),
+    var(--preview-accent);
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--preview-accent) 24%, transparent);
+}
+
+.preview-fab::before,
+.preview-fab::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  background: rgba(0, 33, 77, 0.88);
+  border-radius: 999px;
+}
+
+.preview-fab::before {
+  width: 0.9rem;
+  height: 0.14rem;
+}
+
+.preview-fab::after {
+  width: 0.14rem;
+  height: 0.9rem;
+}
+
+.preview-panel__footer-capitalize {
   text-transform: capitalize;
-}
-
-.preview-sep {
-  color: var(--border-strong);
-  font-size: 0.68rem;
 }
 </style>

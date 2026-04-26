@@ -71,13 +71,16 @@ const router = createRouter({
           name: 'insights',
           component: InsightsView,
         },
+        {
+          path: 'settings/appearance',
+          name: 'settings-appearance',
+          component: SettingsAppearanceView,
+        },
       ],
     },
     {
       path: '/settings/appearance',
-      name: 'settings-appearance',
-      component: SettingsAppearanceView,
-      meta: { requiresAuth: true },
+      redirect: { name: 'settings-appearance' },
     },
   ],
 });

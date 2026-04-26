@@ -14,8 +14,8 @@ const emit = defineEmits<{
     <button
       v-for="option in options"
       :key="option.id"
-      class="density-btn"
-      :class="{ 'density-btn--active': selected === option.id }"
+      class="density-selector__option"
+      :class="{ 'density-selector__option--active': selected === option.id }"
       :aria-pressed="selected === option.id"
       type="button"
       @click="emit('select', option.id)"
@@ -27,43 +27,36 @@ const emit = defineEmits<{
 
 <style scoped>
 .density-selector {
-  display: inline-flex;
-  background: var(--bg-strong);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 3px;
-  gap: 2px;
+  display: flex;
+  padding: 0.35rem;
+  border: 1px solid var(--app-line);
+  border-radius: 1rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 100%),
+    rgba(16, 32, 52, 0.88);
 }
 
-.density-btn {
-  padding: 0.45rem 1.1rem;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.82rem;
-  font-weight: 500;
-  color: var(--fg-soft);
+.density-selector__option {
+  flex: 1;
+  min-height: 2.85rem;
+  padding: 0.7rem 1rem;
+  border: 0;
+  border-radius: 0.8rem;
   background: transparent;
-  cursor: pointer;
-  transition:
-    background 150ms ease,
-    color 150ms ease,
-    box-shadow 150ms ease;
-  white-space: nowrap;
+  color: var(--app-ink-soft);
+  font-size: 0.92rem;
+  font-weight: 600;
 }
 
-.density-btn:hover {
-  color: var(--fg);
-  background: rgba(255, 255, 255, 0.05);
+.density-selector__option:hover {
+  color: var(--app-ink);
+  background: rgba(255, 255, 255, 0.04);
 }
 
-.density-btn--active {
-  background: var(--bg-elevated);
-  color: var(--fg);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28);
-}
-
-.density-btn:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: -2px;
+.density-selector__option--active {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(38, 54, 74, 0.92);
+  color: var(--app-ink);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
 }
 </style>

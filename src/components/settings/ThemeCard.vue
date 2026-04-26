@@ -2,9 +2,10 @@
 defineProps<{
   id: string;
   label: string;
+  subtitle: string;
   active: boolean;
   preview: {
-    bg: string;
+    base: string;
     elevated: string;
     accent: string;
     text: string;
@@ -24,123 +25,151 @@ const emit = defineEmits<{
     type="button"
     @click="emit('select', id)"
   >
-    <div class="theme-card__visual" :style="{ background: preview.bg }">
-      <div class="theme-card__bar" :style="{ background: preview.elevated }">
-        <span class="theme-card__dot" :style="{ background: preview.accent }" />
-        <span class="theme-card__dot" :style="{ background: preview.accent + '55' }" />
+    <div class="theme-card__preview" :style="{ background: preview.base }">
+      <div class="theme-card__preview-overlay" :style="{ background: `linear-gradient(135deg, ${preview.accent}1f, transparent)` }" />
+      <div class="theme-card__preview-top">
+        <span class="theme-card__preview-badge" :style="{ background: `${preview.accent}20`, borderColor: `${preview.accent}55` }">
+          <span :style="{ background: preview.accent }" />
+        </span>
+        <span class="theme-card__preview-line" :style="{ background: `${preview.text}66` }" />
       </div>
-      <div class="theme-card__content">
-        <span class="theme-card__line" :style="{ background: preview.text + '55', width: '68%' }" />
-        <span class="theme-card__line" :style="{ background: preview.text + '30', width: '48%' }" />
-        <span class="theme-card__chip" :style="{ background: preview.accent + '2a', borderColor: preview.accent + '55' }" />
+      <div class="theme-card__preview-panel" :style="{ background: preview.elevated, borderColor: `${preview.text}18` }">
+        <span class="theme-card__preview-rule" :style="{ background: `${preview.accent}75`, width: '74%' }" />
+        <span class="theme-card__preview-rule" :style="{ background: `${preview.text}40`, width: '52%' }" />
       </div>
     </div>
-    <div class="theme-card__footer" :style="{ background: preview.elevated, borderTopColor: preview.text + '14' }">
-      <span class="theme-card__name" :style="{ color: preview.text }">{{ label }}</span>
-      <span
-        v-if="active"
-        class="theme-card__badge"
-        :style="{ color: preview.accent, background: preview.accent + '22' }"
-      >Active</span>
+
+    <div class="theme-card__meta">
+      <div>
+        <h4>{{ label }}</h4>
+        <p>{{ subtitle }}</p>
+      </div>
+      <span class="theme-card__check" :class="{ 'theme-card__check--active': active }" />
     </div>
   </button>
 </template>
 
 <style scoped>
 .theme-card {
-  display: flex;
-  flex-direction: column;
-  border: 2px solid var(--border);
-  border-radius: 12px;
+  position: relative;
   overflow: hidden;
-  background: transparent;
-  cursor: pointer;
-  transition: border-color 150ms ease, transform 150ms ease, box-shadow 150ms ease;
-  text-align: left;
   padding: 0;
+  border: 1px solid var(--app-line);
+  border-radius: 1rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 100%),
+    rgba(16, 32, 52, 0.88);
+  text-align: left;
+  cursor: pointer;
 }
 
 .theme-card:hover {
-  border-color: var(--border-strong);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  border-color: var(--app-line-strong);
+  transform: translateY(-1px);
 }
 
 .theme-card--active {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 1px var(--primary), 0 8px 24px rgba(127, 157, 255, 0.15);
+  border-color: color-mix(in srgb, var(--app-accent) 48%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--app-accent) 34%, transparent);
 }
 
-.theme-card:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
+.theme-card__preview {
+  position: relative;
+  height: 7.2rem;
+  padding: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.theme-card__visual {
-  height: 84px;
-  padding: 10px 10px 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.theme-card__preview-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 }
 
-.theme-card__bar {
-  height: 16px;
-  border-radius: 4px;
+.theme-card__preview-top,
+.theme-card__preview-panel {
+  position: relative;
+  z-index: 1;
+}
+
+.theme-card__preview-top {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 0 6px;
+  gap: 0.55rem;
+  margin-bottom: 0.7rem;
 }
 
-.theme-card__dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  flex-shrink: 0;
+.theme-card__preview-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
 }
 
-.theme-card__content {
+.theme-card__preview-badge span {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 999px;
+}
+
+.theme-card__preview-line {
+  height: 0.4rem;
+  width: 4rem;
+  border-radius: 999px;
+}
+
+.theme-card__preview-panel {
+  height: 3.9rem;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding-top: 2px;
-}
-
-.theme-card__line {
-  height: 4px;
-  border-radius: 2px;
-  display: block;
-}
-
-.theme-card__chip {
-  width: 34px;
-  height: 12px;
-  border-radius: 6px;
+  gap: 0.55rem;
+  padding: 0.75rem;
   border: 1px solid transparent;
-  margin-top: 2px;
+  border-radius: 0.75rem;
 }
 
-.theme-card__footer {
-  padding: 8px 10px;
+.theme-card__preview-rule {
+  display: block;
+  height: 0.32rem;
+  border-radius: 999px;
+}
+
+.theme-card__meta {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-top: 1px solid transparent;
+  gap: 1rem;
+  padding: 1rem;
 }
 
-.theme-card__name {
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-
-.theme-card__badge {
-  font-size: 0.6rem;
+.theme-card__meta h4 {
+  margin: 0;
+  color: var(--app-ink);
+  font-size: 0.98rem;
   font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  padding: 2px 6px;
-  border-radius: 99px;
+  letter-spacing: -0.02em;
+}
+
+.theme-card__meta p {
+  margin: 0.2rem 0 0;
+  color: var(--app-ink-soft);
+  font-size: 0.82rem;
+}
+
+.theme-card__check {
+  width: 1.35rem;
+  height: 1.35rem;
+  border: 2px solid var(--app-line-strong);
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.theme-card__check--active {
+  border-color: var(--app-accent);
+  background:
+    radial-gradient(circle at center, var(--app-accent) 0 42%, transparent 44% 100%);
 }
 </style>

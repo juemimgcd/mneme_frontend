@@ -5659,3 +5659,36 @@ textarea:focus-visible {
 .app-shell .status-pill[data-status='draft'] {
   color: #d6dbe4;
 }
+
+/* Mneme appearance defaults. Settings override these tokens at runtime. */
+:root {
+  --mneme-bg: #031427;
+  --mneme-surface-container-low: #0b1c30;
+  --mneme-surface-container: #102034;
+  --mneme-surface-container-high: #1b2b3f;
+  --mneme-surface-container-highest: #26364a;
+  --mneme-on-surface: #d3e4fe;
+  --mneme-on-surface-variant: #c2c6d6;
+  --mneme-outline: #8c909f;
+  --mneme-outline-variant: #424754;
+  --mneme-accent: #adc6ff;
+  --mneme-accent-strong: #d8e2ff;
+}
+
+html,
+body {
+  background:
+    radial-gradient(circle at 12% 0%, rgba(173, 198, 255, 0.12), transparent 22rem),
+    radial-gradient(circle at 88% 0%, rgba(77, 142, 255, 0.12), transparent 20rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 14rem),
+    var(--mneme-bg);
+  color: var(--mneme-on-surface);
+}
+
+:root[data-reading-font='dyslexic'] body,
+:root[data-reading-font='dyslexic'] button,
+:root[data-reading-font='dyslexic'] input,
+:root[data-reading-font='dyslexic'] select,
+:root[data-reading-font='dyslexic'] textarea {
+  font-family: 'OpenDyslexic', 'Segoe UI', sans-serif;
+}

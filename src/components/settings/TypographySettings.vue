@@ -16,45 +16,52 @@ function onFontSizeInput(event: Event) {
 
 <template>
   <div class="typography-settings">
-    <!-- Dyslexic-friendly font row -->
-    <div class="setting-row">
-      <div class="setting-info">
-        <span id="dyslexic-label" class="setting-label">Dyslexic-friendly font</span>
-        <p class="setting-hint">Uses OpenDyslexic for improved readability</p>
+    <div class="typography-settings__row">
+      <div>
+        <h4>Dyslexic Friendly Font</h4>
+        <p>Switches the interface to OpenDyslexic to improve readability.</p>
       </div>
+
       <button
-        class="toggle"
-        :class="{ 'toggle--on': dyslexicFont }"
-        role="switch"
+        class="typography-toggle"
+        :class="{ 'typography-toggle--active': dyslexicFont }"
         :aria-checked="dyslexicFont"
-        aria-labelledby="dyslexic-label"
+        role="switch"
         type="button"
         @click="emit('update:dyslexicFont', !dyslexicFont)"
       >
-        <span class="toggle__thumb" />
-        <span class="sr-only">{{ dyslexicFont ? 'On' : 'Off' }}</span>
+        <span class="typography-toggle__thumb" />
       </button>
     </div>
 
-    <!-- Base font size row -->
-    <div class="setting-row">
-      <div class="setting-info">
-        <label class="setting-label" for="font-size-range">Base font size</label>
-        <p class="setting-hint">Adjusts the root font size across the interface</p>
+    <div class="typography-settings__row typography-settings__row--stacked">
+      <div class="typography-settings__label-row">
+        <div>
+          <h4>Base Font Size</h4>
+          <p>Adjust the core scale of the interface text.</p>
+        </div>
+        <span class="typography-settings__value">{{ fontSize }}px</span>
       </div>
-      <div class="size-control">
+
+      <div class="typography-slider">
+        <div class="typography-slider__track" />
+        <div class="typography-slider__fill" :style="{ width: `${((fontSize - 12) / 12) * 100}%` }" />
         <input
-          id="font-size-range"
-          type="range"
-          class="range-input"
-          min="12"
+          aria-label="Adjust font size"
+          class="typography-slider__input"
           max="24"
-          step="1"
+          min="12"
+          step="2"
+          type="range"
           :value="fontSize"
-          aria-label="Base font size"
           @input="onFontSizeInput"
         />
-        <span class="size-value" aria-live="polite" aria-atomic="true">{{ fontSize }}px</span>
+      </div>
+
+      <div class="typography-settings__scale">
+        <span>A</span>
+        <span>A</span>
+        <span>A</span>
       </div>
     </div>
   </div>
@@ -62,143 +69,148 @@ function onFontSizeInput(event: Event) {
 
 <style scoped>
 .typography-settings {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  gap: 1.2rem;
 }
 
-.setting-row {
+.typography-settings__row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1.5rem;
-  padding: 1rem 0;
-  border-bottom: 1px solid var(--border);
+  gap: 1rem;
 }
 
-.setting-row:last-child {
-  border-bottom: none;
+.typography-settings__row--stacked {
+  display: grid;
+  gap: 1rem;
 }
 
-.setting-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.setting-label {
-  display: block;
-  font-size: 0.875rem;
+.typography-settings h4 {
+  margin: 0 0 0.3rem;
+  color: var(--app-ink);
+  font-size: 0.98rem;
   font-weight: 600;
-  color: var(--fg);
-  cursor: pointer;
 }
 
-.setting-hint {
-  margin: 0.2rem 0 0;
-  font-size: 0.78rem;
-  color: var(--fg-soft);
-  line-height: 1.5;
+.typography-settings p {
+  margin: 0;
+  color: var(--app-ink-soft);
+  line-height: 1.6;
 }
 
-/* Toggle switch */
-.toggle {
-  flex-shrink: 0;
+.typography-toggle {
   position: relative;
-  width: 44px;
-  height: 24px;
-  background: var(--border-strong);
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
+  width: 3rem;
+  height: 1.75rem;
   padding: 0;
-  transition: background 200ms ease;
-}
-
-.toggle--on {
-  background: var(--primary);
-}
-
-.toggle__thumb {
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #fff;
-  transition: transform 200ms ease;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
-}
-
-.toggle--on .toggle__thumb {
-  transform: translateX(20px);
-}
-
-.toggle:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
-}
-
-/* Range slider */
-.size-control {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-shrink: 0;
-}
-
-.range-input {
-  width: 120px;
-  height: 4px;
-  appearance: none;
-  -webkit-appearance: none;
-  background: var(--border-strong);
-  border-radius: 2px;
-  outline: none;
-  cursor: pointer;
-}
-
-.range-input::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--primary);
-  cursor: pointer;
-  box-shadow: 0 0 0 3px rgba(127, 157, 255, 0.2);
-}
-
-.range-input::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  border: none;
-  border-radius: 50%;
-  background: var(--primary);
-  cursor: pointer;
-}
-
-.range-input:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 4px;
-}
-
-.size-value {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--primary);
-  min-width: 3rem;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
   border: 0;
+  border-radius: 999px;
+  background: var(--mneme-surface-container-highest, #26364a);
+}
+
+.typography-toggle--active {
+  background: color-mix(in srgb, var(--app-accent) 45%, var(--mneme-surface-container-highest, #26364a));
+}
+
+.typography-toggle__thumb {
+  position: absolute;
+  top: 0.16rem;
+  left: 0.16rem;
+  width: 1.42rem;
+  height: 1.42rem;
+  border-radius: 999px;
+  background: var(--mneme-outline, #8c909f);
+}
+
+.typography-toggle--active .typography-toggle__thumb {
+  transform: translateX(1.24rem);
+  background: var(--app-accent);
+}
+
+.typography-settings__label-row {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.typography-settings__value {
+  padding: 0.35rem 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--app-accent) 24%, transparent);
+  border-radius: 0.55rem;
+  background: color-mix(in srgb, var(--app-accent) 10%, transparent);
+  color: var(--app-accent);
+  font-family: var(--app-font-mono);
+  font-size: 0.82rem;
+}
+
+.typography-slider {
+  position: relative;
+  height: 1.7rem;
+}
+
+.typography-slider__track,
+.typography-slider__fill {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  height: 0.35rem;
+  border-radius: 999px;
+}
+
+.typography-slider__track {
+  width: 100%;
+  background: var(--mneme-surface-container-highest, #26364a);
+}
+
+.typography-slider__fill {
+  background: var(--app-accent);
+}
+
+.typography-slider__input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  margin: 0;
+  appearance: none;
+  background: transparent;
+}
+
+.typography-slider__input::-webkit-slider-thumb {
+  width: 1.15rem;
+  height: 1.15rem;
+  appearance: none;
+  border: 2px solid var(--mneme-bg, #031427);
+  border-radius: 999px;
+  background: var(--app-accent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--app-accent) 40%, transparent);
+}
+
+.typography-slider__input::-moz-range-thumb {
+  width: 1.15rem;
+  height: 1.15rem;
+  border: 2px solid var(--mneme-bg, #031427);
+  border-radius: 999px;
+  background: var(--app-accent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--app-accent) 40%, transparent);
+}
+
+.typography-settings__scale {
+  display: flex;
+  justify-content: space-between;
+  color: rgba(211, 228, 254, 0.64);
+}
+
+.typography-settings__scale span:first-child {
+  font-size: 0.86rem;
+}
+
+.typography-settings__scale span:nth-child(2) {
+  font-size: 1rem;
+}
+
+.typography-settings__scale span:last-child {
+  font-size: 1.2rem;
 }
 </style>

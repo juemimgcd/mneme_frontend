@@ -1,231 +1,671 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Karpathy AI Knowledge Graph</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Editorial Dashboard Mockup</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --bg: #efece6;
+            --panel: #f6f4ef;
+            --panel-2: #f3f1ec;
+            --line: #d9d3ca;
+            --line-soft: #e5dfd6;
+            --ink: #261f1b;
+            --muted: #756b62;
+            --muted-2: #93867a;
+            --accent: #b28b53;
+            --accent-soft: #eee3d1;
+            --green: #7f9386;
+            --navy: #14131d;
+            --navy-2: #1e1c2a;
+            --white: #ffffff;
+            --radius-xl: 24px;
+            --radius-lg: 18px;
+            --radius-md: 14px;
+            --shadow-soft: 0 8px 24px rgba(28, 20, 12, 0.04);
         }
 
+        * { box-sizing: border-box; }
+        html, body { height: 100%; }
         body {
-            background: #f7f6f3;
-            font-family: Arial, sans-serif;
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            line-height: 1.45;
+        }
+
+        .page {
+            max-width: 1320px;
+            margin: 0 auto;
+            background: linear-gradient(180deg, #f1eee8 0%, #ede9e2 100%);
+            min-height: 100vh;
+            border-left: 1px solid rgba(72, 56, 41, 0.05);
+            border-right: 1px solid rgba(72, 56, 41, 0.05);
+        }
+
+        .topbar {
+            height: 104px;
+            padding: 18px 22px 16px;
+            background: radial-gradient(circle at 22% -10%, rgba(93, 75, 129, 0.16), transparent 28%),
+            linear-gradient(90deg, var(--navy) 0%, #191822 48%, #14131d 100%);
+            color: #cdbfae;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .topbar-copy {
+            min-width: 0;
+        }
+
+        .eyebrow-note {
+            font-size: 12px;
+            letter-spacing: 0.03em;
+            color: rgba(214, 194, 171, 0.76);
+            margin-bottom: 12px;
+        }
+
+        .chip-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            height: 28px;
+            padding: 0 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(225, 215, 200, 0.18);
+            background: rgba(255, 255, 255, 0.06);
+            color: #ddd0c1;
+            font-size: 12px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .chip--warm {
+            color: #c49854;
+            border-color: rgba(180, 139, 83, 0.45);
+            background: rgba(178, 139, 83, 0.08);
+        }
+
+        .topbar-actions {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .select, .btn-top {
+            height: 44px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(246, 241, 233, 0.96);
+            color: var(--ink);
+            padding: 0 14px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .select { min-width: 240px; }
+        .btn-top {
+            font-weight: 600;
+            background: rgba(248, 243, 236, 0.95);
+            cursor: pointer;
+        }
+
+        .content {
+            padding: 18px;
+        }
+
+        .hero {
+            min-height: 226px;
+            border: 1px solid var(--line);
+            background: linear-gradient(135deg, rgba(255,255,255,0.36), rgba(255,255,255,0.08));
+            border-radius: var(--radius-xl);
+            display: grid;
+            grid-template-columns: 280px 1fr;
             overflow: hidden;
-            color: #37352f;
-            height: 100vh;
-            width: 100vw;
+            margin-bottom: 24px;
         }
 
-        #graph-container {
-            width: 100%;
-            height: 100%;
+        .hero-side {
             position: relative;
+            border-right: 1px solid rgba(66, 48, 31, 0.03);
         }
 
-        .graph-title {
+        .hero-side::before {
+            content: "";
             position: absolute;
-            top: 20px;
-            left: 20px;
+            inset: auto 16px 22px 16px;
+            height: 1px;
+            background: transparent;
+        }
+
+        .hero-side-label {
+            position: absolute;
+            left: 18px;
+            bottom: 22px;
+            font-size: 12px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--muted-2);
+            font-weight: 600;
+        }
+
+        .hero-main {
+            padding: 28px 34px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .hero h1,
+        .section-title,
+        .shelf-head strong {
+            margin: 0;
+            font-family: Georgia, "Times New Roman", serif;
+            font-weight: 700;
+            letter-spacing: -0.04em;
+            color: #221b18;
+        }
+
+        .hero h1 {
+            max-width: 640px;
+            font-size: clamp(54px, 5.2vw, 76px);
+            line-height: 0.92;
+            margin-bottom: 18px;
+        }
+
+        .hero p {
+            max-width: 760px;
+            margin: 0;
+            font-size: 17px;
+            line-height: 1.7;
+            color: #645b53;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.33);
+            border: 1px solid var(--line-soft);
+            border-radius: 24px;
+            box-shadow: var(--shadow-soft);
+        }
+
+        .metric {
+            padding: 18px 20px 20px;
+            min-height: 156px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .eyebrow {
+            font-size: 12px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--muted-2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .eyebrow::before {
+            content: "";
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 1px solid var(--line);
+            background: rgba(255,255,255,0.18);
+            display: inline-block;
+        }
+
+        .metric-value {
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 68px;
+            line-height: 0.9;
+            letter-spacing: -0.05em;
+            color: #241d19;
+            margin-top: 10px;
+        }
+
+        .metric-sub {
+            font-size: 15px;
+            color: #7a7068;
+            margin-top: 6px;
+        }
+
+        .lower {
+            display: grid;
+            grid-template-columns: 1.58fr 0.98fr;
+            gap: 18px;
+        }
+
+        .panel {
+            padding: 18px 18px 16px;
+            min-height: 420px;
+        }
+
+        .panel-header {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: end;
+            gap: 16px;
+            padding: 2px 2px 14px;
+            border-bottom: 1px solid var(--line);
+            margin-bottom: 20px;
+        }
+
+        .panel-header .eyebrow {
+            align-items: center;
+        }
+
+        .panel-header .eyebrow::before {
+            display: none;
+        }
+
+        .section-title {
+            font-size: 28px;
+            line-height: 1;
+            justify-self: end;
+        }
+
+        .shelf-grid {
+            display: grid;
+            grid-template-columns: 1.12fr 0.92fr;
+            gap: 18px;
+        }
+
+        .shelf-card,
+        .queue-card,
+        .conversation-card,
+        .movement-item {
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            background: rgba(255,255,255,0.24);
+        }
+
+        .shelf-card {
+            min-height: 300px;
+            padding: 18px;
+            position: relative;
+            overflow: hidden;
+            background:
+                    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.6), transparent 40%),
+                    linear-gradient(180deg, rgba(255,255,255,0.32), rgba(255,255,255,0.12));
+        }
+
+        .shelf-card::after {
+            content: "";
+            position: absolute;
+            width: 240px;
+            height: 240px;
+            right: -72px;
+            bottom: -94px;
+            border-radius: 50%;
+            border: 1px solid rgba(136, 122, 105, 0.15);
+            background: radial-gradient(circle at 40% 40%, rgba(255,255,255,0.48), rgba(255,255,255,0.06));
+        }
+
+        .shelf-kicker {
+            font-size: 12px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--muted-2);
+            margin-bottom: 28px;
+        }
+
+        .shelf-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .shelf-head strong {
+            font-size: clamp(34px, 4vw, 58px);
+            line-height: 0.95;
+            max-width: 320px;
+        }
+
+        .status-pill {
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid #d9c6ab;
+            background: rgba(232, 221, 204, 0.55);
+            color: #b07f3c;
+            font-size: 12px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .queue-stack {
+            display: grid;
+            gap: 18px;
+        }
+
+        .queue-card,
+        .conversation-card {
+            min-height: 108px;
+            padding: 16px 16px 14px;
+        }
+
+        .queue-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding-bottom: 14px;
+            margin-bottom: 14px;
+            border-bottom: 1px solid var(--line-soft);
+        }
+
+        .queue-title {
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 19px;
+            color: #302724;
+        }
+
+        .bubble {
+            min-width: 28px;
+            height: 28px;
+            padding: 0 10px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #9b7447;
+            border: 1px solid #d8c5a8;
+            background: #efe4d4;
+        }
+
+        .bubble--cool {
+            color: #738175;
+            border-color: #cfd8d1;
+            background: #e9efea;
+        }
+
+        .queue-desc {
             font-size: 16px;
-            font-weight: normal;
-            color: #37352f;
-            opacity: 0.85;
-            z-index: 100;
-            pointer-events: none;
+            color: #6f655e;
         }
 
-        .graph-tip {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            font-size: 11px;
-            color: #6b7280;
-            opacity: 0.7;
-            z-index: 100;
-            pointer-events: none;
+        .movement-list {
+            display: grid;
+            gap: 0;
         }
 
-        svg {
-            user-select: none;
-            display: block;
+        .movement-item {
+            border-left: none;
+            border-right: none;
+            border-radius: 0;
+            background: transparent;
+            padding: 16px 0;
+            display: grid;
+            grid-template-columns: 18px 1fr auto;
+            gap: 14px;
+            align-items: start;
+        }
+
+        .movement-item:first-child { padding-top: 4px; }
+        .movement-item + .movement-item { border-top: 1px solid var(--line); }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #d0d7df;
+            margin-top: 9px;
+            box-shadow: 0 0 0 6px rgba(208, 215, 223, 0.18);
+        }
+
+        .dot--green {
+            background: #7a8f83;
+            box-shadow: 0 0 0 6px rgba(122, 143, 131, 0.18);
+        }
+
+        .movement-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #332a26;
+            margin-bottom: 4px;
+        }
+
+        .movement-sub {
+            font-size: 14px;
+            color: #746962;
+        }
+
+        .movement-time {
+            white-space: nowrap;
+            font-size: 13px;
+            color: #8e8378;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding-top: 4px;
+        }
+
+        .float-actions {
+            position: fixed;
+            right: 10px;
+            top: 56%;
+            transform: translateY(-50%);
+            display: grid;
+            gap: 10px;
+            z-index: 20;
+        }
+
+        .float-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 1px solid #edd8d9;
+            background: rgba(255, 244, 245, 0.92);
+            color: #e28ea0;
+            display: grid;
+            place-items: center;
+            box-shadow: 0 8px 20px rgba(160, 120, 126, 0.12);
+            font-size: 18px;
+        }
+
+        @media (max-width: 1120px) {
+            .hero { grid-template-columns: 1fr; }
+            .hero-side { min-height: 60px; border-right: none; border-bottom: 1px solid rgba(66,48,31,0.03); }
+            .hero-side-label { top: 18px; bottom: auto; }
+            .stats, .lower, .shelf-grid { grid-template-columns: 1fr; }
+            .section-title { justify-self: start; }
+            .panel-header { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 760px) {
+            .topbar {
+                height: auto;
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .topbar-actions {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+
+            .select {
+                min-width: 0;
+                flex: 1 1 220px;
+            }
+
+            .btn-top {
+                flex: 0 0 auto;
+            }
+
+            .hero-main {
+                padding: 22px;
+            }
+
+            .hero h1 {
+                font-size: 46px;
+            }
+
+            .metric-value {
+                font-size: 56px;
+            }
+
+            .shelf-head {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .float-actions {
+                display: none;
+            }
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 </head>
 <body>
-<div id="graph-container">
-    <div class="graph-title">Karpathy AI Knowledge Graph</div>
-    <div class="graph-tip">Drag nodes | Zoom wheel | Double click focus</div>
+<div class="page">
+    <header class="topbar">
+        <div class="topbar-copy">
+            <div class="eyebrow-note">A composed overview of your active collection and its latest signals.</div>
+            <div class="chip-row">
+                <span class="chip chip--warm">Indexing</span>
+                <span class="chip">1 Indexed of 2</span>
+                <span class="chip">Notes 0</span>
+                <span class="chip">1 Processing</span>
+            </div>
+        </div>
+        <div class="topbar-actions">
+            <select class="select">
+                <option>默认个人知识库</option>
+            </select>
+            <button class="btn-top">tty</button>
+        </div>
+    </header>
+
+    <main class="content">
+        <section class="hero card">
+            <div class="hero-side">
+                <div class="hero-side-label">Workspace ledger</div>
+            </div>
+            <div class="hero-main">
+                <h1>Read the room<br>before you begin.</h1>
+                <p>
+                    A stable overview of the current collection: source readiness, extracted
+                    memory, recent movement, and the strongest reading signals.
+                </p>
+            </div>
+        </section>
+
+        <section class="stats">
+            <article class="metric card">
+                <div class="eyebrow">Open shelf</div>
+                <div>
+                    <div class="metric-value">3</div>
+                    <div class="metric-sub">默认个人知识库</div>
+                </div>
+            </article>
+            <article class="metric card">
+                <div class="eyebrow">Indexed</div>
+                <div>
+                    <div class="metric-value">1</div>
+                    <div class="metric-sub">0 notes extracted</div>
+                </div>
+            </article>
+            <article class="metric card">
+                <div class="eyebrow">Activity</div>
+                <div>
+                    <div class="metric-value">1</div>
+                    <div class="metric-sub">Documents are still processing</div>
+                </div>
+            </article>
+        </section>
+
+        <section class="lower">
+            <article class="panel card">
+                <div class="panel-header">
+                    <div class="eyebrow">Open shelf</div>
+                    <h2 class="section-title">Current collection</h2>
+                </div>
+
+                <div class="shelf-grid">
+                    <div class="shelf-card">
+                        <div class="shelf-kicker">Active collection</div>
+                        <div class="shelf-head">
+                            <strong>默认个人知<br>识库</strong>
+                            <span class="status-pill">Indexing</span>
+                        </div>
+                    </div>
+
+                    <div class="queue-stack">
+                        <div class="queue-card">
+                            <div class="queue-top">
+                                <div class="queue-title">Processing queue</div>
+                                <span class="bubble">1</span>
+                            </div>
+                            <div class="queue-desc">New material is still being processed.</div>
+                        </div>
+
+                        <div class="conversation-card">
+                            <div class="queue-top">
+                                <div class="queue-title">Latest conversation</div>
+                                <span class="bubble bubble--cool">0</span>
+                            </div>
+                            <div class="queue-desc">No conversation yet.</div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+            <article class="panel card">
+                <div class="panel-header">
+                    <div class="eyebrow">Change log</div>
+                    <h2 class="section-title">Recent movement</h2>
+                </div>
+
+                <div class="movement-list">
+                    <div class="movement-item">
+                        <span class="dot"></span>
+                        <div>
+                            <div class="movement-title">celery_learning.md</div>
+                            <div class="movement-sub">queued ・ MD</div>
+                        </div>
+                        <div class="movement-time">Apr 20, 08:32 AM</div>
+                    </div>
+
+                    <div class="movement-item">
+                        <span class="dot dot--green"></span>
+                        <div>
+                            <div class="movement-title">Reading profile</div>
+                        </div>
+                        <div class="movement-time">最近 30 天</div>
+                    </div>
+                </div>
+            </article>
+        </section>
+    </main>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var graphData = {
-            nodes: [
-                { id: "root", name: "AI Knowledge Base", group: 0, size: 28 },
-                { id: "raw", name: "Raw Materials", group: 1, size: 18 },
-                { id: "paper", name: "Papers", group: 1, size: 10 },
-                { id: "article", name: "Articles", group: 1, size: 10 },
-                { id: "note", name: "Notes Images", group: 1, size: 10 },
-                { id: "wiki", name: "Wiki Network", group: 2, size: 18 },
-                { id: "markdown", name: "Markdown", group: 2, size: 10 },
-                { id: "graph", name: "Concept Graph", group: 2, size: 10 },
-                { id: "relation", name: "Knowledge Links", group: 2, size: 10 },
-                { id: "rule", name: "Rule Book", group: 3, size: 18 },
-                { id: "cloud", name: "cloud.md", group: 3, size: 10 },
-                { id: "work", name: "AI Rules", group: 3, size: 10 },
-                { id: "naming", name: "Naming Rule", group: 3, size: 10 }
-            ],
-            links: [
-                { source: "root", target: "raw", value: 1 },
-                { source: "raw", target: "paper", value: 0.5 },
-                { source: "raw", target: "article", value: 0.5 },
-                { source: "raw", target: "note", value: 0.5 },
-                { source: "root", target: "wiki", value: 1 },
-                { source: "wiki", target: "markdown", value: 0.5 },
-                { source: "wiki", target: "graph", value: 0.5 },
-                { source: "wiki", target: "relation", value: 0.5 },
-                { source: "root", target: "rule", value: 1 },
-                { source: "rule", target: "cloud", value: 0.5 },
-                { source: "rule", target: "work", value: 0.5 },
-                { source: "rule", target: "naming", value: 0.5 }
-            ]
-        };
-
-        var width = window.innerWidth;
-        var height = window.innerHeight;
-
-        var svg = d3.select("#graph-container")
-            .append("svg")
-            .attr("width", width)
-            .attr("height", height);
-
-        var zoom = d3.zoom()
-            .scaleExtent([0.2, 2.5])
-            .on("zoom", function(event) {
-                g.attr("transform", event.transform);
-            });
-        svg.call(zoom);
-
-        var g = svg.append("g");
-
-        var simulation = d3.forceSimulation(graphData.nodes)
-            .force("link", d3.forceLink(graphData.links).id(function(d) { return d.id; }).distance(90).strength(0.7))
-            .force("charge", d3.forceManyBody().strength(-280))
-            .force("center", d3.forceCenter(width / 2, height / 2))
-            .force("collide", d3.forceCollide().radius(function(d) { return d.size + 8; }).iterations(4));
-
-        var link = g.append("g")
-            .selectAll("line")
-            .data(graphData.links)
-            .enter().append("line")
-            .attr("stroke", "#9ca3af")
-            .attr("stroke-opacity", 0.45)
-            .attr("stroke-width", function(d) { return d.value === 1 ? 1 : 0.8; })
-            .attr("stroke-linecap", "round");
-
-        var node = g.append("g")
-            .selectAll(".node")
-            .data(graphData.nodes)
-            .enter().append("g")
-            .attr("class", "node")
-            .call(d3.drag()
-                .on("start", dragstarted)
-                .on("drag", dragged)
-                .on("end", dragended));
-
-        node.append("circle")
-            .attr("r", function(d) { return d.size / 2; })
-            .attr("fill", "transparent")
-            .attr("stroke", "#37352f")
-            .attr("stroke-width", 1)
-            .attr("stroke-opacity", 0.9);
-
-        node.append("circle")
-            .attr("r", function(d) { return (d.size / 2) - 1; })
-            .attr("fill", "#ffffff")
-            .attr("stroke", "none")
-            .attr("opacity", 0.95);
-
-        node.append("circle")
-            .attr("r", function(d) { return d.size / 4.5; })
-            .attr("fill", "#37352f")
-            .attr("stroke", "none")
-            .attr("opacity", 0.98);
-
-        node.append("text")
-            .attr("dx", function(d) { return d.size / 2 + 6; })
-            .attr("dy", ".32em")
-            .text(function(d) { return d.name; })
-            .style("font-size", "11px")
-            .style("font-weight", "normal")
-            .style("fill", "#37352f")
-            .style("opacity", 0.9)
-            .style("pointer-events", "none");
-
-        simulation.on("tick", function() {
-            link
-                .attr("x1", function(d) { return d.source.x; })
-                .attr("y1", function(d) { return d.source.y; })
-                .attr("x2", function(d) { return d.target.x; })
-                .attr("y2", function(d) { return d.target.y; });
-
-            node
-                .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
-        });
-
-        function dragstarted(event, d) {
-            if (!event.active) simulation.alphaTarget(0.2).restart();
-            d.fx = d.x;
-            d.fy = d.y;
-            d3.select(event.currentTarget).selectAll("circle").attr("opacity", 1);
-        }
-
-        function dragged(event, d) {
-            d.fx = event.x;
-            d.fy = event.y;
-        }
-
-        function dragended(event, d) {
-            if (!event.active) simulation.alphaTarget(0);
-            d.fx = null;
-            d.fy = null;
-            d3.select(event.currentTarget).selectAll("circle").attr("opacity", 0.95);
-        }
-
-        node.on("dblclick", function(event, d) {
-            svg.transition()
-                .duration(300)
-                .ease(d3.easeCubicInOut)
-                .call(zoom.transform, d3.zoomIdentity
-                    .translate(width / 2, height / 2)
-                    .scale(1.8)
-                    .translate(-d.x, -d.y));
-        });
-
-        node.on("mouseover", function() {
-            d3.select(this).selectAll("circle")
-                .attr("opacity", 1)
-                .attr("stroke-width", 1.2);
-            d3.select(this).select("text").attr("opacity", 1);
-        }).on("mouseout", function() {
-            d3.select(this).selectAll("circle")
-                .attr("opacity", 0.95)
-                .attr("stroke-width", 1);
-            d3.select(this).select("text").attr("opacity", 0.9);
-        });
-
-        window.addEventListener('resize', function() {
-            var newWidth = window.innerWidth;
-            var newHeight = window.innerHeight;
-            svg.attr("width", newWidth).attr("height", newHeight);
-            simulation.force("center", d3.forceCenter(newWidth / 2, newHeight / 2)).restart();
-        });
-    });
-</script>
+<div class="float-actions" aria-hidden="true">
+    <div class="float-btn">⌘</div>
+    <div class="float-btn">☆</div>
+</div>
 </body>
 </html>

@@ -1,676 +1,476 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { RouterLink, useRouter } from 'vue-router';
-import { useSessionStore } from '@/stores/session';
+import { computed, ref, watch } from 'vue';
 import ThemeCard from '@/components/settings/ThemeCard.vue';
 import AccentPicker from '@/components/settings/AccentPicker.vue';
 import TypographySettings from '@/components/settings/TypographySettings.vue';
 import DensitySelector from '@/components/settings/DensitySelector.vue';
 import LivePreviewPanel from '@/components/settings/LivePreviewPanel.vue';
-
-const router = useRouter();
-const session = useSessionStore();
-
-// ── Theme ────────────────────────────────────────────────────────────────────
+import { useTheme } from '@/composables/useTheme';
 
 type ThemeId = 'deep-sea' | 'solar' | 'graphite' | 'cyber';
+type DensityId = 'compact' | 'comfortable' | 'spacious';
 
-interface ThemePreview {
-  bg: string;
-  elevated: string;
-  accent: string;
-  text: string;
-}
-
-interface AppTheme {
+type ThemeDefinition = {
   id: ThemeId;
   label: string;
-  preview: ThemePreview;
-}
+  subtitle: string;
+  mode: 'dark' | 'light';
+  preview: {
+    base: string;
+    elevated: string;
+    accent: string;
+    text: string;
+  };
+  tokens: {
+    bg: string;
+    surfaceContainerLow: string;
+    surfaceContainer: string;
+    surfaceContainerHigh: string;
+    surfaceContainerHighest: string;
+    onSurface: string;
+    onSurfaceVariant: string;
+    outline: string;
+    outlineVariant: string;
+    accentStrong: string;
+  };
+};
 
-const themes: AppTheme[] = [
+const STORAGE_KEY = 'mneme-appearance-v2';
+const { setTheme } = useTheme();
+
+const themes: ThemeDefinition[] = [
   {
     id: 'deep-sea',
     label: 'Deep Sea',
-    preview: { bg: '#06080c', elevated: '#0d1118', accent: '#7f9dff', text: '#f6f7fb' },
+    subtitle: 'Current Dark',
+    mode: 'dark',
+    preview: {
+      base: '#031427',
+      elevated: '#102034',
+      accent: '#adc6ff',
+      text: '#d3e4fe',
+    },
+    tokens: {
+      bg: '#031427',
+      surfaceContainerLow: '#0b1c30',
+      surfaceContainer: '#102034',
+      surfaceContainerHigh: '#1b2b3f',
+      surfaceContainerHighest: '#26364a',
+      onSurface: '#d3e4fe',
+      onSurfaceVariant: '#c2c6d6',
+      outline: '#8c909f',
+      outlineVariant: '#424754',
+      accentStrong: '#d8e2ff',
+    },
   },
   {
     id: 'solar',
     label: 'Solar',
-    preview: { bg: '#1a1200', elevated: '#231800', accent: '#f5c96a', text: '#fef3d0' },
+    subtitle: 'Clean Light',
+    mode: 'light',
+    preview: {
+      base: '#f8fafc',
+      elevated: '#ffffff',
+      accent: '#4d8eff',
+      text: '#132338',
+    },
+    tokens: {
+      bg: '#eef3fa',
+      surfaceContainerLow: '#f7f9fc',
+      surfaceContainer: '#ffffff',
+      surfaceContainerHigh: '#edf2f8',
+      surfaceContainerHighest: '#dfe7f1',
+      onSurface: '#16253a',
+      onSurfaceVariant: '#5c6b82',
+      outline: '#90a0b5',
+      outlineVariant: '#cad4e1',
+      accentStrong: '#0f3f82',
+    },
   },
   {
     id: 'graphite',
     label: 'Graphite',
-    preview: { bg: '#111214', elevated: '#1b1e24', accent: '#9cb5ff', text: '#e8eaf0' },
+    subtitle: 'Neutral Dark',
+    mode: 'dark',
+    preview: {
+      base: '#0a0a0a',
+      elevated: '#171717',
+      accent: '#d6dbe4',
+      text: '#f3f4f6',
+    },
+    tokens: {
+      bg: '#0b0d11',
+      surfaceContainerLow: '#11141a',
+      surfaceContainer: '#151922',
+      surfaceContainerHigh: '#1d222c',
+      surfaceContainerHighest: '#262d38',
+      onSurface: '#f3f4f6',
+      onSurfaceVariant: '#b5bcc7',
+      outline: '#8a92a0',
+      outlineVariant: '#353b46',
+      accentStrong: '#ffffff',
+    },
   },
   {
     id: 'cyber',
     label: 'Cyber',
-    preview: { bg: '#020d07', elevated: '#091b10', accent: '#39e87b', text: '#ccf5de' },
+    subtitle: 'High Contrast',
+    mode: 'dark',
+    preview: {
+      base: '#02070b',
+      elevated: '#09131d',
+      accent: '#00e5ff',
+      text: '#d5faff',
+    },
+    tokens: {
+      bg: '#02070b',
+      surfaceContainerLow: '#071018',
+      surfaceContainer: '#0b1620',
+      surfaceContainerHigh: '#10212d',
+      surfaceContainerHighest: '#16303f',
+      onSurface: '#d5faff',
+      onSurfaceVariant: '#89b8c7',
+      outline: '#4d7a87',
+      outlineVariant: '#1b3944',
+      accentStrong: '#8cf6ff',
+    },
   },
 ];
 
-const selectedThemeId = ref<ThemeId>('deep-sea');
-const selectedTheme = computed(() => themes.find((t) => t.id === selectedThemeId.value)!);
-
-function selectTheme(id: string) {
-  selectedThemeId.value = id as ThemeId;
-}
-
-// ── Accent color ─────────────────────────────────────────────────────────────
-
 const accentColors = [
-  { id: 'indigo', value: '#7f9dff', label: 'Indigo' },
-  { id: 'teal', value: '#4fc3c0', label: 'Teal' },
-  { id: 'amber', value: '#f5c96a', label: 'Amber' },
-  { id: 'coral', value: '#ff8872', label: 'Coral' },
-  { id: 'violet', value: '#c07aff', label: 'Violet' },
-  { id: 'sage', value: '#78c17a', label: 'Sage' },
+  { id: 'blue', value: '#adc6ff', strong: '#d8e2ff', label: 'Blue' },
+  { id: 'violet', value: '#a78bfa', strong: '#ddd6fe', label: 'Violet' },
+  { id: 'emerald', value: '#34d399', strong: '#bbf7d0', label: 'Emerald' },
+  { id: 'amber', value: '#fbbf24', strong: '#fde68a', label: 'Amber' },
 ];
-
-const selectedAccentId = ref('indigo');
-const selectedAccentColor = computed(
-  () => accentColors.find((c) => c.id === selectedAccentId.value)?.value ?? '#7f9dff',
-);
-
-// ── Typography ────────────────────────────────────────────────────────────────
-
-const dyslexicFont = ref(false);
-const fontSize = ref(16);
-
-// ── Density ──────────────────────────────────────────────────────────────────
 
 const densityOptions = [
   { id: 'compact', label: 'Compact' },
-  { id: 'normal', label: 'Normal' },
+  { id: 'comfortable', label: 'Comfortable' },
   { id: 'spacious', label: 'Spacious' },
-];
-const selectedDensity = ref('normal');
+] satisfies ReadonlyArray<{ id: DensityId; label: string }>;
 
-// ── Navigation ────────────────────────────────────────────────────────────────
+const selectedThemeId = ref<ThemeId>('deep-sea');
+const selectedAccentId = ref('blue');
+const dyslexicFont = ref(false);
+const fontSize = ref(16);
+const selectedDensity = ref<DensityId>('comfortable');
 
-const workspaceNavItems = [
-  { name: 'dashboard', label: 'Desk' },
-  { name: 'knowledge-bases', label: 'Collections' },
-  { name: 'documents', label: 'Library' },
-  { name: 'chat', label: 'Notes' },
-];
+const selectedTheme = computed(() => themes.find((theme) => theme.id === selectedThemeId.value) ?? themes[0]);
+const selectedAccent = computed(
+  () => accentColors.find((color) => color.id === selectedAccentId.value) ?? accentColors[0],
+);
 
-const analysisNavItems = [
-  { name: 'graph', label: 'Canvas' },
-  { name: 'memory', label: 'Memory' },
-  { name: 'insights', label: 'Review' },
-];
+function loadAppearanceState() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) {
+    return;
+  }
 
-function logout() {
-  session.logout();
-  router.push({ name: 'login' });
+  try {
+    const state = JSON.parse(raw) as Partial<{
+      themeId: ThemeId;
+      accentId: string;
+      dyslexicFont: boolean;
+      fontSize: number;
+      density: DensityId;
+    }>;
+
+    if (state.themeId && themes.some((item) => item.id === state.themeId)) {
+      selectedThemeId.value = state.themeId;
+    }
+    if (state.accentId && accentColors.some((item) => item.id === state.accentId)) {
+      selectedAccentId.value = state.accentId;
+    }
+    if (typeof state.dyslexicFont === 'boolean') {
+      dyslexicFont.value = state.dyslexicFont;
+    }
+    if (typeof state.fontSize === 'number' && state.fontSize >= 12 && state.fontSize <= 24) {
+      fontSize.value = state.fontSize;
+    }
+    if (state.density && densityOptions.some((item) => item.id === state.density)) {
+      selectedDensity.value = state.density;
+    }
+  } catch {
+    localStorage.removeItem(STORAGE_KEY);
+  }
 }
+
+function applyAppearance() {
+  const root = document.documentElement;
+  const { tokens, mode } = selectedTheme.value;
+
+  root.style.setProperty('--mneme-bg', tokens.bg);
+  root.style.setProperty('--mneme-surface-container-low', tokens.surfaceContainerLow);
+  root.style.setProperty('--mneme-surface-container', tokens.surfaceContainer);
+  root.style.setProperty('--mneme-surface-container-high', tokens.surfaceContainerHigh);
+  root.style.setProperty('--mneme-surface-container-highest', tokens.surfaceContainerHighest);
+  root.style.setProperty('--mneme-on-surface', tokens.onSurface);
+  root.style.setProperty('--mneme-on-surface-variant', tokens.onSurfaceVariant);
+  root.style.setProperty('--mneme-outline', tokens.outline);
+  root.style.setProperty('--mneme-outline-variant', tokens.outlineVariant);
+  root.style.setProperty('--mneme-accent', selectedAccent.value.value);
+  root.style.setProperty('--mneme-accent-strong', selectedAccent.value.strong);
+  root.style.setProperty('--mneme-density', selectedDensity.value);
+  root.style.fontSize = `${fontSize.value}px`;
+  root.dataset.readingFont = dyslexicFont.value ? 'dyslexic' : 'default';
+  setTheme(mode);
+
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify({
+      themeId: selectedThemeId.value,
+      accentId: selectedAccentId.value,
+      dyslexicFont: dyslexicFont.value,
+      fontSize: fontSize.value,
+      density: selectedDensity.value,
+    }),
+  );
+}
+
+loadAppearanceState();
+
+watch(
+  [selectedThemeId, selectedAccentId, dyslexicFont, fontSize, selectedDensity],
+  applyAppearance,
+  { immediate: true },
+);
 </script>
 
 <template>
-  <div class="settings-page">
-    <!-- ── Desktop Sidebar ─────────────────────────────────────────────────── -->
-    <aside class="settings-sidebar" aria-label="Settings navigation">
-      <RouterLink class="settings-brand" :to="{ name: 'dashboard' }">
-        <span class="settings-brand__glyph" aria-hidden="true">M</span>
-        <span class="settings-brand__text">
-          <strong>Mneme</strong>
-          <small>Settings</small>
-        </span>
-      </RouterLink>
-
-      <nav class="settings-nav" aria-label="Navigation">
-        <div class="settings-nav__group">
-          <p class="settings-nav__caption">Workspace</p>
-          <RouterLink
-            v-for="item in workspaceNavItems"
-            :key="item.name"
-            class="settings-nav__link"
-            :to="{ name: item.name }"
-          >{{ item.label }}</RouterLink>
-        </div>
-
-        <div class="settings-nav__group">
-          <p class="settings-nav__caption">Analysis</p>
-          <RouterLink
-            v-for="item in analysisNavItems"
-            :key="item.name"
-            class="settings-nav__link"
-            :to="{ name: item.name }"
-          >{{ item.label }}</RouterLink>
-        </div>
-
-        <div class="settings-nav__group">
-          <p class="settings-nav__caption">Settings</p>
-          <RouterLink
-            class="settings-nav__link settings-nav__link--current"
-            :to="{ name: 'settings-appearance' }"
-          >Appearance</RouterLink>
-        </div>
-      </nav>
-
-      <div class="settings-sidebar__footer">
-        <button class="settings-signout" type="button" @click="logout">Sign out</button>
-      </div>
-    </aside>
-
-    <!-- ── Main Content ────────────────────────────────────────────────────── -->
-    <main id="app-main" class="settings-main">
-      <header class="settings-header">
-        <nav class="settings-breadcrumb" aria-label="Breadcrumb">
-          <RouterLink :to="{ name: 'dashboard' }">Settings</RouterLink>
-          <span aria-hidden="true">›</span>
-          <span aria-current="page">Appearance</span>
-        </nav>
-        <h1 class="settings-title">Appearance</h1>
-        <p class="settings-desc">
-          Customize how Mneme looks and feels. Changes are applied instantly and saved locally.
+  <div class="view-stack settings-view">
+    <section class="settings-view__intro">
+      <div>
+        <p class="settings-view__eyebrow">Settings / Appearance</p>
+        <h2>Customize your cognitive workspace.</h2>
+        <p>
+          Changes apply instantly across the shell, preview, and content surfaces so you can tune
+          contrast, rhythm, and reading comfort in one pass.
         </p>
-      </header>
+      </div>
+      <span class="settings-view__status">Auto-Sync Enabled</span>
+    </section>
 
-      <div class="settings-body">
-        <!-- Settings form column -->
-        <div class="settings-form">
-          <!-- Theme -->
-          <section class="settings-section" aria-labelledby="theme-heading">
-            <div class="settings-section__head">
-              <h2 id="theme-heading" class="settings-section__title">Theme</h2>
-              <p class="settings-section__hint">Choose a base color scheme for the interface.</p>
+    <div class="settings-view__grid">
+      <div class="settings-view__controls">
+        <section class="settings-section">
+          <div class="settings-section__head">
+            <div>
+              <h3>Theme</h3>
+              <p>Choose the base environment for navigation, content panels, and the workspace canvas.</p>
             </div>
-            <div class="theme-grid">
-              <ThemeCard
-                v-for="theme in themes"
-                :key="theme.id"
-                :id="theme.id"
-                :label="theme.label"
-                :active="selectedThemeId === theme.id"
-                :preview="theme.preview"
-                @select="selectTheme"
-              />
-            </div>
-          </section>
+          </div>
 
-          <!-- Accent color -->
-          <section class="settings-section" aria-labelledby="accent-heading">
-            <div class="settings-section__head">
-              <h2 id="accent-heading" class="settings-section__title">Accent Color</h2>
-              <p class="settings-section__hint">
-                Highlight color used for active states and interactive elements.
-              </p>
-            </div>
-            <AccentPicker
-              :colors="accentColors"
-              :selected="selectedAccentId"
-              @select="selectedAccentId = $event"
-            />
-          </section>
-
-          <!-- Typography -->
-          <section class="settings-section" aria-labelledby="typography-heading">
-            <div class="settings-section__head">
-              <h2 id="typography-heading" class="settings-section__title">Typography</h2>
-              <p class="settings-section__hint">Font and sizing preferences for readability.</p>
-            </div>
-            <TypographySettings
-              v-model:dyslexic-font="dyslexicFont"
-              v-model:font-size="fontSize"
-            />
-          </section>
-
-          <!-- Interface density -->
-          <section class="settings-section" aria-labelledby="density-heading">
-            <div class="settings-section__head">
-              <h2 id="density-heading" class="settings-section__title">Interface Density</h2>
-              <p class="settings-section__hint">
-                Control spacing and padding throughout the interface.
-              </p>
-            </div>
-            <DensitySelector
-              :options="densityOptions"
-              :selected="selectedDensity"
-              @select="selectedDensity = $event"
-            />
-          </section>
-        </div>
-
-        <!-- Live preview column (xl+) -->
-        <aside class="settings-preview" aria-label="Live preview">
-          <div class="settings-preview__sticky">
-            <LivePreviewPanel
-              :theme-label="selectedTheme.label"
-              :theme-bg="selectedTheme.preview.bg"
-              :theme-elevated="selectedTheme.preview.elevated"
-              :theme-accent="selectedTheme.preview.accent"
-              :theme-text="selectedTheme.preview.text"
-              :accent-color="selectedAccentColor"
-              :dyslexic-font="dyslexicFont"
-              :font-size="fontSize"
-              :density="selectedDensity"
+          <div class="settings-theme-grid">
+            <ThemeCard
+              v-for="theme in themes"
+              :key="theme.id"
+              :active="selectedThemeId === theme.id"
+              :id="theme.id"
+              :label="theme.label"
+              :preview="theme.preview"
+              :subtitle="theme.subtitle"
+              @select="selectedThemeId = $event as ThemeId"
             />
           </div>
-        </aside>
+        </section>
+
+        <section class="settings-section settings-section--panel">
+          <div class="settings-section__head">
+            <div>
+              <h3>Accent Color</h3>
+              <p>Used for active states, primary actions, highlights, and graph emphasis.</p>
+            </div>
+          </div>
+
+          <AccentPicker
+            :colors="accentColors"
+            :selected="selectedAccentId"
+            @select="selectedAccentId = $event"
+          />
+        </section>
+
+        <section class="settings-section settings-section--panel">
+          <div class="settings-section__head">
+            <div>
+              <h3>Typography</h3>
+              <p>Adjust type size and accessibility defaults for long reading sessions.</p>
+            </div>
+          </div>
+
+          <TypographySettings
+            v-model:dyslexic-font="dyslexicFont"
+            v-model:font-size="fontSize"
+          />
+        </section>
+
+        <section class="settings-section">
+          <div class="settings-section__head">
+            <div>
+              <h3>Interface Density</h3>
+              <p>Control spacing between panels, controls, and navigation rows.</p>
+            </div>
+          </div>
+
+          <DensitySelector
+            :options="densityOptions"
+            :selected="selectedDensity"
+            @select="selectedDensity = $event as DensityId"
+          />
+        </section>
       </div>
-    </main>
 
-    <!-- ── Mobile Bottom Navigation ──────────────────────────────────────── -->
-    <nav class="bottom-nav" aria-label="Mobile navigation">
-      <RouterLink class="bottom-nav__item" :to="{ name: 'dashboard' }">
-        <svg viewBox="0 0 24 24" fill="none" width="22" height="22" aria-hidden="true">
-          <path
-            d="M5 10.5 12 6l7 4.5v7L12 22l-7-4.5Z"
-            stroke="currentColor"
-            stroke-width="1.6"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
-        <span>Home</span>
-      </RouterLink>
-
-      <RouterLink class="bottom-nav__item" :to="{ name: 'knowledge-bases' }">
-        <svg viewBox="0 0 24 24" fill="none" width="22" height="22" aria-hidden="true">
-          <path
-            d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8L12 2Z"
-            stroke="currentColor"
-            stroke-width="1.6"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
-        <span>Collections</span>
-      </RouterLink>
-
-      <RouterLink
-        class="bottom-nav__item bottom-nav__item--active"
-        :to="{ name: 'settings-appearance' }"
-        aria-current="page"
-      >
-        <svg viewBox="0 0 24 24" fill="none" width="22" height="22" aria-hidden="true">
-          <path
-            d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
-            stroke="currentColor"
-            stroke-width="1.6"
-            stroke-linecap="round"
-          />
-          <path
-            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"
-            stroke="currentColor"
-            stroke-width="1.6"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
-        <span>Appearance</span>
-      </RouterLink>
-    </nav>
+      <aside class="settings-view__preview">
+        <LivePreviewPanel
+          :accent-color="selectedAccent.value"
+          :density="selectedDensity"
+          :dyslexic-font="dyslexicFont"
+          :font-size="fontSize"
+          :theme-bg="selectedTheme.tokens.bg"
+          :theme-elevated="selectedTheme.tokens.surfaceContainerLow"
+          :theme-label="selectedTheme.label"
+          :theme-surface="selectedTheme.tokens.surfaceContainer"
+          :theme-surface-high="selectedTheme.tokens.surfaceContainerHigh"
+          :theme-surface-highest="selectedTheme.tokens.surfaceContainerHighest"
+          :theme-text="selectedTheme.tokens.onSurface"
+          :theme-text-muted="selectedTheme.tokens.onSurfaceVariant"
+        />
+      </aside>
+    </div>
   </div>
 </template>
 
 <style scoped>
-/* ── Page shell ─────────────────────────────────────────────────────────────── */
-.settings-page {
-  display: flex;
-  min-height: 100vh;
-  background:
-    radial-gradient(circle at 10% -10%, rgba(127, 157, 255, 0.1), transparent 30%),
-    radial-gradient(circle at 92% 8%, rgba(255, 255, 255, 0.03), transparent 26%),
-    var(--bg);
-  color: var(--fg);
-  font-family: var(--font-sans);
-}
-
-/* ── Sidebar ─────────────────────────────────────────────────────────────────── */
-.settings-sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 240px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.025) 0%, transparent 100%),
-    var(--bg-elevated);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  padding: 1.5rem 1rem;
-  gap: 1.5rem;
-  z-index: 20;
-  overflow-y: auto;
-}
-
-/* Brand */
-.settings-brand {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  text-decoration: none;
-  color: var(--fg);
-  border-radius: 8px;
-  padding: 0.2rem 0.3rem;
-  transition: background 150ms ease;
-}
-
-.settings-brand:hover {
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.settings-brand:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
-}
-
-.settings-brand__glyph {
-  width: 2.2rem;
-  height: 2.2rem;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #233a55 0%, #667f92 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 1rem;
-  color: #fbf8f2;
-  flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(47, 73, 104, 0.4);
-}
-
-.settings-brand__text strong {
-  display: block;
-  font-size: 0.9rem;
-  font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
-}
-
-.settings-brand__text small {
-  font-size: 0.7rem;
-  color: var(--fg-soft);
-  display: block;
-}
-
-/* Nav */
-.settings-nav {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.settings-nav__group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-}
-
-.settings-nav__caption {
-  margin: 0 0 0.3rem;
-  padding: 0 0.5rem;
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--fg-soft);
-  opacity: 0.55;
-}
-
-.settings-nav__link {
-  display: block;
-  padding: 0.52rem 0.75rem;
-  border-radius: 7px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--fg-soft);
-  text-decoration: none;
-  transition: background 150ms ease, color 150ms ease;
-}
-
-.settings-nav__link:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--fg);
-}
-
-.settings-nav__link--current,
-.settings-nav__link.router-link-active {
-  background: rgba(127, 157, 255, 0.12);
-  color: var(--primary);
-}
-
-.settings-nav__link:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
-}
-
-/* Sidebar footer */
-.settings-sidebar__footer {
-  padding-top: 1rem;
-  border-top: 1px solid var(--border);
-}
-
-.settings-signout {
-  width: 100%;
-  padding: 0.52rem 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  background: transparent;
-  color: var(--fg-soft);
-  font-size: 0.875rem;
-  font-family: inherit;
-  cursor: pointer;
-  text-align: left;
-  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
-}
-
-.settings-signout:hover {
-  background: rgba(255, 90, 90, 0.08);
-  color: #ff6b6b;
-  border-color: rgba(255, 90, 90, 0.25);
-}
-
-.settings-signout:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
-}
-
-/* ── Main ────────────────────────────────────────────────────────────────────── */
-.settings-main {
-  flex: 1;
-  margin-left: 240px;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Header */
-.settings-header {
-  padding: 2rem 2.5rem 1.5rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.settings-breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-bottom: 0.6rem;
-  font-size: 0.78rem;
-  color: var(--fg-soft);
-}
-
-.settings-breadcrumb a {
-  color: var(--fg-soft);
-  text-decoration: none;
-  transition: color 150ms ease;
-}
-
-.settings-breadcrumb a:hover {
-  color: var(--fg);
-}
-
-.settings-breadcrumb a:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
-  border-radius: 3px;
-}
-
-.settings-title {
-  margin: 0 0 0.4rem;
-  font-size: 1.85rem;
-  font-weight: 700;
-  letter-spacing: -0.045em;
-  line-height: 1.1;
-  color: var(--fg);
-}
-
-.settings-desc {
-  margin: 0;
-  font-size: 0.88rem;
-  color: var(--fg-soft);
-  line-height: 1.65;
-  max-width: 52ch;
-}
-
-/* Body — 2-column on xl */
-.settings-body {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
+.settings-view {
   gap: 2rem;
-  padding: 2rem 2.5rem;
-  align-items: start;
-  flex: 1;
 }
 
-/* Form column */
-.settings-form {
+.settings-view__intro {
   display: flex;
-  flex-direction: column;
-  gap: 0;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
-/* Section */
+.settings-view__eyebrow {
+  margin: 0 0 0.65rem;
+  color: rgba(211, 228, 254, 0.56);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.settings-view__intro h2 {
+  margin: 0 0 0.55rem;
+  color: var(--app-ink);
+  font-size: clamp(1.7rem, 2vw, 2.3rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.settings-view__intro p:last-child {
+  max-width: 44rem;
+  margin: 0;
+  color: var(--app-ink-soft);
+  line-height: 1.7;
+}
+
+.settings-view__status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--app-line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--app-ink-soft);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.settings-view__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(22rem, 28rem);
+  gap: 2rem;
+  align-items: start;
+}
+
+.settings-view__controls {
+  display: grid;
+  gap: 1.6rem;
+}
+
 .settings-section {
-  padding: 1.75rem 0;
-  border-bottom: 1px solid var(--border);
+  display: grid;
+  gap: 1rem;
 }
 
-.settings-section:last-child {
-  border-bottom: none;
+.settings-section--panel {
+  padding: 1.4rem;
+  border: 1px solid var(--app-line);
+  border-radius: 1.25rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 100%),
+    rgba(16, 32, 52, 0.88);
 }
 
 .settings-section__head {
-  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
-.settings-section__title {
-  margin: 0 0 0.3rem;
-  font-size: 0.95rem;
+.settings-section__head h3 {
+  margin: 0 0 0.35rem;
+  color: var(--app-ink);
+  font-size: 1.2rem;
   font-weight: 700;
-  color: var(--fg);
   letter-spacing: -0.02em;
 }
 
-.settings-section__hint {
+.settings-section__head p {
   margin: 0;
-  font-size: 0.8rem;
-  color: var(--fg-soft);
-  line-height: 1.55;
+  color: var(--app-ink-soft);
+  line-height: 1.65;
 }
 
-/* Theme grid */
-.theme-grid {
+.settings-theme-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
 }
 
-/* Preview column */
-.settings-preview {
-  /* visible at xl+; hidden below */
-}
-
-.settings-preview__sticky {
+.settings-view__preview {
   position: sticky;
   top: 1.5rem;
 }
 
-/* ── Bottom navigation (mobile) ─────────────────────────────────────────────── */
-.bottom-nav {
-  display: none;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: var(--bg-elevated);
-  border-top: 1px solid var(--border);
-  padding: 0.5rem 0 max(0.5rem, env(safe-area-inset-bottom, 0.5rem));
-  z-index: 30;
-}
-
-.bottom-nav__item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.22rem;
-  flex: 1;
-  padding: 0.35rem 0.5rem;
-  text-decoration: none;
-  color: var(--fg-soft);
-  font-size: 0.68rem;
-  font-weight: 500;
-  transition: color 150ms ease;
-}
-
-.bottom-nav__item:hover,
-.bottom-nav__item--active,
-.bottom-nav__item.router-link-active {
-  color: var(--primary);
-}
-
-.bottom-nav__item:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: -2px;
-}
-
-/* ── Responsive ─────────────────────────────────────────────────────────────── */
-
-/* Hide preview below 1280px */
-@media (max-width: 1280px) {
-  .settings-body {
+@media (max-width: 1180px) {
+  .settings-view__grid {
     grid-template-columns: 1fr;
   }
 
-  .settings-preview {
-    display: none;
+  .settings-view__preview {
+    position: static;
   }
 }
 
-/* Collapse to mobile layout below 768px */
-@media (max-width: 768px) {
-  .settings-sidebar {
-    display: none;
+@media (max-width: 720px) {
+  .settings-view__intro {
+    flex-direction: column;
   }
 
-  .settings-main {
-    margin-left: 0;
-    padding-bottom: 5rem;
+  .settings-theme-grid {
+    grid-template-columns: 1fr;
   }
 
-  .settings-header {
-    padding: 1.25rem 1.25rem 1rem;
-  }
-
-  .settings-body {
-    padding: 1.25rem;
-    gap: 0;
-  }
-
-  .theme-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .bottom-nav {
-    display: flex;
+  .settings-section--panel {
+    padding: 1.1rem;
   }
 }
 </style>

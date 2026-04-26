@@ -14,47 +14,56 @@ const emit = defineEmits<{
     <button
       v-for="color in colors"
       :key="color.id"
-      class="accent-swatch"
-      :class="{ 'accent-swatch--active': selected === color.id }"
-      role="radio"
-      :aria-checked="selected === color.id"
-      :aria-label="color.label + (selected === color.id ? ' (selected)' : '')"
-      type="button"
+      class="accent-picker__swatch"
+      :class="{ 'accent-picker__swatch--active': selected === color.id }"
       :style="{ '--swatch': color.value }"
+      :aria-checked="selected === color.id"
+      :aria-label="color.label"
+      role="radio"
+      type="button"
       @click="emit('select', color.id)"
-    />
+    >
+      <span v-if="selected === color.id" class="accent-picker__check" />
+    </button>
   </div>
 </template>
 
 <style scoped>
 .accent-picker {
   display: flex;
-  gap: 10px;
   flex-wrap: wrap;
+  gap: 1rem;
 }
 
-.accent-swatch {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--swatch);
-  border: 2px solid transparent;
-  cursor: pointer;
+.accent-picker__swatch {
+  position: relative;
+  width: 3rem;
+  height: 3rem;
   padding: 0;
-  transition: transform 150ms ease, box-shadow 150ms ease;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: var(--swatch);
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.22);
 }
 
-.accent-swatch:hover {
-  transform: scale(1.2);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+.accent-picker__swatch:hover {
+  transform: scale(1.04);
 }
 
-.accent-swatch--active {
-  box-shadow: 0 0 0 3px var(--bg-strong), 0 0 0 5px var(--swatch);
+.accent-picker__swatch--active {
+  box-shadow:
+    0 0 0 4px rgba(16, 32, 52, 1),
+    0 0 0 6px color-mix(in srgb, var(--swatch) 75%, transparent);
 }
 
-.accent-swatch:focus-visible {
-  outline: 2px solid var(--fg);
-  outline-offset: 3px;
+.accent-picker__check {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 0.8rem;
+  height: 0.4rem;
+  border-left: 2px solid rgba(0, 24, 56, 0.88);
+  border-bottom: 2px solid rgba(0, 24, 56, 0.88);
+  transform: rotate(-45deg) translateY(-1px);
 }
 </style>

@@ -2,7 +2,7 @@ import { ref, watchEffect } from 'vue';
 
 const STORAGE_KEY = 'mneme-theme-editorial-v1';
 const theme = ref<'light' | 'dark'>(
-  (localStorage.getItem(STORAGE_KEY) as 'light' | 'dark' | null) ?? 'light',
+  (localStorage.getItem(STORAGE_KEY) as 'light' | 'dark' | null) ?? 'dark',
 );
 
 export function useTheme() {
