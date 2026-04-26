@@ -11,6 +11,7 @@ import GraphView from '@/views/GraphView.vue';
 import MemoryView from '@/views/MemoryView.vue';
 import InsightsView from '@/views/InsightsView.vue';
 import AppShell from '@/components/app/AppShell.vue';
+import SettingsAppearanceView from '@/views/SettingsAppearanceView.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -71,6 +72,12 @@ const router = createRouter({
           component: InsightsView,
         },
       ],
+    },
+    {
+      path: '/settings/appearance',
+      name: 'settings-appearance',
+      component: SettingsAppearanceView,
+      meta: { requiresAuth: true },
     },
   ],
 });
