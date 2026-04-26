@@ -262,6 +262,11 @@ function logout() {
           <span v-for="tag in displayedTags" :key="tag" class="memory-chip">{{ tag }}</span>
         </div>
       </section>
+
+      <RouterLink class="app-nav__link app-nav__link--settings" :to="{ name: 'settings-appearance' }">
+        <AppIcon name="settings" />
+        <span>Settings</span>
+      </RouterLink>
     </aside>
 
     <div class="app-shell__content">
@@ -372,6 +377,10 @@ function logout() {
 <style scoped>
 .app-sidebar {
   gap: 1rem;
+}
+
+.app-nav__link--settings {
+  margin-top: auto;
 }
 
 .app-nav-group {
