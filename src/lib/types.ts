@@ -36,6 +36,15 @@ export interface KnowledgeBase {
   status: 'ready' | 'indexing' | 'draft' | 'queued';
 }
 
+export interface KnowledgeBaseDeleteResult {
+  knowledge_base_id: string;
+  document_count: number;
+  chunk_count: number;
+  deleted_memory_entry_count: number;
+  deleted_task_count: number;
+  deleted_vector_count: number;
+}
+
 export interface DocumentItem {
   id: string;
   user_id?: number;
@@ -260,6 +269,16 @@ export interface GraphResult {
   edge_count: number;
   node_type_counts: Record<string, number>;
   edge_type_counts: Record<string, number>;
+}
+
+export interface GraphProjectionRebuildResult {
+  scope: 'user' | 'knowledge_base';
+  user_id: number;
+  knowledge_base_id: string | null;
+  knowledge_base_count: number | null;
+  document_count: number;
+  memory_entry_count: number;
+  status: string;
 }
 
 export interface GraphQueryOptions {

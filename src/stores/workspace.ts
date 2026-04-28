@@ -9,6 +9,7 @@ import type {
   GrowthAdviceResult,
   GrowthReport,
   KnowledgeBase,
+  KnowledgeBaseDeleteResult,
   MemoryLibrary,
   MemoryRebuildResult,
   PersonalProfile,
@@ -75,6 +76,17 @@ export const useWorkspaceStore = defineStore('workspace', () => {
 
   function patchDocument(documentId: string, patch: Partial<DocumentItem>) {
     documents.value = documents.value.map((item) => (item.id === documentId ? { ...item, ...patch } : item));
+  }
+
+  function resetKnowledgeOutputs() {
+    memoryLibrary.value = null;
+    profile.value = null;
+    growth.value = null;
+    advice.value = null;
+    companion.value = null;
+    lastMemoryRebuild.value = null;
+    documentMemoryPreview.value = null;
+    documentMemoryLoading.value = false;
   }
 
   function decorateKnowledgeBases(baseItems: KnowledgeBase[], documentItems: DocumentItem[]) {
@@ -249,9 +261,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
       throw new Error('缺少当前用户上下文');
     }
     activeKnowledgeBaseId.value = knowledgeBaseId;
-    advice.value = null;
-    companion.value = null;
-    documentMemoryPreview.value = null;
+    resetKnowledgeOutputs();
     selectedDocumentId.value =
       documents.value.find((item) => item.knowledge_base_id === knowledgeBaseId)?.id ?? '';
     await refreshKnowledgeOutputs(token);
@@ -264,9 +274,55 @@ export const useWorkspaceStore = defineStore('workspace', () => {
   ) {
     const created = await api.createKnowledgeBase(userId, payload, token);
     currentUserId.value = userId;
-    knowledgeBases.value.unshift(created);
+    knowledgeBases.value = decorateKnowledgeBases([created, ...knowledgeBases.value], documents.value);
     activeKnowledgeBaseId.value = created.id;
+    resetKnowledgeOutputs();
+    selectedDocumentId.value = '';
+    await refreshKnowledgeOutputs(token);
     return created;
+  }
+
+  async function deleteKnowledgeBase(token: string, knowledgeBaseId: string) {
+    if (!currentUserId.value) {
+      throw new Error('缺少当前用户上下文');
+    }
+
+    const relatedDocumentIds = new Set(
+      documents.value
+        .filter((item) => item.knowledge_base_id === knowledgeBaseId)
+        .map((item) => item.id),
+    );
+
+    const result = (await api.deleteKnowledgeBase(
+      currentUserId.value,
+      knowledgeBaseId,
+      token,
+    )) as KnowledgeBaseDeleteResult;
+
+    documents.value = documents.value.filter((item) => item.knowledge_base_id !== knowledgeBaseId);
+    knowledgeBases.value = knowledgeBases.value.filter((item) => item.id !== knowledgeBaseId);
+    taskRecords.value = Object.fromEntries(
+      Object.entries(taskRecords.value).filter(([, task]) => !relatedDocumentIds.has(task.target_id)),
+    );
+
+    if (activeKnowledgeBaseId.value === knowledgeBaseId) {
+      activeKnowledgeBaseId.value = knowledgeBases.value[0]?.id ?? '';
+      resetKnowledgeOutputs();
+      selectedDocumentId.value =
+        documents.value.find((item) => item.knowledge_base_id === activeKnowledgeBaseId.value)?.id ?? '';
+
+      if (activeKnowledgeBaseId.value) {
+        await refreshKnowledgeOutputs(token);
+      }
+    } else {
+      if (selectedDocumentId.value && relatedDocumentIds.has(selectedDocumentId.value)) {
+        selectedDocumentId.value = filteredDocuments.value[0]?.id ?? '';
+        documentMemoryPreview.value = null;
+      }
+      knowledgeBases.value = decorateKnowledgeBases(knowledgeBases.value, documents.value);
+    }
+
+    return result;
   }
 
   async function refreshDocuments(token: string) {
@@ -442,6 +498,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     initialize,
     selectKnowledgeBase,
     createKnowledgeBase,
+    deleteKnowledgeBase,
     refreshDocuments,
     refreshKnowledgeOutputs,
     rebuildKnowledgeMemory,

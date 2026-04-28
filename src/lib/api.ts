@@ -8,12 +8,14 @@ import type {
   DocumentItem,
   GraphEdge,
   GraphNode,
+  GraphProjectionRebuildResult,
   GraphQueryOptions,
   GraphResult,
   GrowthAdviceResult,
   GrowthReport,
   IndexSubmission,
   KnowledgeBase,
+  KnowledgeBaseDeleteResult,
   MemoryLibrary,
   MemoryRebuildResult,
   PersonalProfile,
@@ -152,9 +154,7 @@ function normalizeKnowledgeBase(raw: unknown): KnowledgeBase {
     status:
       rawStatus === 'queued' || rawStatus === 'indexing' || rawStatus === 'draft'
         ? rawStatus
-        : firstPresent(source, ['is_default'], false)
-          ? 'ready'
-          : 'draft',
+        : 'ready',
   };
 }
 
@@ -426,6 +426,18 @@ function normalizeDocumentDeleteResult(raw: unknown): DocumentDeleteResult {
   };
 }
 
+function normalizeKnowledgeBaseDeleteResult(raw: unknown): KnowledgeBaseDeleteResult {
+  const source = isObject(raw) ? raw : {};
+  return {
+    knowledge_base_id: asString(firstPresent(source, ['knowledge_base_id']), ''),
+    document_count: asNumber(firstPresent(source, ['document_count']), 0),
+    chunk_count: asNumber(firstPresent(source, ['chunk_count']), 0),
+    deleted_memory_entry_count: asNumber(firstPresent(source, ['deleted_memory_entry_count']), 0),
+    deleted_task_count: asNumber(firstPresent(source, ['deleted_task_count']), 0),
+    deleted_vector_count: asNumber(firstPresent(source, ['deleted_vector_count']), 0),
+  };
+}
+
 function normalizeGraphNode(raw: unknown): GraphNode {
   const source = isObject(raw) ? raw : {};
   const metadata = isObject(firstPresent(source, ['metadata'], {}))
@@ -522,6 +534,23 @@ function normalizeGraph(raw: unknown): GraphResult {
     edge_count: asNumber(firstPresent(source, ['edge_count']), edges.length),
     node_type_counts: nodeTypeCounts,
     edge_type_counts: edgeTypeCounts,
+  };
+}
+
+function normalizeGraphProjectionRebuildResult(raw: unknown): GraphProjectionRebuildResult {
+  const source = isObject(raw) ? raw : {};
+  const knowledgeBaseId = firstPresent(source, ['knowledge_base_id'], null);
+  const knowledgeBaseCount = firstPresent(source, ['knowledge_base_count'], null);
+  const scope = asString(firstPresent(source, ['scope']), 'knowledge_base');
+
+  return {
+    scope: scope === 'user' ? 'user' : 'knowledge_base',
+    user_id: asNumber(firstPresent(source, ['user_id']), 0),
+    knowledge_base_id: knowledgeBaseId == null ? null : asString(knowledgeBaseId),
+    knowledge_base_count: knowledgeBaseCount == null ? null : asNumber(knowledgeBaseCount),
+    document_count: asNumber(firstPresent(source, ['document_count']), 0),
+    memory_entry_count: asNumber(firstPresent(source, ['memory_entry_count']), 0),
+    status: asString(firstPresent(source, ['status']), ''),
   };
 }
 
@@ -663,6 +692,26 @@ export const api = {
           ),
         ),
       () => mockCreateKnowledgeBase(payload),
+    );
+  },
+  deleteKnowledgeBase(userId: number, knowledgeBaseId: string, token: string) {
+    return withFallback(
+      async () =>
+        normalizeKnowledgeBaseDeleteResult(
+          await requestJson<unknown>(
+            `/users/${userId}/knowledge-bases/${knowledgeBaseId}`,
+            { method: 'DELETE' },
+            token,
+          ),
+        ),
+      async () => ({
+        knowledge_base_id: knowledgeBaseId,
+        document_count: 0,
+        chunk_count: 0,
+        deleted_memory_entry_count: 0,
+        deleted_task_count: 0,
+        deleted_vector_count: 0,
+      }),
     );
   },
   documents(userId: number, token: string, knowledgeBaseId?: string) {
@@ -920,6 +969,44 @@ export const api = {
           ),
         ),
       async () => createEmptyGraph('document'),
+    );
+  },
+  rebuildUserGraph(token: string) {
+    return withFallback(
+      async () =>
+        normalizeGraphProjectionRebuildResult(
+          await requestJson<unknown>('/graph/rebuild', { method: 'POST' }, token),
+        ),
+      async () => ({
+        scope: 'user' as const,
+        user_id: 0,
+        knowledge_base_id: null,
+        knowledge_base_count: null,
+        document_count: 0,
+        memory_entry_count: 0,
+        status: 'mocked',
+      }),
+    );
+  },
+  rebuildKnowledgeBaseGraph(token: string, knowledgeBaseId: string) {
+    return withFallback(
+      async () =>
+        normalizeGraphProjectionRebuildResult(
+          await requestJson<unknown>(
+            `/graph/knowledge-bases/${knowledgeBaseId}/rebuild`,
+            { method: 'POST' },
+            token,
+          ),
+        ),
+      async () => ({
+        scope: 'knowledge_base' as const,
+        user_id: 0,
+        knowledge_base_id: knowledgeBaseId,
+        knowledge_base_count: null,
+        document_count: 0,
+        memory_entry_count: 0,
+        status: 'mocked',
+      }),
     );
   },
 };

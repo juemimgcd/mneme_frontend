@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import SectionHeader from '@/components/common/SectionHeader.vue';
 import SurfacePanel from '@/components/common/SurfacePanel.vue';
 import KnowledgeBaseGrid from '@/components/knowledge/KnowledgeBaseGrid.vue';
@@ -8,6 +8,7 @@ import { useWorkspaceStore } from '@/stores/workspace';
 
 const session = useSessionStore();
 const workspace = useWorkspaceStore();
+const deleting = ref(false);
 const form = reactive({
   name: '',
   description: '',
@@ -48,6 +49,26 @@ async function selectKnowledgeBase(id: string) {
     return;
   }
   await workspace.selectKnowledgeBase(id, session.token);
+}
+
+async function deleteCurrentKnowledgeBase() {
+  if (!session.token || !workspace.currentKnowledgeBase || workspace.currentKnowledgeBase.is_default || deleting.value) {
+    return;
+  }
+
+  const confirmed = window.confirm(
+    `Delete "${workspace.currentKnowledgeBase.name}"? Documents, chunks, memory entries, and vectors in this collection will be removed.`,
+  );
+  if (!confirmed) {
+    return;
+  }
+
+  deleting.value = true;
+  try {
+    await workspace.deleteKnowledgeBase(session.token, workspace.currentKnowledgeBase.id);
+  } finally {
+    deleting.value = false;
+  }
 }
 </script>
 
@@ -125,6 +146,24 @@ async function selectKnowledgeBase(id: string) {
               <span v-for="item in focusItems" :key="item" class="memory-chip">{{ item }}</span>
             </div>
           </article>
+
+          <article
+            v-if="workspace.currentKnowledgeBase && !workspace.currentKnowledgeBase.is_default"
+            class="context-card collection-row collection-row--actions"
+          >
+            <strong>Maintenance</strong>
+            <p>Delete custom collections directly from the backend-backed workspace.</p>
+            <div class="graph-actions">
+              <button
+                class="ghost-button ghost-button--danger"
+                type="button"
+                :disabled="deleting"
+                @click="deleteCurrentKnowledgeBase"
+              >
+                {{ deleting ? 'Deleting...' : 'Delete Collection' }}
+              </button>
+            </div>
+          </article>
         </div>
       </SurfacePanel>
     </section>
@@ -172,6 +211,10 @@ async function selectKnowledgeBase(id: string) {
   display: grid;
   gap: var(--space-3);
   align-content: start;
+}
+
+.collection-row--actions {
+  align-self: end;
 }
 
 .collection-row header {

@@ -19,7 +19,13 @@ import { api } from '@/lib/api';
 import { mergeQuery, readQueryBoolean, readQueryFloat, readQueryNumber, readQueryString } from '@/lib/route-query';
 import { useSessionStore } from '@/stores/session';
 import { useWorkspaceStore } from '@/stores/workspace';
-import type { GraphEdge, GraphNode, GraphQueryOptions, GraphResult } from '@/lib/types';
+import type {
+  GraphEdge,
+  GraphNode,
+  GraphProjectionRebuildResult,
+  GraphQueryOptions,
+  GraphResult,
+} from '@/lib/types';
 
 type GraphScope = 'knowledge_base' | 'user' | 'document';
 type GraphLayoutMode = 'tree' | 'constellation';
@@ -87,7 +93,10 @@ const stageRef = ref<HTMLDivElement | null>(null);
 const svgRef = ref<SVGSVGElement | null>(null);
 const graph = ref<GraphResult | null>(null);
 const loading = ref(false);
+const rebuildLoading = ref(false);
 const error = ref('');
+const rebuildMessage = ref('');
+const lastRebuild = ref<GraphProjectionRebuildResult | null>(null);
 const selectedNodeId = ref('');
 const scope = ref<GraphScope>('knowledge_base');
 const includeRelationships = ref(true);
@@ -132,6 +141,19 @@ const currentDocumentId = computed(() => {
     return graphDocumentId.value;
   }
   return workspace.selectedDocumentId || workspace.filteredDocuments[0]?.id || '';
+});
+
+const graphRebuildTargetKnowledgeBaseId = computed(() => {
+  if (scope.value === 'user') {
+    return '';
+  }
+
+  if (scope.value === 'document') {
+    const targetDocument = workspace.documents.find((item) => item.id === currentDocumentId.value);
+    return targetDocument?.knowledge_base_id ?? workspace.activeKnowledgeBaseId;
+  }
+
+  return workspace.activeKnowledgeBaseId;
 });
 
 const graphOptions = computed<GraphQueryOptions>(() => ({
@@ -1509,6 +1531,38 @@ async function loadGraph() {
   }
 }
 
+async function rebuildGraphProjection() {
+  if (!session.token || rebuildLoading.value) {
+    return;
+  }
+
+  if (scope.value !== 'user' && !graphRebuildTargetKnowledgeBaseId.value) {
+    rebuildMessage.value = 'Select a knowledge base before rebuilding the graph projection.';
+    return;
+  }
+
+  rebuildLoading.value = true;
+  rebuildMessage.value = '';
+  try {
+    lastRebuild.value =
+      scope.value === 'user'
+        ? await api.rebuildUserGraph(session.token)
+        : await api.rebuildKnowledgeBaseGraph(session.token, graphRebuildTargetKnowledgeBaseId.value);
+
+    rebuildMessage.value =
+      lastRebuild.value.scope === 'user'
+        ? `Rebuilt ${lastRebuild.value.document_count} documents across the workspace.`
+        : `Rebuilt ${lastRebuild.value.document_count} documents and ${lastRebuild.value.memory_entry_count} memory entries.`;
+
+    await loadGraph();
+  } catch (rebuildError) {
+    rebuildMessage.value =
+      rebuildError instanceof Error ? rebuildError.message : 'Unable to rebuild graph projection.';
+  } finally {
+    rebuildLoading.value = false;
+  }
+}
+
 function selectNode(nodeId: string) {
   setSelectedNode(nodeId, { history: 'push' });
 }
@@ -1799,6 +1853,14 @@ watch(
       <div class="graph-header-actions">
         <button class="ghost-button" type="button" :disabled="loading" @click="loadGraph">
           {{ loading ? 'Loading' : 'Refresh' }}
+        </button>
+        <button
+          class="ghost-button"
+          type="button"
+          :disabled="rebuildLoading || (scope !== 'user' && !graphRebuildTargetKnowledgeBaseId)"
+          @click="rebuildGraphProjection"
+        >
+          {{ rebuildLoading ? 'Rebuilding' : 'Rebuild' }}
         </button>
         <button class="ghost-button" type="button" @click="zoomOut()">-</button>
         <button class="ghost-button" type="button" @click="zoomIn()">+</button>
@@ -2132,6 +2194,14 @@ watch(
               <span class="inline-badge">{{ graph?.scope ?? 'idle' }}</span>
             </header>
             <p>{{ relatedEdgeCount }} related edges · {{ layoutMode }} · generated {{ generatedAt }}</p>
+          </article>
+
+          <article v-if="rebuildMessage || lastRebuild" class="context-card">
+            <header class="knowledge-card__header">
+              <strong>Projection</strong>
+              <span class="inline-badge">{{ lastRebuild?.status ?? 'ready' }}</span>
+            </header>
+            <p>{{ rebuildMessage || 'Graph projection has not been rebuilt in this session.' }}</p>
           </article>
         </section>
 

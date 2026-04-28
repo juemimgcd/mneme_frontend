@@ -26,6 +26,36 @@ function extractEnvelopeData<T>(payload: unknown): T | undefined {
   return undefined;
 }
 
+function extractErrorMessage(payload: unknown): string | null {
+  if (!isObject(payload)) {
+    return null;
+  }
+
+  const detail = payload.detail;
+  if (typeof detail === 'string' && detail.trim()) {
+    return detail;
+  }
+
+  const message = payload.message;
+  if (typeof message === 'string' && message.trim()) {
+    return message;
+  }
+
+  const error = payload.error;
+  if (typeof error === 'string' && error.trim()) {
+    return error;
+  }
+
+  if (isObject(detail)) {
+    const nestedMessage = extractErrorMessage(detail);
+    if (nestedMessage) {
+      return nestedMessage;
+    }
+  }
+
+  return null;
+}
+
 function resolvePayload<T>(payload: T | ApiEnvelope<T>): T {
   const extracted = extractEnvelopeData<T>(payload);
   if (extracted !== undefined) {
@@ -57,6 +87,26 @@ function buildCandidatePaths(path: string) {
   return candidates;
 }
 
+async function readErrorResponse(response: Response) {
+  const contentType = response.headers.get('content-type') ?? '';
+
+  if (contentType.includes('application/json')) {
+    const payload = await response.json();
+    const message = extractErrorMessage(payload);
+    return {
+      message: message ?? `Request failed: ${response.status}`,
+      retryableNotFound: response.status === 404 && !message,
+    };
+  }
+
+  const text = (await response.text()).trim();
+  const plainNotFound = text === '' || /^not found$/i.test(text);
+  return {
+    message: text || `Request failed: ${response.status}`,
+    retryableNotFound: response.status === 404 && plainNotFound,
+  };
+}
+
 export async function requestJson<T>(
   path: string,
   init: RequestInit = {},
@@ -77,14 +127,14 @@ export async function requestJson<T>(
       headers,
     });
 
-    if (response.status === 404) {
-      lastError = new Error(`Not found for path ${candidatePath}`);
-      continue;
-    }
-
     if (!response.ok) {
-      const text = await response.text();
-      throw new Error(text || `Request failed: ${response.status}`);
+      const errorInfo = await readErrorResponse(response);
+      if (response.status === 404 && errorInfo.retryableNotFound) {
+        lastError = new Error(`Not found for path ${candidatePath}`);
+        continue;
+      }
+
+      throw new Error(errorInfo.message);
     }
 
     if (response.status === 204) {
